@@ -31,7 +31,8 @@ export function CaptureIdeaForm() {
   }
 
   return (
-    <form onSubmit={submit} aria-busy={pending} className="mb-10 max-w-2xl space-y-4 rounded-lg border bg-white p-5 shadow-sm">
+    <form id="capture-idea" onSubmit={submit} aria-busy={pending} className="workspace-panel space-y-4 p-6">
+      <div><p className="workspace-eyebrow">Make room for the next thing</p><h2 className="mt-2 text-xl font-semibold tracking-tight">Quick capture</h2><p className="mt-2 text-sm leading-6 text-slate-500">A rough thought is enough. Give it a name; refine it later.</p></div>
       <label className="block text-sm font-medium">Idea
         <input name="title" required maxLength={160} readOnly={pending} placeholder="What is the idea?" className="mt-2 w-full rounded-md border p-3" />
       </label>
@@ -39,7 +40,8 @@ export function CaptureIdeaForm() {
         <textarea name="description" maxLength={2000} readOnly={pending} className="mt-2 min-h-24 w-full rounded-md border p-3" />
       </label>
       <input type="hidden" name="source" value="OWN" />
-      <button disabled={pending} className="rounded-md bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-50" type="submit">{pending ? "Saving..." : "Capture idea"}</button>
+      <button disabled={pending} className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50" type="submit">{pending ? "Saving..." : "+ Capture idea"}</button>
+      <p className="text-xs text-slate-500">Private by default · Added to Inbox</p>
       <p role="status" className="text-sm text-green-700">{message}</p>
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
     </form>

@@ -1,13 +1,12 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
 export function WorkspaceNav() {
   const pathname = usePathname();
-  return <nav aria-label="Workspace" className="flex gap-2 border-t border-slate-200 pt-4">
-    {[{ href: "/private/ideas", label: "Ideas" }, { href: "/private/problems", label: "Problems" }].map(({ href, label }) => {
+  return <nav aria-label="Workspace" className="flex gap-2 lg:flex-col">
+    {[{ href: "/private/ideas", label: "Ideas", mark: "01" }, { href: "/private/problems", label: "Problems", mark: "02" }].map(({ href, label, mark }) => {
       const active = pathname === href || pathname.startsWith(href + "/");
-      return <Link key={href} href={href} aria-current={active ? "page" : undefined} className={`rounded-lg px-4 py-2 text-sm font-medium ${active ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"}`}>{label}</Link>;
+      return <Link key={href} href={href} aria-current={active ? "page" : undefined} className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold ${active ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-50"}`}><span aria-hidden="true" className="text-xs opacity-60">{mark}</span>{label}<span aria-hidden="true" className="ml-auto">{active ? "•" : ""}</span></Link>;
     })}
   </nav>;
 }
