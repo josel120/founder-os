@@ -7,6 +7,16 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: founder_os_e2e
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -22,6 +32,12 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
         timeout-minutes: 5
+        env:
+          # Disposable CI-only database and throwaway credentials; not real secrets.
+          E2E_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/founder_os_e2e
+          E2E_OWNER_EMAIL: owner@e2e.test
+          E2E_SETUP_TOKEN: e2e-only-setup-token-not-a-secret-0123456789
+          E2E_AUTH_SECRET: e2e-only-auth-secret-not-a-secret-0123456789
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
