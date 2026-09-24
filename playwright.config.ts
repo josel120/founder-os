@@ -2,6 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
+  globalTimeout: 180_000,
+  timeout: 30_000,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 2 : undefined,
@@ -11,6 +13,7 @@ export default defineConfig({
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    gracefulShutdown: { signal: "SIGTERM", timeout: 5_000 },
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
 });

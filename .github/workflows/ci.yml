@@ -1,11 +1,12 @@
 name: CI
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -20,6 +21,7 @@ jobs:
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+        timeout-minutes: 5
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

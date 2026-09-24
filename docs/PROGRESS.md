@@ -37,3 +37,7 @@ Latest test run: 8 files, 28 tests passed, exit 0, including ownership tests bei
 Security agent delivered owner-scoped Ideas/Problems, closed registration, migration 0001 and documented historical adoption. Independent final suite: 38/38 tests passed in 9 files; pnpm lint exit 0. GitHub authentication verified as josel120; remote founder-os is private, default branch master (local main shares the baseline). Preparing a review branch rather than modifying the remote default. Existing database has not been migrated; OWNER_EMAIL and historical adoption remain deployment prerequisites.
 
 Production build passed (exit 0, 8 routes). E2E ran with approved browser permissions against next start: initial run caught an ambiguous alert locator; scoped it to the form and reran all 5 tests successfully (exit 0). E2E covers public/auth UI and anonymous protection, not authenticated database workflows. No real account or record was created by these tests.
+
+## CI follow-up
+
+PR #1 run 36010366205 independently passed install, lint, typecheck, unit tests and build on Linux. Browser stage remained in progress unusually long. Added explicit Playwright global timeout, server shutdown timeout, E2E step timeout and job timeout so hangs produce bounded failures. Added master push coverage because it is the current remote default. These bounds do not establish the cause of the original hang.
