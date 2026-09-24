@@ -12,7 +12,7 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`.
 | T-016 | Verify idea refinement and decision isolation end to end | done | codex | S | T-015 |
 | T-017 | Plan Project OS MVP and ownership boundaries | done | codex | M | none |
 | T-018 | Add owner isolation to projects (migration generation) | done | claude | S | T-017 |
-| T-019 | Apply project ownership migration locally | todo | human | S | T-018 |
+| T-019 | Apply project ownership migration locally | done | human | S | T-018 |
 | T-020 | Build owner-scoped Projects domain | todo | codex | M | T-019 |
 | T-021 | Add Projects list, detail and edit UI | todo | codex | M | T-020 |
 | T-022 | Convert a candidate Idea into a Project | todo | claude | M | T-020 |

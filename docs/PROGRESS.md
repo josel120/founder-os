@@ -23,11 +23,11 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - PR #13 merged at 0275995 after CI passed lint, typecheck, unit, build and 11 authenticated/anonymous E2E tests.
 - T-013..T-016 are done. Project OS MVP is next: T-017 planning, T-018/T-019 ownership migration, T-020 domain, T-021 UI, T-022 conversion, T-023 project decisions and T-024 E2E review.
 - T-017 done (ADR-009). T-018 done: migration 0003 (`project.owner_id`) generated, not applied; 87/87 unit tests, lint/typecheck exit 0.
-- Next: human applies 0003 locally (T-019), then T-020 (codex). Claude's T-022/T-023/T-024 wait on T-020.
+- T-019 done: owner reports 0003 applied locally (not independently verified). Next: T-020 Projects domain (codex); Claude's T-022/T-023/T-024 wait on it.
 - T-025 done: every card now gets its own `task/` branch; finished cards are committed, pushed and opened as a PR (ADR-010). Merges stay human.
-- Open PRs: #14 (T-017 + T-018 → master), #15 (T-025, stacked on #14; retarget to master after #14 merges).
+- PRs #14 (T-017 + T-018) and #15 (T-025) merged into master at 49f2ed0.
 
-See docs/agents/tasks/BOARD.md. T-001..T-018 and T-025 are done.
+See docs/agents/tasks/BOARD.md. T-001..T-019 and T-025 are done.
 
 ## Deployment prerequisites
 
