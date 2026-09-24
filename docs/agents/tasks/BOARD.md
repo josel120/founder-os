@@ -15,4 +15,4 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`.
 | T-008 | Decision Log ownership migration (generate only) | done | claude | S | – |
 | T-009 | Apply migration 0002 to the local database | todo | human | S | T-008 |
 | T-010 | Decisions domain: schema, actions, queries | done | claude | M | T-008 |
-| T-011 | Decisions page and idea-level decision log | todo | codex | S | T-010, T-009 |
+| T-011 | Decisions page and idea-level decision log | review | claude | S | T-010, T-009 |
