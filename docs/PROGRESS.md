@@ -6,13 +6,14 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 
 - Branch `feature/foundation-owner-security`; PR #1 open against `master`.
 - Done: owner-scoped Ideas/Problems (ADR-005), closed registration, migration 0001 applied locally, 2 historical ideas adopted by the owner (ADR-006), explicit results for idea status updates and idea creation, capture form with error feedback.
-- Last full verification: 45/45 unit tests (10 files), lint exit 0, typecheck exit 0. Before T-001: build exit 0, 5/5 anonymous E2E. CI passed install/lint/typecheck/unit/build; the browser stage hung (see T-007).
+- Last full verification: 52/52 unit tests (12 files), lint exit 0, typecheck exit 0. Before T-001: build exit 0, 5/5 anonymous E2E. CI passed install/lint/typecheck/unit/build; the browser stage hung (see T-007).
 - T-001 done (Ideas inbox search/filter, sidebar layout); owner verified it in the browser (T-002).
+- T-003 done: createProblem returns explicit results, and the Problems page has a capture form with error feedback. Owner verified it in the browser.
 - Agent coordination layer added: `docs/agents/` (ADR-007).
 
 ## Next
 
-See `docs/agents/tasks/BOARD.md`. Priority: T-003 → T-004 → T-006.
+See `docs/agents/tasks/BOARD.md`. Priority: T-004 → T-006 → T-007.
 
 ## Deployment prerequisites
 
