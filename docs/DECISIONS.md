@@ -80,3 +80,11 @@ Task cards are local rather than GitHub Issues because reading one file costs fa
 ## ADR-008: Decision Log is owner-scoped
 
 Migration `0002_decision_log_ownership.sql` adds a nullable `owner_id` (FK to `user.id`, ON DELETE RESTRICT) and a `visibility` column (NOT NULL, default `PRIVATE`) to `decision_log`. It is purely additive, with no UPDATE or DELETE. As with ADR-006, rows without an owner stay inaccessible until adopted by explicit reviewed IDs. Decision queries and actions must use the same predicates as Ideas and Problems: id + session owner + `PRIVATE`. Decisions are recorded by the owner. They are never generated automatically from AI output (PRD: human decisions over AI recommendations). Apply the migration with a backup first (T-009).
+
+## ADR-009: Project OS ownership and MVP boundary
+
+Project OS starts as a private, owner-scoped workspace. The `project` table must gain a nullable `owner_id` foreign key to `user.id` with `ON DELETE RESTRICT`, using the same additive migration and explicit adoption procedure as ADR-006 and ADR-008. Project reads and mutations must use the session owner plus `id + owner_id + PRIVATE`; NULL-owner rows remain inaccessible until explicitly reviewed by a human.
+
+The MVP keeps Project lifecycle and operational status independent. Lifecycle describes the product state (`PLANNING`, `ACTIVE`, `PAUSED`, `RELEASED`, `ARCHIVED`); operational status describes attention needed (`NO_ACTION_REQUIRED`, `NEXT_ACTION_DUE`, `WAITING`, `BLOCKED`, `REVIEW_DUE`). Waiting fields are meaningful only for waiting state, and status changes must not silently change lifecycle.
+
+An Idea -> Project conversion verifies the source Idea with the session owner and PRIVATE visibility, sets the Project owner from the session, stores `origin_idea_id`, and returns an explicit result. Repeated conversion is rejected or returns the existing owned Project according to the implementation card; it never creates an unowned or duplicate Project silently. Project decisions use the existing owner-scoped Decision Log. Finance transactions, public publishing, integrations and AI execution remain outside this phase; nullable finance `project_id` must not be treated as an ownership boundary.
