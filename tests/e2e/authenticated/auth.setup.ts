@@ -20,6 +20,7 @@ setup("reset the disposable database and sign in as the owner", async ({ page, r
   expect(signUp.ok()).toBe(true);
 
   await page.goto("/login");
+  await page.waitForLoadState("networkidle"); // let React hydrate before filling the form
   await page.getByLabel("Email", { exact: true }).fill(e2eOwner.email);
   await page.getByLabel("Password", { exact: true }).fill(e2eOwner.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
