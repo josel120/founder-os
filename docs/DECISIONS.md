@@ -65,3 +65,14 @@ ROLLBACK;
 ```
 
 The template deliberately ends in ROLLBACK. For an approved execution replace that final statement with COMMIT only after verification. Omit an UPDATE if there are no reviewed records of that type. Reload the application and verify these exact records are accessible to the configured owner; other accounts and unclaimed records remain inaccessible. Keep a private audit of reviewed IDs and the assignment result.
+
+## ADR-007: File-based multi-agent coordination with a token budget
+
+Several AI agents (ChatGPT desktop, Codex, Claude Code) work on this repo with limited token quotas. Coordination lives in the repo, not in chat history, so any agent can pick up work cheaply:
+
+- Tiered context: `AGENTS.md` (+ `CLAUDE.md`, which imports it) is always loaded and kept short. `docs/agents/CONTEXT.md` replaces exploration: layout, invariants, known-good commands and known environment failures. Other docs are read only when a task card links them.
+- Work unit: task cards (`docs/agents/tasks/T-XXX.md`) with explicit files in scope, acceptance criteria and a ≤15-line Handoff block. `BOARD.md` is the queue and lock (one `doing` owner per file set).
+- Routing (`docs/agents/ROUTING.md`): planning goes to ChatGPT, scoped implementation to Codex, security and review work to Claude, irreversible operations to the human. Escalation after two failures on the same step, or when quota runs out.
+- `docs/PROGRESS.md` is a rolling ≤40-line summary. History is archived under `docs/agents/archive/`.
+
+Task cards are local rather than GitHub Issues because reading one file costs far fewer tokens than API calls. GitHub stays the source of truth for PRs and CI. If the team grows, cards can be mirrored to Issues.
