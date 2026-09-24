@@ -25,7 +25,9 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - T-017 done (ADR-009). T-018 done: migration 0003 (`project.owner_id`) generated, not applied; 87/87 unit tests, lint/typecheck exit 0.
 - Next: human applies 0003 locally (T-019), then T-020 (codex). Claude's T-022/T-023/T-024 wait on T-020.
 
-See docs/agents/tasks/BOARD.md. T-001..T-018 are done.
+- T-025 done: every card now gets its own `task/` branch; finished cards are committed, pushed and opened as a PR (ADR-010). Merges stay human.
+
+See docs/agents/tasks/BOARD.md. T-001..T-018 and T-025 are done.
 
 ## Deployment prerequisites
 

@@ -28,6 +28,7 @@
 - Agent / date:
 - Done:
 - Changed files:
+- Branch / PR: `task/T-XXX-<slug>` → <PR URL>
 - Verification: `<command>` → exit <n>
 - Not done / next step:
 - Next owner:

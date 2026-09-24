@@ -8,7 +8,7 @@ Send each task to the cheapest agent that can do it well. Save the scarce budget
 | Implement a clear S/M card with explicit files in scope | `codex` (paste `prompts/codex-task.md`) | Loads AGENTS.md natively; good at scoped edits |
 | Cross-module design, security/ownership logic, auth, hard debugging, reviews | `claude` | Uses subagents to keep exploration cheap |
 | Mechanical work: lint fixes, renames, test scaffolding, doc sync | `claude` → `implementer`/`scout` subagent, or `codex` at low reasoning effort | Cheap models are enough |
-| Migrations against real data, secrets, `OWNER_EMAIL`, deploys, merges, pushes, deleting data | `human` (an agent prepares; the human approves and runs) | Irreversible |
+| Migrations against real data, secrets, `OWNER_EMAIL`, deploys, merges, force pushes, pushes to `master`, deleting data or branches | `human` (an agent prepares; the human approves and runs) | Irreversible |
 
 ## Card sizes (budget)
 
@@ -25,7 +25,9 @@ codex / claude: implement → Handoff block → status review
    ↓
 claude reviewer (or the other agent): review → done  | back to todo with notes
    ↓
-human: approve commit / PR / merge
+codex / claude: commit, push task branch, open PR (AGENTS.md "Git per card")
+   ↓
+human: review PR and merge
 ```
 
 ## Escalation
