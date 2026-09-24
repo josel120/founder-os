@@ -16,6 +16,8 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 
 ## Next
 
+- T-020 review: private Projects domain implemented on task/T-020-projects-domain; lint/typecheck completed, 113 unit tests passed (26 new). No migration or real-data write. ADR-009 corrected to approved lifecycle/operational enums. Next: review PR, then T-021/T-022/T-023.
+
 - T-012 done: Codex added T-013..T-016 and `docs/agents/CLAUDE_HANDOFF.md`; documentation only, no implementation gates run.
 - Ready queue: T-013 safe idea-creation errors -> T-014 owner-scoped content editing -> T-015 editor UI -> T-016 Claude review/E2E persistence and decision-isolation coverage.
 - Codex completed T-013..T-016 implementation work; T-016 awaits CI or approved disposable E2E verification. This session did not contact a separate Claude process.
