@@ -143,6 +143,7 @@ export const ideas = pgTable("idea", {
 });
 export const projects = pgTable("project", {
   id: uuid("id").defaultRandom().primaryKey(),
+  ownerId: text("owner_id").references(() => users.id, { onDelete: "restrict" }),
   originIdeaId: uuid("origin_idea_id").references(() => ideas.id),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
