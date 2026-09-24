@@ -38,6 +38,15 @@ describe("idea server boundaries", () => {
     expect(await createIdea(input())).toEqual({ ok: true });
     expect(mocks.values).toHaveBeenCalledWith(expect.objectContaining({ visibility: "PRIVATE", status: "INBOX", ownerId: "owner-a" }));
   });
+  it("reports idea insertion failures without exposing database details", async () => {
+    mocks.requireAuth.mockResolvedValue({ id: "owner-a" });
+    mocks.values.mockRejectedValue(new Error("private database detail"));
+
+    const result = await createIdea(input());
+
+    expect(result).toEqual({ ok: false, error: "Could not save the idea. Please try again." });
+    expect(JSON.stringify(result)).not.toContain("private database detail");
+  });
   it("rejects invalid status before updating", async () => {
     mocks.requireAuth.mockResolvedValue({ id: "owner-a" });
     await updateIdeaStatus(input());

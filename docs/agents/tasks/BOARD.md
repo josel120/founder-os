@@ -6,10 +6,10 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`.
 | ID | Title | Status | Owner | Size | Depends |
 |---|---|---|---|---|---|
 | T-012 | Expand backlog and prepare Claude handoff | done | codex | M | none |
-| T-013 | Return a safe result when idea creation fails | todo | codex | S | none |
-| T-014 | Add owner-scoped editing of idea content | todo | codex | M | T-013 |
-| T-015 | Let the owner refine an idea on its detail page | todo | codex | S | T-014 |
-| T-016 | Verify idea refinement and decision isolation end to end | todo | claude | S | T-015 |
+| T-013 | Return a safe result when idea creation fails | done | codex | S | none |
+| T-014 | Add owner-scoped editing of idea content | done | codex | M | T-013 |
+| T-015 | Let the owner refine an idea on its detail page | done | codex | S | T-014 |
+| T-016 | Verify idea refinement and decision isolation end to end | review | codex | S | T-015 |
 | T-001 | Finish Ideas inbox search/filter and workspace layout (uncommitted WIP) | done | claude | S | – |
 | T-002 | Manually verify authenticated Ideas workflow with the real owner account | done | human | S | T-001 |
 | T-003 | Explicit creation result for createProblem (Ideas already done) | done | claude | S | – |
