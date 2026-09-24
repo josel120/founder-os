@@ -38,7 +38,8 @@ Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind 4 · Drizzl
 | Typecheck | `pnpm typecheck` |
 | Lint changed files | `pnpm exec eslint <files>` (full: `pnpm lint`) |
 | Build | `pnpm build` — do not run it while another agent's dev/build is running |
-| E2E | `pnpm test:e2e` — needs browser permission; Chromium may fail with `spawn EPERM` in sandboxes |
+| E2E (anonymous) | `pnpm test:e2e` — needs browser permission; Chromium may fail with `spawn EPERM` in sandboxes |
+| E2E (signed in) | Set `E2E_DATABASE_URL` (db name must end in `_e2e`), `E2E_SETUP_TOKEN` and `E2E_AUTH_SECRET` (≥32 chars each), then `pnpm test:e2e`. The DB is wiped. CI runs this automatically |
 | Diff summary | `git diff --stat 2>/dev/null` (hides CRLF warnings) |
 
 ## Known environment failures (do not re-debug)
