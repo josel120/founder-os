@@ -41,6 +41,8 @@ Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind 4 · Drizzl
 | E2E (anonymous) | `pnpm test:e2e` — needs browser permission; Chromium may fail with `spawn EPERM` in sandboxes |
 | E2E (signed in) | Set `E2E_DATABASE_URL` (db name must end in `_e2e`), `E2E_SETUP_TOKEN` and `E2E_AUTH_SECRET` (≥32 chars each), then `pnpm test:e2e`. The DB is wiped. CI runs this automatically |
 | Diff summary | `git diff --stat 2>/dev/null` (hides CRLF warnings) |
+| Card branch | `git fetch origin && git switch -c task/T-XXX-<slug> origin/master` |
+| Open PR | `git push -u origin <branch> && gh pr create --base master --title "T-XXX: <title>" --body-file <file>` |
 
 ## Known environment failures (do not re-debug)
 

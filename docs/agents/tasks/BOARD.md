@@ -29,3 +29,4 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`.
 | T-009 | Apply migration 0002 to the local database | done | human | S | T-008 |
 | T-010 | Decisions domain: schema, actions, queries | done | claude | M | T-008 |
 | T-011 | Decisions page and idea-level decision log | done | claude | S | T-010, T-009 |
+| T-025 | Require a task branch, commit and PR for every card | done | claude | S | none |

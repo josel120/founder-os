@@ -19,13 +19,15 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - T-012 done: Codex added T-013..T-016 and `docs/agents/CLAUDE_HANDOFF.md`; documentation only, no implementation gates run.
 - Ready queue: T-013 safe idea-creation errors -> T-014 owner-scoped content editing -> T-015 editor UI -> T-016 Claude review/E2E persistence and decision-isolation coverage.
 - Codex completed T-013..T-016 implementation work; T-016 awaits CI or approved disposable E2E verification. This session did not contact a separate Claude process.
-- Earlier PR/CI status below is historical and was not rechecked during backlog planning; human approval remains required for merges/pushes/branch cleanup.
+- Merges, force pushes, pushes to `master` and branch cleanup need human approval; agents push their own `task/` branches and open PRs (ADR-010).
 - PR #13 merged at 0275995 after CI passed lint, typecheck, unit, build and 11 authenticated/anonymous E2E tests.
 - T-013..T-016 are done. Project OS MVP is next: T-017 planning, T-018/T-019 ownership migration, T-020 domain, T-021 UI, T-022 conversion, T-023 project decisions and T-024 E2E review.
 - T-017 done (ADR-009). T-018 done: migration 0003 (`project.owner_id`) generated, not applied; 87/87 unit tests, lint/typecheck exit 0.
 - Next: human applies 0003 locally (T-019), then T-020 (codex). Claude's T-022/T-023/T-024 wait on T-020.
+- T-025 done: every card now gets its own `task/` branch; finished cards are committed, pushed and opened as a PR (ADR-010). Merges stay human.
+- Open PRs: #14 (T-017 + T-018 → master), #15 (T-025, stacked on #14; retarget to master after #14 merges).
 
-See docs/agents/tasks/BOARD.md. T-001..T-018 are done.
+See docs/agents/tasks/BOARD.md. T-001..T-018 and T-025 are done.
 
 ## Deployment prerequisites
 
