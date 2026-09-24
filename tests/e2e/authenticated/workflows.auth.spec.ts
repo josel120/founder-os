@@ -52,7 +52,7 @@ test("idea content edits persist and decisions stay with their idea", async ({ p
   await expect(page.getByText("Idea updated.")).toBeVisible();
   await ready(page, page.reload());
   await expect(page.getByRole("heading", { name: `${firstTitle} refined` })).toBeVisible();
-  await expect(page.getByText("A persisted description")).toBeVisible();
+  await expect(page.locator("p").filter({ hasText: "A persisted description" })).toBeVisible();
   await ready(page, page.goto("/private/ideas"));
   await expect(page.getByRole("link", { name: `${firstTitle} refined` })).toBeVisible();
   await page.getByRole("link", { name: `${firstTitle} refined` }).click();
