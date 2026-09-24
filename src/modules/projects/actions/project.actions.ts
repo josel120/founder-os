@@ -1,0 +1,70 @@
+"use server";
+
+import { and, eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { db } from "@/db";
+import { projects } from "@/db/schema";
+import { requireAuth } from "@/lib/require-auth";
+import { createProjectSchema, updateProjectContentSchema, updateProjectStatusSchema } from "../schemas/project.schema";
+
+type Result = { ok: true; projectId: string } | { ok: false; error: string };
+const failure = { ok: false as const, error: "Could not save the project. Please try again." };
+
+function refresh(id: string) {
+  revalidatePath("/private/projects");
+  revalidatePath(`/private/projects/${id}`);
+}
+
+export async function createProject(formData: FormData): Promise<Result> {
+  const owner = await requireAuth();
+  if (!owner) return { ok: false, error: "Sign in again to save changes." };
+  const parsed = createProjectSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid project." };
+  if (!db) return failure;
+  let projectId: string;
+  try {
+    const [created] = await db.insert(projects).values({ ...parsed.data, ownerId: owner.id, visibility: "PRIVATE", lifecycle: "PLANNING", operationalStatus: "NO_ACTION_REQUIRED" }).returning({ id: projects.id });
+    if (!created) return failure;
+    projectId = created.id;
+  } catch { return failure; }
+  refresh(projectId);
+  return { ok: true, projectId };
+}
+
+export async function updateProjectContent(formData: FormData): Promise<Result> {
+  const owner = await requireAuth();
+  if (!owner) return { ok: false, error: "Sign in again to save changes." };
+  const parsed = updateProjectContentSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid project." };
+  if (!db) return failure;
+  const { projectId, ...content } = parsed.data;
+  try {
+    const changed = await db.update(projects).set({ ...content, updatedAt: new Date() }).where(and(eq(projects.id, projectId), eq(projects.ownerId, owner.id), eq(projects.visibility, "PRIVATE"))).returning({ id: projects.id });
+    if (!changed.length) return { ok: false, error: "Project not found. Changes were not saved." };
+  } catch { return failure; }
+  refresh(projectId);
+  return { ok: true, projectId };
+}
+
+export async function updateProjectStatus(formData: FormData): Promise<Result> {
+  const owner = await requireAuth();
+  if (!owner) return { ok: false, error: "Sign in again to save changes." };
+  const parsed = updateProjectStatusSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid project status." };
+  if (!db) return failure;
+  const data = parsed.data;
+  const waiting = data.operationalStatus.startsWith("WAITING_");
+  try {
+    const changed = await db.update(projects).set({
+      lifecycle: data.lifecycle, operationalStatus: data.operationalStatus,
+      nextAction: data.nextAction || null,
+      waitingReason: waiting ? data.waitingReason : null,
+      waitingSince: waiting ? new Date(data.waitingSince) : null,
+      reviewAt: data.reviewAt ? new Date(data.reviewAt) : null,
+      updatedAt: new Date(),
+    }).where(and(eq(projects.id, data.projectId), eq(projects.ownerId, owner.id), eq(projects.visibility, "PRIVATE"))).returning({ id: projects.id });
+    if (!changed.length) return { ok: false, error: "Project not found. Changes were not saved." };
+  } catch { return failure; }
+  refresh(data.projectId);
+  return { ok: true, projectId: data.projectId };
+}
