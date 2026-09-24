@@ -37,6 +37,42 @@ test("idea status changes persist after reload", async ({ page }) => {
   await expect(page.getByLabel("Status")).toHaveValue("RESEARCHING");
 });
 
+test("idea content edits persist and decisions stay with their idea", async ({ page }) => {
+  const firstTitle = `E2E editable ${unique()}`;
+  const secondTitle = `E2E separate ${unique()}`;
+  await captureIdea(page, firstTitle);
+  await captureIdea(page, secondTitle);
+
+  await ready(page, page.reload());
+  await page.getByRole("link", { name: firstTitle }).click();
+  await ready(page, page.waitForURL(/\/private\/ideas\/[0-9a-f-]{36}$/));
+  await page.getByLabel("Title", { exact: true }).fill(`${firstTitle} refined`);
+  await page.getByLabel("Description", { exact: true }).fill("A persisted description");
+  await page.getByRole("button", { name: "Save idea" }).click();
+  await expect(page.getByText("Idea updated.")).toBeVisible();
+  await ready(page, page.reload());
+  await expect(page.getByRole("heading", { name: `${firstTitle} refined` })).toBeVisible();
+  await expect(page.getByText("A persisted description")).toBeVisible();
+  await ready(page, page.goto("/private/ideas"));
+  await expect(page.getByRole("link", { name: `${firstTitle} refined` })).toBeVisible();
+  await page.getByRole("link", { name: `${firstTitle} refined` }).click();
+  await ready(page, page.waitForURL(/\/private\/ideas\/[0-9a-f-]{36}$/));
+
+  const decision = `E2E isolated decision ${unique()}`;
+  await page.getByLabel("What was decided about?").fill(decision);
+  await page.getByLabel("Decision", { exact: true }).fill("Interview the target user");
+  await page.getByLabel("Why").fill("Validate the refined idea");
+  await page.getByRole("button", { name: "Record decision" }).click();
+  await expect(page.getByText("Decision recorded privately.")).toBeVisible();
+  await ready(page, page.goto("/private/decisions"));
+  await expect(page.getByText(decision)).toBeVisible();
+
+  await ready(page, page.goto("/private/ideas"));
+  await page.getByRole("link", { name: secondTitle }).click();
+  await ready(page, page.waitForURL(/\/private\/ideas\/[0-9a-f-]{36}$/));
+  await expect(page.getByText(decision)).not.toBeVisible();
+});
+
 test("a problem becomes a linked idea that records decisions", async ({ page, browser }) => {
   const title = `E2E problem ${unique()}`;
   await ready(page, page.goto("/private/problems"));

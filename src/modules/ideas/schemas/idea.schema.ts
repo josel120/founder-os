@@ -8,6 +8,14 @@ export const createIdeaSchema = z.object({
 
 export type CreateIdeaInput = z.infer<typeof createIdeaSchema>;
 
+export const updateIdeaContentSchema = z.object({
+  ideaId: z.string().uuid(),
+  title: z.string().trim().min(1, "Title is required").max(160),
+  description: z.string().trim().max(2000).default(""),
+});
+
+export type UpdateIdeaContentInput = z.infer<typeof updateIdeaContentSchema>;
+
 export const updateIdeaStatusSchema = z.object({
   ideaId: z.string().uuid(),
   status: z.enum(["INBOX", "RESEARCHING", "VALIDATING", "CANDIDATE", "PLANNING", "CONVERTED", "PAUSED", "REJECTED", "ARCHIVED"]),

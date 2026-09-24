@@ -1,0 +1,61 @@
+"use client";
+
+import { useRef, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { updateIdeaContent } from "../actions/idea.actions";
+
+type EditIdeaFormProps = {
+  ideaId: string;
+  initialTitle: string;
+  initialDescription: string;
+};
+
+export function EditIdeaForm({ ideaId, initialTitle, initialDescription }: EditIdeaFormProps) {
+  const router = useRouter();
+  const inFlight = useRef(false);
+  const [pending, setPending] = useState(false);
+  const [title, setTitle] = useState(initialTitle);
+  const [description, setDescription] = useState(initialDescription);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setPending(true);
+    setError("");
+    setMessage("");
+    const data = new FormData(event.currentTarget);
+    try {
+      const result = await updateIdeaContent(data);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setMessage("Idea updated.");
+      router.refresh();
+    } catch {
+      setError("Could not confirm the save. Check the idea before retrying.");
+    } finally {
+      inFlight.current = false;
+      setPending(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} aria-busy={pending} className="mt-8 space-y-4 rounded-xl border border-slate-200 p-5">
+      <h2 className="text-lg font-semibold">Refine idea</h2>
+      <input type="hidden" name="ideaId" value={ideaId} />
+      <label className="block text-sm font-medium">Title
+        <input name="title" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={160} readOnly={pending} required className="mt-2 w-full rounded-md border p-3" />
+      </label>
+      <label className="block text-sm font-medium">Description
+        <textarea name="description" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={2000} readOnly={pending} className="mt-2 min-h-24 w-full rounded-md border p-3" />
+      </label>
+      <button disabled={pending} type="submit" className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{pending ? "Saving..." : "Save idea"}</button>
+      <p role="status" className="text-sm text-green-700">{message}</p>
+      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+    </form>
+  );
+}
