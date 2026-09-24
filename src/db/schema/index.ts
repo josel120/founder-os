@@ -173,11 +173,13 @@ export const projects = pgTable("project", {
 });
 export const decisionLogs = pgTable("decision_log", {
   id: uuid("id").defaultRandom().primaryKey(),
+  ownerId: text("owner_id").references(() => users.id, { onDelete: "restrict" }),
   ideaId: uuid("idea_id").references(() => ideas.id),
   projectId: uuid("project_id").references(() => projects.id),
   title: text("title").notNull(),
   decision: text("decision").notNull(),
   reason: text("reason").notNull(),
+  visibility: visibility("visibility").notNull().default("PRIVATE"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

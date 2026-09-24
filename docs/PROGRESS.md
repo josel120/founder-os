@@ -4,16 +4,19 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 
 ## Current state (2026-09-24)
 
-- Branch `feature/foundation-owner-security`; PR #1 open against `master`.
+- PR #11 (`task/T-011-decisions-ui` → `master`) carries T-004..T-011; CI passes. PRs #4–#10 were stacked into task branches, not `master`.
 - Done: owner-scoped Ideas/Problems (ADR-005), closed registration, migration 0001 applied locally, 2 historical ideas adopted by the owner (ADR-006), explicit results for idea status updates and idea creation, capture form with error feedback.
-- Last full verification: 52/52 unit tests (12 files), lint exit 0, typecheck exit 0. Before T-001: build exit 0, 5/5 anonymous E2E. CI passed install/lint/typecheck/unit/build; the browser stage hung (see T-007).
+- Last full verification: 72/72 unit tests (15 files), lint exit 0, typecheck exit 0. Before T-001: build exit 0, 5/5 anonymous E2E. CI passed install/lint/typecheck/unit/build; a browser-stage hang was traced to server shutdown and fixed (T-007).
 - T-001 done (Ideas inbox search/filter, sidebar layout); owner verified it in the browser (T-002).
 - T-003 done: createProblem returns explicit results, and the Problems page has a capture form with error feedback. Owner verified it in the browser.
+- T-004 done: Problem → Idea conversion with owner-checked linking.
+- T-005 planned the Decision Log (T-008..T-011). T-008 generated migration 0002; the owner applied it locally (T-009). T-010 added the owner-scoped decisions domain. T-011 added the Decisions UI.
+- T-006 done: signed-in E2E on a disposable DB (10/10 in CI). It also fixed requireAuth so private pages stay dynamic.
 - Agent coordination layer added: `docs/agents/` (ADR-007).
 
 ## Next
 
-See `docs/agents/tasks/BOARD.md`. Priority: T-004 → T-006 → T-007.
+See `docs/agents/tasks/BOARD.md`. All cards T-001..T-011 are done. Next: owner merges PR #11 into `master`, then deletes the stale `main` branch and the merged task branches.
 
 ## Deployment prerequisites
 

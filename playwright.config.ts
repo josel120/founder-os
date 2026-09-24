@@ -1,4 +1,13 @@
 import { defineConfig, devices } from "@playwright/test";
+import { e2eAuthSecret, e2eBaseUrl, e2eDatabaseUrl, e2eOwner, e2eSetupToken, e2eStorageState, requireDisposableDatabase } from "./tests/e2e/e2e-env";
+
+// Authenticated tests run only with E2E_DATABASE_URL (a *_e2e database). The server is then pointed at it
+// explicitly, so a local run can never use the real database from .env.local.
+const authenticated = Boolean(e2eDatabaseUrl);
+const serverEnv: Record<string, string> = authenticated
+  ? { DATABASE_URL: requireDisposableDatabase(), OWNER_EMAIL: e2eOwner.email, OWNER_SETUP_TOKEN: e2eSetupToken, BETTER_AUTH_SECRET: e2eAuthSecret, BETTER_AUTH_URL: e2eBaseUrl }
+  : {};
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
@@ -7,13 +16,23 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 2 : undefined,
-  use: { baseURL: "http://localhost:3000", trace: "retain-on-failure" },
+  use: { baseURL: e2eBaseUrl, trace: "retain-on-failure" },
   webServer: {
-    command: process.env.CI ? "pnpm start" : "pnpm dev",
-    url: "http://localhost:3000",
-    reuseExistingServer: !process.env.CI,
+    // Run next directly (on PATH via `pnpm test:e2e`): a pnpm wrapper may not forward SIGTERM, leaving the server alive and teardown hung.
+    command: process.env.CI ? "next start" : "next dev",
+    url: e2eBaseUrl,
+    reuseExistingServer: !process.env.CI && !authenticated,
     timeout: 120_000,
     gracefulShutdown: { signal: "SIGTERM", timeout: 5_000 },
+    env: serverEnv,
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "chromium", testIgnore: /authenticated\//, use: { ...devices["Desktop Chrome"] } },
+    ...(authenticated
+      ? [
+          { name: "setup", testMatch: /authenticated\/auth\.setup\.ts/ },
+          { name: "authenticated", testMatch: /\.auth\.spec\.ts/, dependencies: ["setup"], use: { ...devices["Desktop Chrome"], storageState: e2eStorageState } },
+        ]
+      : []),
+  ],
 });

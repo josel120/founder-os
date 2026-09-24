@@ -76,3 +76,7 @@ Several AI agents (ChatGPT desktop, Codex, Claude Code) work on this repo with l
 - `docs/PROGRESS.md` is a rolling ≤40-line summary. History is archived under `docs/agents/archive/`.
 
 Task cards are local rather than GitHub Issues because reading one file costs far fewer tokens than API calls. GitHub stays the source of truth for PRs and CI. If the team grows, cards can be mirrored to Issues.
+
+## ADR-008: Decision Log is owner-scoped
+
+Migration `0002_decision_log_ownership.sql` adds a nullable `owner_id` (FK to `user.id`, ON DELETE RESTRICT) and a `visibility` column (NOT NULL, default `PRIVATE`) to `decision_log`. It is purely additive, with no UPDATE or DELETE. As with ADR-006, rows without an owner stay inaccessible until adopted by explicit reviewed IDs. Decision queries and actions must use the same predicates as Ideas and Problems: id + session owner + `PRIVATE`. Decisions are recorded by the owner. They are never generated automatically from AI output (PRD: human decisions over AI recommendations). Apply the migration with a backup first (T-009).
