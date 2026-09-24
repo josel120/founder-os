@@ -16,6 +16,11 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 
 ## Next
 
+- T-012 done: Codex added T-013..T-016 and `docs/agents/CLAUDE_HANDOFF.md`; documentation only, no implementation gates run.
+- Ready queue: T-013 safe idea-creation errors -> T-014 owner-scoped content editing -> T-015 editor UI -> T-016 Claude review/E2E persistence and decision-isolation coverage.
+- Codex owns T-013..T-015; Claude owns T-016. Each card must be claimed before edits; this session did not contact a separate Claude process.
+- Earlier PR/CI status below is historical and was not rechecked during backlog planning; human approval remains required for merges/pushes/branch cleanup.
+
 See `docs/agents/tasks/BOARD.md`. All cards T-001..T-011 are done. Next: owner merges PR #11 into `master`, then deletes the stale `main` branch and the merged task branches.
 
 ## Deployment prerequisites
