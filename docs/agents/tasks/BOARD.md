@@ -10,7 +10,7 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`.
 | T-003 | Explicit creation result for createProblem (Ideas already done) | done | claude | S | – |
 | T-004 | Problem → Idea conversion (link an idea to an owned problem) | review | claude | M | T-003 |
 | T-005 | Decision Log MVP (owner-scoped create/list) | done | claude | M | – |
-| T-006 | Authenticated E2E with a disposable test database | todo | claude | M | T-002 |
+| T-006 | Authenticated E2E with a disposable test database | review | claude | M | T-002 |
 | T-007 | Investigate the CI browser-stage hang | done | claude | S | – |
 | T-008 | Decision Log ownership migration (generate only) | done | claude | S | – |
 | T-009 | Apply migration 0002 to the local database | todo | human | S | T-008 |

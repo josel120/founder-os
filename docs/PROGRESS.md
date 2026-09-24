@@ -11,11 +11,12 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - T-003 done: createProblem returns explicit results, and the Problems page has a capture form with error feedback. Owner verified it in the browser.
 - T-004 in review (PR): Problem → Idea conversion with owner-checked linking.
 - T-005 planned the Decision Log (T-008..T-011). T-008 generated migration 0002 (not applied; T-009 is human). T-010 added the owner-scoped decisions domain. T-011 added the Decisions UI (needs 0002 applied).
+- T-006 in review: signed-in E2E on a disposable DB (10/10 in CI). It also fixed requireAuth so private pages stay dynamic.
 - Agent coordination layer added: `docs/agents/` (ADR-007).
 
 ## Next
 
-See `docs/agents/tasks/BOARD.md`. Priority: T-004 → T-006 → T-007.
+See `docs/agents/tasks/BOARD.md`. Next: owner reviews and merges PRs #3–#10 in order, then applies migration 0002 (T-009).
 
 ## Deployment prerequisites
 
