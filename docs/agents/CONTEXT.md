@@ -24,6 +24,7 @@ Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind 4 · Drizzl
 
 - Visibility defaults to `PRIVATE` in the database.
 - Every private query or mutation gets the owner ID from the server session (`src/lib/require-auth.ts`). Never trust an ID sent by the client.
+- `requireAuth()` always reads request headers first, so private pages stay dynamic. Never short-circuit before `headers()`, or builds without auth env prerender private pages as static login redirects.
 - Access requires the session email to match `OWNER_EMAIL`. Public signup is closed.
 - Predicates include `id + owner_id + PRIVATE`. Rows with a null `owner_id` stay inaccessible.
 - Mutations return explicit results. Updates check `UPDATE … RETURNING` before reporting success.
