@@ -41,3 +41,7 @@ Production build passed (exit 0, 8 routes). E2E ran with approved browser permis
 ## CI follow-up
 
 PR #1 run 36010366205 independently passed install, lint, typecheck, unit tests and build on Linux. Browser stage remained in progress unusually long. Added explicit Playwright global timeout, server shutdown timeout, E2E step timeout and job timeout so hangs produce bounded failures. Added master push coverage because it is the current remote default. These bounds do not establish the cause of the original hang.
+
+## Local owner activation
+
+User provided the existing owner email. Read-only inventory confirmed one matching account, two unowned ideas and no problems. Saved a PostgreSQL custom-format backup in ignored work/ and verified its archive catalog. Applied migration 0001 through pnpm db:migrate successfully. Adopted exactly the two inventoried idea UUIDs in a locked transaction with account and row-count assertions; verified total=2, owned=2. No records deleted or content changed. OWNER_EMAIL is set only in ignored .env.local. Passwords, backup contents and account identifiers are not committed. Restart an existing dev server to load changed environment. Interactive authenticated UI verification remains pending.
