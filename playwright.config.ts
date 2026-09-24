@@ -9,7 +9,8 @@ export default defineConfig({
   workers: process.env.CI ? 2 : undefined,
   use: { baseURL: "http://localhost:3000", trace: "retain-on-failure" },
   webServer: {
-    command: process.env.CI ? "pnpm start" : "pnpm dev",
+    // Run next directly (on PATH via `pnpm test:e2e`): a pnpm wrapper may not forward SIGTERM, leaving the server alive and teardown hung.
+    command: process.env.CI ? "next start" : "next dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
