@@ -1,11 +1,11 @@
 "use server";
 
-import { ideas } from "@/db/schema";
+import { ideas, problems } from "@/db/schema";
 import { db } from "@/db";
 import { createIdeaSchema } from "../schemas/idea.schema";
 import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
-import { updateIdeaStatusSchema } from "../schemas/idea.schema";
+import { createIdeaFromProblemSchema, updateIdeaStatusSchema } from "../schemas/idea.schema";
 import { requireAuth } from "@/lib/require-auth";
 
 export async function createIdea(formData: FormData): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -51,4 +51,31 @@ export async function updateIdeaStatus(formData: FormData): Promise<{ ok: true }
   revalidatePath("/private/ideas");
   revalidatePath(`/private/ideas/${parsed.data.ideaId}`);
   return { ok: true };
+}
+
+export async function createIdeaFromProblem(formData: FormData): Promise<{ ok: true; ideaId: string } | { ok: false; error: string }> {
+  const owner = await requireAuth();
+  if (!owner) return { ok: false, error: "Sign in again to create the idea." };
+  const parsed = createIdeaFromProblemSchema.safeParse({ problemId: formData.get("problemId") });
+  if (!parsed.success) return { ok: false, error: "Invalid problem." };
+  if (!db) return { ok: false, error: "Database is unavailable." };
+  try {
+    const [problem] = await db.select({ id: problems.id, title: problems.title, description: problems.description }).from(problems)
+      .where(and(eq(problems.id, parsed.data.problemId), eq(problems.ownerId, owner.id), eq(problems.visibility, "PRIVATE"))).limit(1);
+    if (!problem) return { ok: false, error: "Problem not found. No idea was created." };
+    const [created] = await db.insert(ideas).values({
+      ownerId: owner.id,
+      problemId: problem.id,
+      title: problem.title,
+      description: problem.description,
+      source: "OWN",
+      status: "INBOX",
+      visibility: "PRIVATE",
+    }).returning({ id: ideas.id });
+    if (!created) return { ok: false, error: "Could not create the idea. Please try again." };
+    revalidatePath("/private/ideas");
+    return { ok: true, ideaId: created.id };
+  } catch {
+    return { ok: false, error: "Could not create the idea. Please try again." };
+  }
 }

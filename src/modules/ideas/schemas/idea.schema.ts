@@ -12,3 +12,7 @@ export const updateIdeaStatusSchema = z.object({
   ideaId: z.string().uuid(),
   status: z.enum(["INBOX", "RESEARCHING", "VALIDATING", "CANDIDATE", "PLANNING", "CONVERTED", "PAUSED", "REJECTED", "ARCHIVED"]),
 });
+
+export const createIdeaFromProblemSchema = z.object({
+  problemId: z.string().uuid(),
+});
