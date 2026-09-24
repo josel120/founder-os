@@ -114,6 +114,7 @@ export const verifications = pgTable("verification", {
 
 export const problems = pgTable("problem", {
   id: uuid("id").defaultRandom().primaryKey(),
+  ownerId: text("owner_id").references(() => users.id, { onDelete: "restrict" }),
   title: text("title").notNull(),
   description: text("description").notNull(),
   visibility: visibility("visibility").notNull().default("PRIVATE"),
@@ -126,6 +127,7 @@ export const problems = pgTable("problem", {
 });
 export const ideas = pgTable("idea", {
   id: uuid("id").defaultRandom().primaryKey(),
+  ownerId: text("owner_id").references(() => users.id, { onDelete: "restrict" }),
   problemId: uuid("problem_id").references(() => problems.id),
   title: text("title").notNull(),
   description: text("description").notNull(),
