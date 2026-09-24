@@ -20,9 +20,12 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - Ready queue: T-013 safe idea-creation errors -> T-014 owner-scoped content editing -> T-015 editor UI -> T-016 Claude review/E2E persistence and decision-isolation coverage.
 - Codex completed T-013..T-016 implementation work; T-016 awaits CI or approved disposable E2E verification. This session did not contact a separate Claude process.
 - Earlier PR/CI status below is historical and was not rechecked during backlog planning; human approval remains required for merges/pushes/branch cleanup.
-- T-013..T-015 are implemented by Codex. T-016 is in review with new authenticated E2E coverage; unit/lint/typecheck pass, but local Playwright is blocked by the documented sandbox browser limitation and no disposable E2E database is configured.
+- PR #13 merged at 0275995 after CI passed lint, typecheck, unit, build and 11 authenticated/anonymous E2E tests.
+- T-013..T-016 are done. Project OS MVP is next: T-017 planning, T-018/T-019 ownership migration, T-020 domain, T-021 UI, T-022 conversion, T-023 project decisions and T-024 E2E review.
+- T-017 done (ADR-009). T-018 done: migration 0003 (`project.owner_id`) generated, not applied; 87/87 unit tests, lint/typecheck exit 0.
+- Next: human applies 0003 locally (T-019), then T-020 (codex). Claude's T-022/T-023/T-024 wait on T-020.
 
-See `docs/agents/tasks/BOARD.md`. All cards T-001..T-011 are done. Next: owner merges PR #11 into `master`, then deletes the stale `main` branch and the merged task branches.
+See docs/agents/tasks/BOARD.md. T-001..T-018 are done.
 
 ## Deployment prerequisites
 

@@ -9,7 +9,15 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`.
 | T-013 | Return a safe result when idea creation fails | done | codex | S | none |
 | T-014 | Add owner-scoped editing of idea content | done | codex | M | T-013 |
 | T-015 | Let the owner refine an idea on its detail page | done | codex | S | T-014 |
-| T-016 | Verify idea refinement and decision isolation end to end | review | codex | S | T-015 |
+| T-016 | Verify idea refinement and decision isolation end to end | done | codex | S | T-015 |
+| T-017 | Plan Project OS MVP and ownership boundaries | done | codex | M | none |
+| T-018 | Add owner isolation to projects (migration generation) | done | claude | S | T-017 |
+| T-019 | Apply project ownership migration locally | todo | human | S | T-018 |
+| T-020 | Build owner-scoped Projects domain | todo | codex | M | T-019 |
+| T-021 | Add Projects list, detail and edit UI | todo | codex | M | T-020 |
+| T-022 | Convert a candidate Idea into a Project | todo | claude | M | T-020 |
+| T-023 | Link project decisions with owner checks | todo | claude | M | T-020 |
+| T-024 | Verify Project OS workflows and privacy end to end | todo | claude | M | T-021, T-022, T-023 |
 | T-001 | Finish Ideas inbox search/filter and workspace layout (uncommitted WIP) | done | claude | S | – |
 | T-002 | Manually verify authenticated Ideas workflow with the real owner account | done | human | S | T-001 |
 | T-003 | Explicit creation result for createProblem (Ideas already done) | done | claude | S | – |

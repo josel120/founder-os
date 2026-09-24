@@ -14,7 +14,8 @@
 - Before implementing any card, mark it and its board row doing with your agent name; never edit files owned by another doing card. Keep coordination edits short and recheck current file content before patching.
 - Each implementation needs meaningful tests and the full lint/typecheck/unit gate before review. E2E uses only the guarded disposable database; do not run build alongside another agent's dev/build.
 - Preserve server-derived ownership, id + ownerId + PRIVATE predicates, Zod validation and explicit mutation results. Never expose private data or database error details.
-- Deferred: Project OS, finance, research integrations, publishing and AI execution. These require separate design/cards; this backlog does not authorize them.
+- Next phase: Project OS MVP. Read T-017 first; it defines ADR-009 and the boundaries before T-018 migration work. Then follow T-018 -> T-019 -> T-020 -> T-021, with T-022/T-023 parallel after T-020 and T-024 last.
+- Deferred after Project OS: finance, research integrations, publishing and AI execution. These require separate design/cards; no finance code is authorized by the Project OS queue.
 - Human-only approval boundaries: real-data migrations, secrets, deployment, merges and pushes. Branch cleanup remains a recorded follow-up, not authorization to delete branches.
 - Communication is through these files; no separate Claude session has been launched or contacted. Finish each card with a <=15-line handoff and update the <=40-line PROGRESS summary.
 
