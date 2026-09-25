@@ -159,6 +159,48 @@ test("a problem becomes a linked idea that records decisions", async ({ page, br
   await anonymous.close();
 });
 
+test("Finance records private income and expenses with project context", async ({ page, browser }) => {
+  const projectName = `E2E finance project ${unique()}`;
+  await ready(page, page.goto("/private/projects"));
+  await page.getByLabel("Name", { exact: true }).fill(projectName);
+  await page.getByLabel("Slug", { exact: true }).fill(`finance-${unique()}`);
+  await page.getByRole("button", { name: "+ Create project" }).click();
+  await expect(page.getByText("Project created privately.")).toBeVisible();
+
+  await ready(page, page.goto("/private/finance"));
+  await expect(page.locator('select[name="projectId"] option', { hasText: projectName })).toBeVisible();
+  await page.locator('input[name="amount"]').fill("12.3400");
+  await page.locator('input[name="category"]').fill("Hosting");
+  await page.locator('input[name="source"]').fill("Cloud provider");
+  await page.locator('input[name="occurredAt"]').fill("2026-09-24T12:00");
+  await page.locator('select[name="projectId"]').selectOption({ label: projectName });
+  await page.getByRole("button", { name: "Record transaction" }).click();
+  await expect(page.getByText("Transaction recorded privately.")).toBeVisible();
+
+  await page.locator('select[name="type"]').selectOption("INCOME");
+  await page.locator('input[name="amount"]').fill("99.9900");
+  await page.locator('input[name="category"]').fill("First sale");
+  await page.locator('input[name="source"]').fill("Customer");
+  await page.locator('input[name="occurredAt"]').fill("2026-09-25T09:30");
+  await page.locator('select[name="projectId"]').selectOption("");
+  await page.getByRole("button", { name: "Record transaction" }).click();
+  await expect(page.getByText("Transaction recorded privately.")).toBeVisible();
+
+  await ready(page, page.reload());
+  await expect(page.getByText("12.3400 USD")).toBeVisible();
+  await expect(page.getByText("99.9900 USD")).toBeVisible();
+  await expect(page.getByText(`Project: ${projectName}`)).toBeVisible();
+  await expect(page.getByText("Cloud provider")).toBeVisible();
+  await expect(page.getByText("Customer")).toBeVisible();
+
+  const anonymous = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const stranger = await anonymous.newPage();
+  await stranger.goto("/private/finance");
+  await expect(stranger).toHaveURL(/\/login(?:\?.*)?$/);
+  await expect(stranger.locator('input[name="amount"]')).toHaveCount(0);
+  await anonymous.close();
+});
+
 test("closed registration rejects other accounts and a second owner", async ({ playwright }) => {
   const api = await playwright.request.newContext({ baseURL: e2eBaseUrl });
   for (const email of ["intruder@e2e.test", e2eOwner.email]) {
