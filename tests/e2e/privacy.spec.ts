@@ -5,6 +5,7 @@ const routes = [
   { path: "/private/ideas/00000000-0000-4000-8000-000000000001", privateField: 'input[name="ideaId"]' },
   { path: "/private/projects", privateField: 'input[name="projectId"]' },
   { path: "/private/projects/00000000-0000-4000-8000-000000000002", privateField: 'input[name="projectId"]' },
+  { path: "/private/finance", privateField: 'input[name="amount"]' },
 ] as const;
 
 for (const route of routes) {
