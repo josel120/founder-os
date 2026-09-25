@@ -73,7 +73,7 @@ test("idea content edits persist and decisions stay with their idea", async ({ p
   await expect(page.getByText(decision)).not.toBeVisible();
 });
 
-test("an idea converts into a private project with an isolated decision log", async ({ page }) => {
+test("an idea converts into a private project with an isolated decision log", async ({ page, browser }) => {
   const ideaTitle = `E2E project idea ${unique()}`;
   await captureIdea(page, ideaTitle);
   await ready(page, page.reload());
@@ -84,6 +84,26 @@ test("an idea converts into a private project with an isolated decision log", as
   await expect(page.getByRole("heading", { name: ideaTitle })).toBeVisible();
   await expect(page.locator("dl").getByText("Planning", { exact: true })).toBeVisible();
 
+  await page.getByLabel("Name", { exact: true }).fill(`${ideaTitle} edited`);
+  await page.getByLabel("Description", { exact: true }).fill("A project description that survives reload");
+  await page.getByRole("button", { name: "Save project" }).click();
+  await expect(page.getByText("Project updated.")).toBeVisible();
+
+  await page.getByLabel("Lifecycle", { exact: true }).selectOption("BETA");
+  await page.getByLabel("Operational status", { exact: true }).selectOption("WAITING_REVIEW");
+  await page.getByLabel("Waiting reason", { exact: true }).fill("Review the beta onboarding flow");
+  await page.getByLabel("Waiting since", { exact: true }).fill("2026-09-24");
+  await page.getByRole("button", { name: "Save status" }).click();
+  await expect(page.getByText("Status saved.")).toBeVisible();
+
+  const projectUrl = page.url();
+  await ready(page, page.reload());
+  await expect(page.getByRole("heading", { name: `${ideaTitle} edited` })).toBeVisible();
+  await expect(page.getByText("A project description that survives reload")).toBeVisible();
+  await expect(page.getByLabel("Lifecycle", { exact: true })).toHaveValue("BETA");
+  await expect(page.getByLabel("Operational status", { exact: true })).toHaveValue("WAITING_REVIEW");
+  await expect(page.getByLabel("Waiting reason", { exact: true })).toHaveValue("Review the beta onboarding flow");
+
   const decision = `E2E project decision ${unique()}`;
   await page.getByLabel("What was decided about?").fill(decision);
   await page.getByLabel("Decision", { exact: true }).fill("Ship the smallest useful version");
@@ -91,6 +111,22 @@ test("an idea converts into a private project with an isolated decision log", as
   await page.getByRole("button", { name: "Record decision" }).click();
   await expect(page.getByText("Decision recorded privately.")).toBeVisible();
   await expect(page.getByText(decision)).toBeVisible();
+
+  await ready(page, page.goto("/private/ideas"));
+  const secondIdeaTitle = `E2E second project ${unique()}`;
+  await captureIdea(page, secondIdeaTitle);
+  await ready(page, page.reload());
+  await page.getByRole("link", { name: secondIdeaTitle }).click();
+  await ready(page, page.waitForURL(/\/private\/ideas\/[0-9a-f-]{36}$/));
+  await page.getByRole("button", { name: "Turn into project" }).click();
+  await ready(page, page.waitForURL(/\/private\/projects\/[0-9a-f-]{36}$/));
+  await expect(page.getByText(decision)).not.toBeVisible();
+
+  const anonymous = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const stranger = await anonymous.newPage();
+  await stranger.goto(projectUrl);
+  await expect(stranger).toHaveURL(/\/login(?:\?.*)?$/);
+  await anonymous.close();
 });
 
 test("a problem becomes a linked idea that records decisions", async ({ page, browser }) => {
