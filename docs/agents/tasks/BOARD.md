@@ -33,3 +33,4 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`.
 | T-026 | Plan Finance OS MVP and ownership boundaries | done | codex | M | T-024 |
 | T-027 | Add Finance ownership and schema contract | done | codex | M | T-026 |
 | T-028 | Implement owner-scoped Finance transactions | done | codex | M | T-027 |
+| T-029 | Build the private Finance UI | done | codex | M | T-028 |
