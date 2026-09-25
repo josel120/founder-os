@@ -30,4 +30,5 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`.
 | T-010 | Decisions domain: schema, actions, queries | done | claude | M | T-008 |
 | T-011 | Decisions page and idea-level decision log | done | claude | S | T-010, T-009 |
 | T-025 | Require a task branch, commit and PR for every card | done | claude | S | none |
-| T-026 | Plan Finance OS MVP and ownership boundaries | doing | codex | M | T-024 |
+| T-026 | Plan Finance OS MVP and ownership boundaries | done | codex | M | T-024 |
+| T-027 | Add Finance ownership and schema contract | done | codex | M | T-026 |
