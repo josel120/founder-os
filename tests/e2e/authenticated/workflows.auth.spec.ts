@@ -99,7 +99,7 @@ test("an idea converts into a private project with an isolated decision log", as
   const projectUrl = page.url();
   await ready(page, page.reload());
   await expect(page.getByRole("heading", { name: `${ideaTitle} edited` })).toBeVisible();
-  await expect(page.getByText("A project description that survives reload")).toBeVisible();
+  await expect(page.locator("p").filter({ hasText: "A project description that survives reload" })).toBeVisible();
   await expect(page.locator('select[name="lifecycle"]')).toHaveValue("BETA");
   await expect(page.locator('select[name="operationalStatus"]')).toHaveValue("WAITING_REVIEW");
   await expect(page.locator('input[name="waitingReason"]')).toHaveValue("Review the beta onboarding flow");
