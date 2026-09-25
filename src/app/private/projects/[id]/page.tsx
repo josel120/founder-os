@@ -1,0 +1,31 @@
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { requireAuth } from "@/lib/require-auth";
+import { getPrivateProject } from "@/modules/projects/queries/project.queries";
+import { EditProjectForm } from "@/modules/projects/components/edit-project-form";
+import { ProjectStatusForm } from "@/modules/projects/components/project-status-form";
+import { isWaiting, operationalTone, projectLabel, toDateInput } from "@/modules/projects/components/project-labels";
+
+export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  if (!(await requireAuth())) redirect("/login");
+  const { id } = await params;
+  const project = await getPrivateProject(id);
+  if (!project || project.visibility !== "PRIVATE") notFound();
+  const links = [["Repository", project.repository], ["Website", project.website], ["Play Store", project.playStoreUrl], ["App Store", project.appStoreUrl]].filter((link): link is [string, string] => Boolean(link[1]));
+  const waiting = isWaiting(project.operationalStatus);
+  return <section className="max-w-2xl"><Link href="/private/projects" className="text-sm text-slate-500 underline">← Back to projects</Link>
+    <p className="mt-8 text-sm uppercase tracking-widest text-slate-500">Project detail</p>
+    <h1 className="mt-2 break-words text-3xl font-semibold">{project.name}</h1>
+    <p className="mt-1 text-sm text-slate-400">{project.slug}</p>
+    <dl className="mt-5 grid gap-3 sm:grid-cols-2">
+      <div className="rounded-xl border border-slate-200 p-4"><dt className="text-xs font-medium text-slate-500">Lifecycle</dt><dd className="mt-2"><span className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">{projectLabel(project.lifecycle)}</span></dd></div>
+      <div className="rounded-xl border border-slate-200 p-4"><dt className="text-xs font-medium text-slate-500">Operational status</dt><dd className="mt-2"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${operationalTone(project.operationalStatus)}`}>{projectLabel(project.operationalStatus)}</span>{waiting && project.waitingReason && <p className="mt-2 text-sm text-slate-600">{project.waitingReason}{project.waitingSince && <> · since <time dateTime={project.waitingSince.toISOString()}>{toDateInput(project.waitingSince)}</time></>}</p>}</dd></div>
+    </dl>
+    {(project.nextAction || project.reviewAt) && <p className="mt-4 text-sm text-slate-700">{project.nextAction && <><span className="font-medium">Next action:</span> {project.nextAction}</>}{project.reviewAt && <span className="ml-2 text-slate-500">Review on <time dateTime={project.reviewAt.toISOString()}>{toDateInput(project.reviewAt)}</time></span>}</p>}
+    <p className="mt-5 whitespace-pre-wrap text-slate-700">{project.description || "No description yet."}</p>
+    {links.length > 0 && <ul className="mt-4 flex flex-wrap gap-3 text-sm">{links.map(([label, href]) => <li key={label}><a href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-indigo-700 underline-offset-4 hover:underline">{label}</a></li>)}</ul>}
+    {(project.currentVersion || project.productionVersion) && <p className="mt-3 text-sm text-slate-500">{project.currentVersion && <>Current {project.currentVersion}</>}{project.currentVersion && project.productionVersion && " · "}{project.productionVersion && <>Production {project.productionVersion}</>}</p>}
+    <ProjectStatusForm projectId={project.id} lifecycle={project.lifecycle} operationalStatus={project.operationalStatus} nextAction={project.nextAction ?? ""} waitingReason={project.waitingReason ?? ""} waitingSince={toDateInput(project.waitingSince)} reviewAt={toDateInput(project.reviewAt)} />
+    <EditProjectForm project={{ id: project.id, name: project.name, slug: project.slug, description: project.description, repository: project.repository, website: project.website, playStoreUrl: project.playStoreUrl, appStoreUrl: project.appStoreUrl, currentVersion: project.currentVersion, productionVersion: project.productionVersion }} />
+  </section>;
+}
