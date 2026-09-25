@@ -82,7 +82,7 @@ test("an idea converts into a private project with an isolated decision log", as
   await page.getByRole("button", { name: "Turn into project" }).click();
   await ready(page, page.waitForURL(/\/private\/projects\/[0-9a-f-]{36}$/));
   await expect(page.getByRole("heading", { name: ideaTitle })).toBeVisible();
-  await expect(page.getByText("Planning", { exact: true })).toBeVisible();
+  await expect(page.locator("dl").getByText("Planning", { exact: true })).toBeVisible();
 
   const decision = `E2E project decision ${unique()}`;
   await page.getByLabel("What was decided about?").fill(decision);
