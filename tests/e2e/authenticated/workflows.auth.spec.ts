@@ -89,10 +89,10 @@ test("an idea converts into a private project with an isolated decision log", as
   await page.getByRole("button", { name: "Save project" }).click();
   await expect(page.getByText("Project updated.")).toBeVisible();
 
-  await page.getByLabel("Lifecycle", { exact: true }).selectOption("BETA");
-  await page.getByLabel("Operational status", { exact: true }).selectOption("WAITING_REVIEW");
-  await page.getByLabel("Waiting reason", { exact: true }).fill("Review the beta onboarding flow");
-  await page.getByLabel("Waiting since", { exact: true }).fill("2026-09-24");
+  await page.locator('select[name="lifecycle"]').selectOption("BETA");
+  await page.locator('select[name="operationalStatus"]').selectOption("WAITING_REVIEW");
+  await page.locator('input[name="waitingReason"]').fill("Review the beta onboarding flow");
+  await page.locator('input[name="waitingSince"]').fill("2026-09-24");
   await page.getByRole("button", { name: "Save status" }).click();
   await expect(page.getByText("Status saved.")).toBeVisible();
 
@@ -100,9 +100,9 @@ test("an idea converts into a private project with an isolated decision log", as
   await ready(page, page.reload());
   await expect(page.getByRole("heading", { name: `${ideaTitle} edited` })).toBeVisible();
   await expect(page.getByText("A project description that survives reload")).toBeVisible();
-  await expect(page.getByLabel("Lifecycle", { exact: true })).toHaveValue("BETA");
-  await expect(page.getByLabel("Operational status", { exact: true })).toHaveValue("WAITING_REVIEW");
-  await expect(page.getByLabel("Waiting reason", { exact: true })).toHaveValue("Review the beta onboarding flow");
+  await expect(page.locator('select[name="lifecycle"]')).toHaveValue("BETA");
+  await expect(page.locator('select[name="operationalStatus"]')).toHaveValue("WAITING_REVIEW");
+  await expect(page.locator('input[name="waitingReason"]')).toHaveValue("Review the beta onboarding flow");
 
   const decision = `E2E project decision ${unique()}`;
   await page.getByLabel("What was decided about?").fill(decision);
