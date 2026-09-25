@@ -110,6 +110,7 @@ test("an idea converts into a private project with an isolated decision log", as
   await page.getByLabel("Why").fill("Keep the first release focused");
   await page.getByRole("button", { name: "Record decision" }).click();
   await expect(page.getByText("Decision recorded privately.")).toBeVisible();
+  await ready(page, page.reload());
   await expect(page.getByText(decision)).toBeVisible();
 
   await ready(page, page.goto("/private/ideas"));
@@ -162,8 +163,8 @@ test("a problem becomes a linked idea that records decisions", async ({ page, br
 test("Finance records private income and expenses with project context", async ({ page, browser }) => {
   const projectName = `E2E finance project ${unique()}`;
   await ready(page, page.goto("/private/projects"));
-  await page.getByLabel("Name", { exact: true }).fill(projectName);
-  await page.getByLabel("Slug", { exact: true }).fill(`finance-${unique()}`);
+  await page.locator('input[name="name"]').fill(projectName);
+  await page.locator('input[name="slug"]').fill(`finance-${unique()}`);
   await page.getByRole("button", { name: "+ Create project" }).click();
   await expect(page.getByText("Project created privately.")).toBeVisible();
 
