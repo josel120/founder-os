@@ -16,7 +16,7 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 
 ## Next
 
-- T-026 is in progress: Finance OS planning. ADR-011 defines a private manual ledger, owner-scoped access, verified same-owner project links and the migration boundary. Planned queue: T-027 ownership migration/schema contract -> T-028 domain actions/queries -> T-029 UI -> T-030 E2E/privacy review.
+- T-026 done: ADR-011 defines a private manual ledger, owner-scoped access, verified same-owner project links and the migration boundary. T-027 adds the Finance ownership schema and migration 0004; follow-up queue remains T-028 domain actions/queries -> T-029 UI -> T-030 E2E/privacy review.
 
 - T-020 review: private Projects domain implemented on task/T-020-projects-domain; lint/typecheck completed, 113 unit tests passed (26 new). No migration or real-data write. ADR-009 corrected to approved lifecycle/operational enums. Next: review PR, then T-021/T-022/T-023.
 
@@ -31,7 +31,7 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - T-025 done: every card now gets its own `task/` branch; finished cards are committed, pushed and opened as a PR (ADR-010). Merges stay human.
 - PRs #14 (T-017 + T-018) and #15 (T-025) merged into master at 49f2ed0.
 
-See docs/agents/tasks/BOARD.md. T-001..T-025 are done.
+See docs/agents/tasks/BOARD.md. T-001..T-026 are done; T-027 is in progress.
 
 ## Deployment prerequisites
 

@@ -187,6 +187,7 @@ export const decisionLogs = pgTable("decision_log", {
 });
 export const financeTransactions = pgTable("finance_transaction", {
   id: uuid("id").defaultRandom().primaryKey(),
+  ownerId: text("owner_id").references(() => users.id, { onDelete: "restrict" }),
   projectId: uuid("project_id").references(() => projects.id),
   type: transactionType("type").notNull(),
   category: text("category").notNull(),
@@ -194,6 +195,7 @@ export const financeTransactions = pgTable("finance_transaction", {
   currency: text("currency").notNull(),
   source: text("source").notNull(),
   externalId: text("external_id"),
+  visibility: visibility("visibility").notNull().default("PRIVATE"),
   occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
