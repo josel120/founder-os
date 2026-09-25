@@ -73,6 +73,26 @@ test("idea content edits persist and decisions stay with their idea", async ({ p
   await expect(page.getByText(decision)).not.toBeVisible();
 });
 
+test("an idea converts into a private project with an isolated decision log", async ({ page }) => {
+  const ideaTitle = `E2E project idea ${unique()}`;
+  await captureIdea(page, ideaTitle);
+  await ready(page, page.reload());
+  await page.getByRole("link", { name: ideaTitle }).click();
+  await ready(page, page.waitForURL(/\/private\/ideas\/[0-9a-f-]{36}$/));
+  await page.getByRole("button", { name: "Turn into project" }).click();
+  await ready(page, page.waitForURL(/\/private\/projects\/[0-9a-f-]{36}$/));
+  await expect(page.getByRole("heading", { name: ideaTitle })).toBeVisible();
+  await expect(page.getByText("Planning", { exact: true })).toBeVisible();
+
+  const decision = `E2E project decision ${unique()}`;
+  await page.getByLabel("What was decided about?").fill(decision);
+  await page.getByLabel("Decision", { exact: true }).fill("Ship the smallest useful version");
+  await page.getByLabel("Why").fill("Keep the first release focused");
+  await page.getByRole("button", { name: "Record decision" }).click();
+  await expect(page.getByText("Decision recorded privately.")).toBeVisible();
+  await expect(page.getByText(decision)).toBeVisible();
+});
+
 test("a problem becomes a linked idea that records decisions", async ({ page, browser }) => {
   const title = `E2E problem ${unique()}`;
   await ready(page, page.goto("/private/problems"));

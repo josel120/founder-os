@@ -19,3 +19,12 @@ export async function listDecisionsForIdea(ideaId: string) {
     .where(and(eq(decisionLogs.ideaId, ideaId), eq(decisionLogs.ownerId, owner.id), eq(decisionLogs.visibility, "PRIVATE")))
     .orderBy(desc(decisionLogs.createdAt));
 }
+
+export async function listDecisionsForProject(projectId: string) {
+  const owner = await requireAuth();
+  if (!owner || !z.string().uuid().safeParse(projectId).success) return [];
+  if (!db) return [];
+  return db.select().from(decisionLogs)
+    .where(and(eq(decisionLogs.projectId, projectId), eq(decisionLogs.ownerId, owner.id), eq(decisionLogs.visibility, "PRIVATE")))
+    .orderBy(desc(decisionLogs.createdAt));
+}

@@ -2,6 +2,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { requireAuth } from "@/lib/require-auth";
 import { getPrivateProject } from "@/modules/projects/queries/project.queries";
+import { listDecisionsForProject } from "@/modules/decisions/queries/decision.queries";
+import { CaptureDecisionForm } from "@/modules/decisions/components/capture-decision-form";
+import { DecisionList } from "@/modules/decisions/components/decision-list";
 import { EditProjectForm } from "@/modules/projects/components/edit-project-form";
 import { ProjectStatusForm } from "@/modules/projects/components/project-status-form";
 import { isWaiting, operationalTone, projectLabel, toDateInput } from "@/modules/projects/components/project-labels";
@@ -9,7 +12,7 @@ import { isWaiting, operationalTone, projectLabel, toDateInput } from "@/modules
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   if (!(await requireAuth())) redirect("/login");
   const { id } = await params;
-  const project = await getPrivateProject(id);
+  const [project, decisions] = await Promise.all([getPrivateProject(id), listDecisionsForProject(id)]);
   if (!project || project.visibility !== "PRIVATE") notFound();
   const links = [["Repository", project.repository], ["Website", project.website], ["Play Store", project.playStoreUrl], ["App Store", project.appStoreUrl]].filter((link): link is [string, string] => Boolean(link[1]));
   const waiting = isWaiting(project.operationalStatus);
@@ -27,5 +30,6 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     {(project.currentVersion || project.productionVersion) && <p className="mt-3 text-sm text-slate-500">{project.currentVersion && <>Current {project.currentVersion}</>}{project.currentVersion && project.productionVersion && " · "}{project.productionVersion && <>Production {project.productionVersion}</>}</p>}
     <ProjectStatusForm projectId={project.id} lifecycle={project.lifecycle} operationalStatus={project.operationalStatus} nextAction={project.nextAction ?? ""} waitingReason={project.waitingReason ?? ""} waitingSince={toDateInput(project.waitingSince)} reviewAt={toDateInput(project.reviewAt)} />
     <EditProjectForm project={{ id: project.id, name: project.name, slug: project.slug, description: project.description, repository: project.repository, website: project.website, playStoreUrl: project.playStoreUrl, appStoreUrl: project.appStoreUrl, currentVersion: project.currentVersion, productionVersion: project.productionVersion }} />
+    <div className="mt-12 space-y-5"><h2 className="text-xl font-semibold tracking-tight">Decisions</h2><DecisionList decisions={decisions} empty="No decisions about this project yet." /><CaptureDecisionForm projectId={project.id} /></div>
   </section>;
 }

@@ -18,6 +18,7 @@ export const createProjectSchema = z.object({
   productionVersion: z.string().trim().max(100).default(""),
 });
 export const updateProjectContentSchema = createProjectSchema.extend({ projectId: z.uuid() });
+export const createProjectFromIdeaSchema = z.object({ ideaId: z.uuid() });
 export const updateProjectStatusSchema = z.object({
   projectId: z.uuid(),
   lifecycle: projectLifecycleSchema,
