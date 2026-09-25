@@ -16,7 +16,7 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 
 ## Next
 
-- T-026 through T-030 are complete locally: Finance now has an ownership migration, owner-scoped transaction domain, private UI and final E2E/privacy coverage. CI remains the final disposable-database gate.
+- T-026 through T-030 are complete: Finance now has an ownership migration, owner-scoped transaction domain, private UI and final E2E/privacy coverage. PR #25 CI run `36086346324` passed lint, typecheck, 145 unit tests, build and 16 authenticated/anonymous E2E tests. PR #25 is ready for human merge.
 
 - T-020 review: private Projects domain implemented on task/T-020-projects-domain; lint/typecheck completed, 113 unit tests passed (26 new). No migration or real-data write. ADR-009 corrected to approved lifecycle/operational enums. Next: review PR, then T-021/T-022/T-023.
 
