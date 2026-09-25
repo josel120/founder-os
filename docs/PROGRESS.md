@@ -16,7 +16,7 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 
 ## Next
 
-- T-026 done: ADR-011 defines a private manual ledger, owner-scoped access, verified same-owner project links and the migration boundary. T-027 and T-028 are done; T-029 is next for Finance UI, followed by T-030 E2E/privacy review.
+- T-026 through T-029 are done: Finance now has an ownership migration, owner-scoped transaction domain and private UI. T-030 is next for E2E/privacy review.
 
 - T-020 review: private Projects domain implemented on task/T-020-projects-domain; lint/typecheck completed, 113 unit tests passed (26 new). No migration or real-data write. ADR-009 corrected to approved lifecycle/operational enums. Next: review PR, then T-021/T-022/T-023.
 

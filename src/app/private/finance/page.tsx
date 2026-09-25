@@ -1,0 +1,18 @@
+import { redirect } from "next/navigation";
+import { requireAuth } from "@/lib/require-auth";
+import { listPrivateProjects } from "@/modules/projects/queries/project.queries";
+import { CaptureFinanceForm } from "@/modules/finance/components/capture-finance-form";
+import { FinanceList } from "@/modules/finance/components/finance-list";
+import { listPrivateFinanceTransactions } from "@/modules/finance/queries/finance.queries";
+
+export default async function FinancePage() {
+  if (!(await requireAuth())) redirect("/login");
+  const [transactions, projects] = await Promise.all([listPrivateFinanceTransactions(), listPrivateProjects()]);
+  const incomeCount = transactions.filter((transaction) => transaction.type === "INCOME").length;
+  const expenseCount = transactions.length - incomeCount;
+  return <section>
+    <div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="workspace-eyebrow">Finance OS</p><h1 className="mt-3 text-4xl font-semibold tracking-tight">Your numbers, in context.</h1><p className="mt-3 text-sm leading-6 text-slate-500">A private ledger for the money moving through your work.</p></div><a href="#capture-finance" className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700">+ Record transaction</a></div>
+    <div className="mb-8 grid grid-cols-3 gap-3 sm:gap-5">{[{ label: "Transactions", value: transactions.length }, { label: "Income entries", value: incomeCount }, { label: "Expense entries", value: expenseCount }].map((item) => <div key={item.label} className="workspace-panel p-4 sm:p-5"><p className="text-xs font-medium text-slate-500">{item.label}</p><p className="mt-3 text-3xl font-semibold tracking-tight">{item.value}</p></div>)}</div>
+    <div className="grid items-start gap-7 xl:grid-cols-[minmax(0,1fr)_380px]"><div><div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-semibold">Ledger</h2><span className="text-xs text-slate-500">Newest first</span></div><FinanceList transactions={transactions} projects={projects} /></div><aside id="capture-finance" className="xl:sticky xl:top-8"><CaptureFinanceForm projects={projects.map((project) => ({ id: project.id, name: project.name }))} /></aside></div>
+  </section>;
+}
