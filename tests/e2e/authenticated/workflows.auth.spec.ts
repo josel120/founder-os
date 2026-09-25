@@ -169,7 +169,7 @@ test("Finance records private income and expenses with project context", async (
   await expect(page.getByText("Project created privately.")).toBeVisible();
 
   await ready(page, page.goto("/private/finance"));
-  await expect(page.locator('select[name="projectId"] option', { hasText: projectName })).toBeVisible();
+  await expect(page.locator('select[name="projectId"] option', { hasText: projectName })).toHaveCount(1);
   await page.locator('input[name="amount"]').fill("12.3400");
   await page.locator('input[name="category"]').fill("Hosting");
   await page.locator('input[name="source"]').fill("Cloud provider");
