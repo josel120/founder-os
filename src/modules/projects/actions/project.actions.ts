@@ -3,9 +3,9 @@
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { projects } from "@/db/schema";
+import { ideas, projects } from "@/db/schema";
 import { requireAuth } from "@/lib/require-auth";
-import { createProjectSchema, updateProjectContentSchema, updateProjectStatusSchema } from "../schemas/project.schema";
+import { createProjectFromIdeaSchema, createProjectSchema, updateProjectContentSchema, updateProjectStatusSchema } from "../schemas/project.schema";
 
 type Result = { ok: true; projectId: string } | { ok: false; error: string };
 const failure = { ok: false as const, error: "Could not save the project. Please try again." };
@@ -29,6 +29,44 @@ export async function createProject(formData: FormData): Promise<Result> {
   } catch { return failure; }
   refresh(projectId);
   return { ok: true, projectId };
+}
+
+export async function createProjectFromIdea(formData: FormData): Promise<Result> {
+  const owner = await requireAuth();
+  if (!owner) return { ok: false, error: "Sign in again to create the project." };
+  const parsed = createProjectFromIdeaSchema.safeParse({ ideaId: formData.get("ideaId") });
+  if (!parsed.success) return { ok: false, error: "Invalid idea." };
+  if (!db) return failure;
+  try {
+    const [idea] = await db.select({ id: ideas.id, title: ideas.title, description: ideas.description })
+      .from(ideas)
+      .where(and(eq(ideas.id, parsed.data.ideaId), eq(ideas.ownerId, owner.id), eq(ideas.visibility, "PRIVATE")))
+      .limit(1);
+    if (!idea) return { ok: false, error: "Idea not found. No project was created." };
+    const [existing] = await db.select({ id: projects.id }).from(projects)
+      .where(and(eq(projects.originIdeaId, idea.id), eq(projects.ownerId, owner.id), eq(projects.visibility, "PRIVATE")))
+      .limit(1);
+    if (existing) {
+      refresh(existing.id);
+      return { ok: true, projectId: existing.id };
+    }
+    const slugBase = idea.title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 70) || "project";
+    const [created] = await db.insert(projects).values({
+      ownerId: owner.id,
+      originIdeaId: idea.id,
+      name: idea.title,
+      slug: `${slugBase}-${idea.id.slice(0, 8)}`,
+      description: idea.description,
+      lifecycle: "PLANNING",
+      operationalStatus: "NO_ACTION_REQUIRED",
+      visibility: "PRIVATE",
+    }).returning({ id: projects.id });
+    if (!created) return failure;
+    refresh(created.id);
+    return { ok: true, projectId: created.id };
+  } catch {
+    return failure;
+  }
 }
 
 export async function updateProjectContent(formData: FormData): Promise<Result> {

@@ -3,7 +3,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { createDecision } from "../actions/decision.actions";
 
-export function CaptureDecisionForm({ ideaId }: { ideaId?: string }) {
+export function CaptureDecisionForm({ ideaId, projectId }: { ideaId?: string; projectId?: string }) {
   const inFlight = useRef(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -42,6 +42,7 @@ export function CaptureDecisionForm({ ideaId }: { ideaId?: string }) {
         <textarea name="reason" required maxLength={2000} readOnly={pending} className="mt-2 min-h-20 w-full rounded-md border p-3" />
       </label>
       {ideaId && <input type="hidden" name="ideaId" value={ideaId} />}
+      {projectId && <input type="hidden" name="projectId" value={projectId} />}
       <button disabled={pending} className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50" type="submit">{pending ? "Saving..." : "Record decision"}</button>
       <p role="status" className="text-sm text-green-700">{message}</p>
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
