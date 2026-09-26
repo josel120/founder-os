@@ -1,9 +1,10 @@
 // Creates the single owner account through Better Auth's own sign-up path (ADR-005), in-process, so the setup
 // token never exists outside this process and the one that started it. Run by scripts/setup-production.ts;
 // the password arrives on stdin, everything else in this process's env. Exit codes: 0 created,
-// OWNER_EXISTS_EXIT_CODE already existed (left unchanged), 1 failed.
+// OWNER_EXISTS_EXIT_CODE already existed (left unchanged), OWNER_RESET_EXIT_CODE new email and password
+// (OWNER_RESET=1), OWNER_EMAIL_MISMATCH_EXIT_CODE an owner exists under another email, 1 failed.
 import { z } from "zod";
-import { createOwnerAccount, MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, OWNER_EXISTS_EXIT_CODE } from "./setup-production-lib";
+import { createOwnerAccount, MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, OWNER_EMAIL_MISMATCH_EXIT_CODE, OWNER_EXISTS_EXIT_CODE, OWNER_RESET_EXIT_CODE } from "./setup-production-lib";
 
 const setupEnvSchema = z.object({
   DATABASE_URL: z.string().url(),
@@ -50,12 +51,20 @@ async function main(): Promise<number> {
     const context = await auth.$context;
     const result = await createOwnerAccount(
       {
-        findUserByEmail: (value) => context.internalAdapter.findUserByEmail(value),
+        listAccounts: async () => (await context.internalAdapter.listUsers(2)).map((user) => ({ id: user.id, email: user.email })),
         signUpEmail: (request) => auth.api.signUpEmail(request),
+        // Better Auth's own hashing and adapter, so the new password verifies exactly like a signed-up one.
+        resetOwner: async (userId, newEmail, newPassword) => {
+          await context.internalAdapter.updateUser(userId, { email: newEmail });
+          await context.internalAdapter.updatePassword(userId, await context.password.hash(newPassword));
+          await context.internalAdapter.deleteUserSessions(userId);
+        },
       },
-      { email, password, setupToken: parsedEnv.data.OWNER_SETUP_TOKEN },
+      { email, password, setupToken: parsedEnv.data.OWNER_SETUP_TOKEN, reset: process.env.OWNER_RESET === "1" },
     );
     if (result.outcome === "exists") return OWNER_EXISTS_EXIT_CODE;
+    if (result.outcome === "reset") return OWNER_RESET_EXIT_CODE;
+    if (result.outcome === "email-mismatch") return OWNER_EMAIL_MISMATCH_EXIT_CODE;
     if (result.outcome === "failed") {
       console.error(`Sign-up failed: ${result.label}`);
       return 1;

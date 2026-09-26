@@ -54,6 +54,11 @@ It never sets `BETTER_AUTH_URL` or `NEXT_PUBLIC_BETTER_AUTH_URL` (derived on Ver
 `OWNER_SETUP_TOKEN`, or any preview database. No secret is printed. On your computer it leaves `.vercel/`
 (gitignored). `vercel link` runs in a private temporary folder, so your `.env.local` and `.gitignore` are never changed.
 
+**Forgot the owner email or password?** Run `pnpm setup:production --reset-owner` and type the email and password
+you want now. The one existing owner account gets them (same account, so every private record stays), old sessions
+are signed out, and the app is redeployed with the new `OWNER_EMAIL`. A plain re-run with a different email stops
+and names this command, because otherwise no account would match `OWNER_EMAIL` (T-063).
+
 **Previews have no database, by design:** a preview build of an unreviewed branch must never reach the real
 data. Previews build, then refuse to boot (T-052 fail-fast); that error page is expected. To use previews,
 give them their own Neon branch: add `DATABASE_URL` and `OWNER_EMAIL` for preview (they already have a
