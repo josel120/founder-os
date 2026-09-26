@@ -1,8 +1,11 @@
 import { z } from "zod";
+import { ideaDescriptionMax } from "./idea.limits";
+
+const description = z.string().trim().max(ideaDescriptionMax).default("");
 
 export const createIdeaSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(160),
-  description: z.string().trim().max(2000).default(""),
+  description,
   source: z.enum(["OWN", "PROBLEM_HUNTER", "PROJECT_HUNTER", "CHATGPT", "OTHER"]).default("OWN"),
 });
 
@@ -11,7 +14,7 @@ export type CreateIdeaInput = z.infer<typeof createIdeaSchema>;
 export const updateIdeaContentSchema = z.object({
   ideaId: z.string().uuid(),
   title: z.string().trim().min(1, "Title is required").max(160),
-  description: z.string().trim().max(2000).default(""),
+  description,
 });
 
 export type UpdateIdeaContentInput = z.infer<typeof updateIdeaContentSchema>;

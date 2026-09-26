@@ -2,10 +2,10 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import { updateIdeaStatus } from "@/modules/ideas/actions/idea.actions";
+import type { InboxStatus } from "@/modules/ideas/services/inbox";
 
-const statuses = ["INBOX", "RESEARCHING", "VALIDATING", "CANDIDATE", "PLANNING", "CONVERTED", "PAUSED", "REJECTED", "ARCHIVED"] as const;
-
-export function StatusForm({ ideaId, initialStatus }: { ideaId: string; initialStatus: (typeof statuses)[number] }) {
+// Options come from the server page, so this client bundle never imports the database schema.
+export function StatusForm({ ideaId, initialStatus, options }: { ideaId: string; initialStatus: InboxStatus; options: { value: InboxStatus; label: string }[] }) {
   const [status, setStatus] = useState(initialStatus);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -31,16 +31,16 @@ export function StatusForm({ ideaId, initialStatus }: { ideaId: string; initialS
   }
 
   return (
-    <form onSubmit={submit} aria-busy={saving} className="mt-8 rounded-lg border bg-white p-5">
+    <form onSubmit={submit} aria-busy={saving} className="workspace-panel mt-8 p-6">
       <input type="hidden" name="ideaId" value={ideaId} />
       <label className="block text-sm font-medium">Status
-        <select name="status" value={status} disabled={saving} className="mt-2 block rounded-md border p-2"
-          onChange={(event) => { setStatus(event.target.value as (typeof statuses)[number]); setMessage(""); setError(""); }}>
-          {statuses.map((option) => <option key={option} value={option}>{option}</option>)}
+        <select name="status" value={status} disabled={saving} className="mt-2 block rounded-md border p-3"
+          onChange={(event) => { setStatus(event.target.value as InboxStatus); setMessage(""); setError(""); }}>
+          {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       </label>
       <div className="mt-4 flex items-center gap-3">
-        <button disabled={saving} type="submit" className="rounded-md bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-50">{saving ? "Saving..." : "Save status"}</button>
+        <button disabled={saving} type="submit" className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{saving ? "Saving..." : "Save status"}</button>
         <span role="status" className="text-sm text-green-700">{message}</span>
       </div>
       {error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}

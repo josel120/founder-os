@@ -57,10 +57,28 @@ it("rejects a missing linked project without inserting", async () => {
   expect(m.insert).not.toHaveBeenCalled();
 });
 
-it("rejects invalid amounts and currencies before database access", async () => {
-  expect((await createFinanceTransaction(input({ amount: "0", currency: "usd" }))).ok).toBe(false);
+it.each<Record<string, string>>([
+  { amount: "0" }, { amount: "0.0000" }, { amount: "-5" }, { amount: "1e3" }, { amount: "12.34567" },
+  { amount: "123456789012345" }, { currency: "US1" }, { currency: "EURO" }, { occurredAt: "1" }, { occurredAt: "2026-02-30T10:00" },
+])("rejects invalid input %o before database access", async (extra) => {
+  expect((await createFinanceTransaction(input(extra))).ok).toBe(false);
   expect(m.select).not.toHaveBeenCalled();
   expect(m.insert).not.toHaveBeenCalled();
+});
+
+it("normalizes currency case and comma decimals and keeps exact amounts", async () => {
+  expect((await createFinanceTransaction(input({ amount: "12,5", currency: " eur " }))).ok).toBe(true);
+  expect(m.values.mock.calls[0][0]).toMatchObject({ amount: "12.5", currency: "EUR" });
+});
+
+it("accepts the largest amount the numeric(18, 4) column can store", async () => {
+  expect((await createFinanceTransaction(input({ amount: "99999999999999.9999" }))).ok).toBe(true);
+  expect(m.values.mock.calls[0][0]).toMatchObject({ amount: "99999999999999.9999" });
+});
+
+it("stores the typed wall-clock time as UTC, whatever the server time zone", async () => {
+  expect((await createFinanceTransaction(input({ occurredAt: "2026-09-24T23:30" }))).ok).toBe(true);
+  expect((m.values.mock.calls[0][0].occurredAt as Date).toISOString()).toBe("2026-09-24T23:30:00.000Z");
 });
 
 it("scopes transaction reads to owner and private visibility", async () => {

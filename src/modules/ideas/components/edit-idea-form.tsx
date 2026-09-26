@@ -3,6 +3,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { updateIdeaContent } from "../actions/idea.actions";
+import { ideaDescriptionMax } from "../schemas/idea.limits";
 
 type EditIdeaFormProps = {
   ideaId: string;
@@ -44,14 +45,14 @@ export function EditIdeaForm({ ideaId, initialTitle, initialDescription }: EditI
   }
 
   return (
-    <form onSubmit={submit} aria-busy={pending} className="mt-8 space-y-4 rounded-xl border border-slate-200 p-5">
+    <form onSubmit={submit} aria-busy={pending} className="workspace-panel mt-8 space-y-4 p-6">
       <h2 className="text-lg font-semibold">Refine idea</h2>
       <input type="hidden" name="ideaId" value={ideaId} />
       <label className="block text-sm font-medium">Title
         <input name="title" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={160} readOnly={pending} required className="mt-2 w-full rounded-md border p-3" />
       </label>
       <label className="block text-sm font-medium">Description
-        <textarea name="description" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={2000} readOnly={pending} className="mt-2 min-h-24 w-full rounded-md border p-3" />
+        <textarea name="description" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={ideaDescriptionMax} readOnly={pending} className="mt-2 min-h-24 w-full rounded-md border p-3" />
       </label>
       <button disabled={pending} type="submit" className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{pending ? "Saving..." : "Save idea"}</button>
       <p role="status" className="text-sm text-green-700">{message}</p>

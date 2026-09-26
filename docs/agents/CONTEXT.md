@@ -12,11 +12,13 @@ Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind 4 · Drizzl
 | Path | Owns |
 |---|---|
 | `src/app` | Routing and composition only. `private/` = authenticated area, `login`, `register`, `api/auth/[...all]` |
-| `src/modules/<domain>/{actions,queries,schemas,services,components}` | Domain behavior. Domains: `ideas`, `problems`, `ai` (interface only) |
-| `src/db/schema/index.ts` | All tables (auth tables + Problem, Idea, Project, DecisionLog, FinanceTransaction) |
+| `src/modules/<domain>/{actions,queries,schemas,services,components}` | Domain behavior. Domains: `ideas`, `problems`, `decisions`, `projects`, `finance`, `ai` (interface only) |
+| `src/db/schema/index.ts` | All tables (auth tables + Problem, Idea, Project, DecisionLog, FinanceTransaction, Evidence) |
 | `src/db/migrations` | Generated SQL. Never edit existing files; add new migrations |
 | `src/lib/auth.ts`, `require-auth.ts`, `env.ts` | Better Auth config, owner check, env validation |
-| `src/middleware.ts` | Redirects anonymous users away from `/private` |
+| `src/lib/safe-redirect.ts`, `session-cookie.ts` | `?next=` validation; Edge-safe session cookie presence check |
+| `src/middleware.ts` | Optimistic guard: cookieless GET/HEAD under `/private` → `/login?next=…`. Server actions pass through (ADR-013) |
+| `next.config.ts` | Security headers and `noindex` (ADR-013) |
 | `tests/*.test.ts(x)` | Vitest unit tests. `tests/e2e/*.spec.ts` = Playwright |
 | `work/` | Git-ignored scratch space (backups, temp). Never read `*.dump` files |
 
@@ -28,6 +30,8 @@ Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind 4 · Drizzl
 - Access requires the session email to match `OWNER_EMAIL`. Public signup is closed.
 - Predicates include `id + owner_id + PRIVATE`. Rows with a null `owner_id` stay inaccessible.
 - Mutations return explicit results. Updates check `UPDATE … RETURNING` before reporting success.
+- Middleware is never an authorization boundary: it only checks that a cookie exists (ADR-013).
+- Money is summed as BigInt ten-thousandths (`finance/services/totals.ts`), never as floats (ADR-011).
 
 ## Known-good commands (Windows machine; use Bash)
 
@@ -50,6 +54,8 @@ Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind 4 · Drizzl
 - `pnpm db:seed` / tsx → `uv_os_get_passwd ENOMEM` inside sandbox. Seed is a no-op anyway.
 - PowerShell scripts are blocked by execution policy. Use Node scripts; do not change the policy.
 - Playwright in sandbox → `spawn EPERM`. Report it as blocked, not as failed.
+- Cloud containers with a preinstalled Chromium of a different revision → point `PLAYWRIGHT_BROWSERS_PATH` at a scratch dir that symlinks the expected revision's layout. Do not change `playwright.config.ts`.
+- Client components must not import Zod schemas (bundles Zod). Share limits via `*.limits.ts` constants.
 - CI (`.github/workflows/ci.yml`) runs install, lint, typecheck, unit tests, build and E2E on Linux. CI is the source of truth for full E2E.
 
 ## Doc map (Tier 2: open only when a card links it)

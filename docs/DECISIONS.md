@@ -120,3 +120,14 @@ Behavior:
 - Out of scope: file uploads, web clipping, imports, AI summaries, scoring, publishing and cross-owner sharing.
 
 Follow-up cards: T-033 schema contract and migration 0005 (generate only). T-034 human applies 0005 locally. T-035 owner-scoped evidence domain. T-036 private Research UI. T-037 Research workflow and privacy E2E. T-035 depends on T-033; T-036 depends on T-034 and T-035; T-037 depends on T-036.
+
+## ADR-013: Defense-in-depth for the web layer (T-039)
+
+Authorization stays where ADR-005 put it: every private page, query and action calls `requireAuth()` and scopes by owner. The web layer adds cheap outer checks that never replace it:
+
+- **Middleware** (`src/middleware.ts`, Edge runtime) redirects `GET`/`HEAD` page requests under `/private` without a Better Auth session cookie to `/login?next=<path>`. It only checks that a cookie exists, never that it is valid. Server action POSTs (`Next-Action` header) always pass through so they keep returning explicit `{ ok: false }` results (T-038 E2E). The cookie names mirror `getSessionCookie` from `better-auth/cookies`, which the Edge runtime cannot import (it pulls in `jose`); `tests/middleware.test.ts` asserts both agree. Node.js middleware was tried and rejected: it reads request bodies and logged uncaught `ECONNRESET` when clients aborted server actions.
+- **`?next=`** is accepted only through `safePrivatePath` (same-origin `/private` paths), so it cannot become an open redirect. A signed-in owner visiting `/login` is sent straight there.
+- **Headers** (`next.config.ts`): `frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `X-Frame-Options: DENY`, `nosniff`, `strict-origin-when-cross-origin`, a restrictive `Permissions-Policy` and HSTS on every response; `X-Robots-Tag: noindex, nofollow` on `/private`, auth pages and `/api`. No `script-src` yet: Next.js inline scripts would need per-request nonces (follow-up T-041).
+- **Registration UI**: `/register` explains that registration is closed instead of offering a form that can never succeed (ADR-005: only an operator request with the setup token creates the owner).
+- **Dependencies**: `@better-auth/cli` was unused and pulled a vulnerable `better-auth` < 1.6.22 (critical advisory), `lodash` and Prisma build scripts; it is removed. `drizzle-orm` moves to ^0.45.3 (GHSA-gpj5-g38j-94v9; also the peer range `better-auth` 1.7 declares). `next>postcss` is overridden to ^8.5.28 in `pnpm-workspace.yaml`. Remaining advisories are dev-only (Vitest 3, drizzle-kit's esbuild), tracked in T-040.
+- **Finance timestamps**: `occurredAt` from the form has no offset. It is stored as that wall-clock time in UTC, so the saved date no longer depends on the server's time zone. Explicit offsets from other callers are kept as given.

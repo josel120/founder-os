@@ -36,10 +36,6 @@ export async function createIdea(formData: FormData): Promise<{ ok: true } | { o
   return { ok: true };
 }
 
-export async function createIdeaAction(formData: FormData): Promise<void> {
-  await createIdea(formData);
-}
-
 export async function updateIdeaStatus(formData: FormData): Promise<{ ok: true } | { ok: false; error: string }> {
   const owner = await requireAuth();
   if (!owner) return { ok: false, error: "Sign in again to save changes." };

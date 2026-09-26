@@ -2,6 +2,7 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import { createIdea } from "../actions/idea.actions";
+import { ideaDescriptionMax } from "../schemas/idea.limits";
 
 export function CaptureIdeaForm() {
   const inFlight = useRef(false);
@@ -37,7 +38,7 @@ export function CaptureIdeaForm() {
         <input name="title" required maxLength={160} readOnly={pending} placeholder="What is the idea?" className="mt-2 w-full rounded-md border p-3" />
       </label>
       <label className="block text-sm font-medium">Context (optional)
-        <textarea name="description" maxLength={2000} readOnly={pending} className="mt-2 min-h-24 w-full rounded-md border p-3" />
+        <textarea name="description" maxLength={ideaDescriptionMax} readOnly={pending} className="mt-2 min-h-24 w-full rounded-md border p-3" />
       </label>
       <input type="hidden" name="source" value="OWN" />
       <button disabled={pending} className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50" type="submit">{pending ? "Saving..." : "+ Capture idea"}</button>

@@ -47,7 +47,7 @@ export function EditProjectForm({ project }: { project: EditableProject }) {
   }
 
   return (
-    <form onSubmit={submit} aria-busy={pending} className="mt-8 space-y-4 rounded-xl border border-slate-200 p-5">
+    <form onSubmit={submit} aria-busy={pending} className="workspace-panel mt-8 space-y-4 p-6">
       <h2 className="text-lg font-semibold">Edit project</h2>
       <input type="hidden" name="projectId" value={project.id} />
       <label className="block text-sm font-medium">Name

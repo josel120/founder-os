@@ -12,6 +12,7 @@ for (const route of routes) {
   test(`anonymous visitors cannot access ${route.path}`, async ({ page }) => {
     await page.goto(route.path);
     await expect(page).toHaveURL(/\/login(?:\?.*)?$/);
+    expect(new URL(page.url()).searchParams.get("next")).toBe(route.path);
     await expect(page.locator('input[type="password"]')).toBeVisible();
     await expect(page.locator(route.privateField)).toHaveCount(0);
   });

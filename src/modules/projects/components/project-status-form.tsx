@@ -50,7 +50,7 @@ export function ProjectStatusForm(props: ProjectStatusFormProps) {
   }
 
   return (
-    <form onSubmit={submit} aria-busy={pending} className="mt-8 space-y-4 rounded-xl border border-slate-200 p-5">
+    <form onSubmit={submit} aria-busy={pending} className="workspace-panel mt-8 space-y-4 p-6">
       <h2 className="text-lg font-semibold">Lifecycle and status</h2>
       <p className="text-sm text-slate-500">Lifecycle is where the product is. Operational status is what it needs from you. Changing one never changes the other.</p>
       <input type="hidden" name="projectId" value={props.projectId} />
