@@ -5,7 +5,7 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 
 | ID | Title | Status | Owner | Size | Depends |
 |---|---|---|---|---|---|
-| T-040 | Harden the evidence schema before migration 0005 is applied | review | claude | S | T-033 |
+| T-040 | Harden the evidence schema before migration 0005 is applied | done | claude | S | T-033 |
 | T-034 | Apply migrations 0005 and 0006 to the local database | todo | human | S | T-033, T-040 |
 | T-035 | Build the owner-scoped Research evidence domain | review | claude | M | T-033, T-040 |
 | T-036 | Build the private Research UI | todo | codex | M | T-034, T-035 |
