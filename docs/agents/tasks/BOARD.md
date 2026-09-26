@@ -35,3 +35,4 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`.
 | T-028 | Implement owner-scoped Finance transactions | done | codex | M | T-027 |
 | T-029 | Build the private Finance UI | done | codex | M | T-028 |
 | T-030 | Verify Finance workflows and privacy end to end | done | codex | M | T-029 |
+| T-031 | Add a phase roadmap | review | claude | S | T-030 |
