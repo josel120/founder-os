@@ -1,7 +1,7 @@
 # Project context (read this instead of exploring)
 
 Founder OS: private, single-owner workspace connecting problems, ideas, projects, decisions and finance.
-Phase 0 (secure foundation) is mostly done; Phase 1 (Idea OS) is in progress. Current state: `docs/PROGRESS.md`.
+Phases (done, current, next): `docs/ROADMAP.md`. Current state: `docs/PROGRESS.md`.
 
 ## Stack
 
