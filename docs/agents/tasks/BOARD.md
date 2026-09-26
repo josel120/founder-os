@@ -9,8 +9,8 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-034 | Apply migrations 0005 and 0006 to the local database | done | human | S | T-033, T-040 |
 | T-035 | Build the owner-scoped Research evidence domain | review | claude | M | T-033, T-040 |
 | T-036 | Build the private Research UI | review | claude | M | T-034, T-035 |
-| T-037 | Verify Research workflows and privacy end to end | doing | claude | M | T-036 |
-| T-039 | Extend the phase plan and add specialized review subagents | review | claude | M | T-033 |
+| T-037 | Verify Research workflows and privacy end to end | review | claude | M | T-036 |
+| T-039 | Extend the phase plan and add specialized review subagents | done | claude | M | T-033 |
 | T-041 | Plan the Workspace cockpit (Phase 5) and its boundaries | todo | codex | M | T-037 |
 | T-042 | Plan Production readiness (Phase 6) and its boundaries | todo | claude | M | T-041 |
 | T-043 | Project-wide audit: security hardening, bug fixes and UX polish | done | claude | M | none |
