@@ -12,8 +12,8 @@ Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind 4 · Drizzl
 | Path | Owns |
 |---|---|
 | `src/app` | Routing and composition only. `private/` = authenticated area, `login`, `register`, `api/auth/[...all]` |
-| `src/modules/<domain>/{actions,queries,schemas,services,components}` | Domain behavior. Domains: `ideas`, `problems`, `ai` (interface only) |
-| `src/db/schema/index.ts` | All tables (auth tables + Problem, Idea, Project, DecisionLog, FinanceTransaction) |
+| `src/modules/<domain>/{actions,queries,schemas,services,components}` | Domain behavior. Domains: `ideas`, `problems`, `decisions`, `projects`, `finance`, `research` (from T-035), `ai` (interface only) |
+| `src/db/schema/index.ts` | All tables (auth tables + Problem, Idea, Project, DecisionLog, FinanceTransaction, Evidence) |
 | `src/db/migrations` | Generated SQL. Never edit existing files; add new migrations |
 | `src/lib/auth.ts`, `require-auth.ts`, `env.ts` | Better Auth config, owner check, env validation |
 | `src/middleware.ts` | Redirects anonymous users away from `/private` |
@@ -40,6 +40,8 @@ Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind 4 · Drizzl
 | Build | `pnpm build` — do not run it while another agent's dev/build is running |
 | E2E (anonymous) | `pnpm test:e2e` — needs browser permission; Chromium may fail with `spawn EPERM` in sandboxes |
 | E2E (signed in) | Set `E2E_DATABASE_URL` (db name must end in `_e2e`), `E2E_SETUP_TOKEN` and `E2E_AUTH_SECRET` (≥32 chars each), then `pnpm test:e2e`. The DB is wiped. CI runs this automatically |
+| E2E helpers (T-038) | `tests/e2e/authenticated/workflows.auth.spec.ts`: `withE2eDb`, `seedOtherOwnerProject`, `retargetServerActions`, `captureServerAction`, `replayAnonymously` for cross-owner and anonymous tests. Reuse them; do not rebuild |
+| CI failure logs | `gh run view <id> --log-failed 2>&1 \| tail -80` (Claude: `ci-triager` subagent) |
 | Diff summary | `git diff --stat 2>/dev/null` (hides CRLF warnings) |
 | Card branch | `git fetch origin && git switch -c task/T-XXX-<slug> origin/master` |
 | Open PR | `git push -u origin <branch> && gh pr create --base master --title "T-XXX: <title>" --body-file <file>` |

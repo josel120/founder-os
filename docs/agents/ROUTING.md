@@ -10,6 +10,17 @@ Send each task to the cheapest agent that can do it well. Save the scarce budget
 | Mechanical work: lint fixes, renames, test scaffolding, doc sync | `claude` → `implementer`/`scout` subagent, or `codex` at low reasoning effort | Cheap models are enough |
 | Migrations against real data, secrets, `OWNER_EMAIL`, deploys, merges, force pushes, pushes to `master`, deleting data or branches | `human` (an agent prepares; the human approves and runs) | Irreversible |
 
+## Claude subagents
+
+| Subagent | Model | Runs when |
+|---|---|---|
+| `scout` | haiku | Any search wider than 2–3 greps |
+| `implementer` | sonnet | Mechanical S/M cards |
+| `reviewer` | sonnet | Every card, before `review` |
+| `schema-reviewer` | sonnet | Also, when a card changes `src/db/schema` or adds a migration |
+| `privacy-auditor` | sonnet | Each phase's closing E2E card, and any card that adds routes outside `/private`, metadata, publishing, logging or outbound calls. Override to the stronger model for the pre-public audits in phases 6–7 |
+| `ci-triager` | sonnet | Any failed CI run. It returns ≤15 lines, so full logs never enter the main session |
+
 ## Card sizes (budget)
 
 - **S**: ≤3 files, one behavior, one session.
@@ -23,11 +34,13 @@ chatgpt: plan → cards (todo, owner set)
    ↓
 codex / claude: implement → Handoff block → status review
    ↓
-claude reviewer (or the other agent): review → done  | back to todo with notes
+claude reviewer (+ schema-reviewer / privacy-auditor when triggered): review → done  | back to todo with notes
    ↓
 codex / claude: commit, push task branch, open PR (AGENTS.md "Git per card")
    ↓
 human: review PR and merge
+   ↓
+next /next-task: marks merged `review` cards `done`
 ```
 
 ## Escalation

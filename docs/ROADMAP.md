@@ -5,9 +5,7 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 
 ## Now
 
-**Phase 4: Research OS (planning done).** Private evidence records on problems and ideas (ADR-012). Queue: T-033 schema + migration 0005 (claude) → T-034 apply locally (human) → T-035 domain (codex) → T-036 UI (codex) → T-037 E2E (claude).
-
-In parallel: T-038 closes the Projects cross-owner and anonymous E2E gaps in `docs/QA-T024-FOLLOWUP.md`.
+**Phase 4: Research OS.** Private evidence records on problems and ideas (ADR-012). Queue: T-040 schema hardening (claude) → T-034 apply 0005+0006 locally (human) → T-035 domain (codex) → T-036 UI (codex) → T-037 E2E + privacy audit (claude).
 
 ## Done
 
@@ -15,16 +13,20 @@ In parallel: T-038 closes the Projects cross-owner and anonymous E2E gaps in `do
 |---|---|---|---|
 | 0. Secure foundation | Next.js app, Better Auth, owner-only access, PRIVATE-by-default schema, CI | pre-card (see `docs/PRD.md`, ADR-001..006) | merged |
 | 1. Idea OS | Ideas and Problems capture/search, Problem → Idea, Decision Log, content editing, signed-in E2E | T-001..T-016 | merged |
-| 2. Project OS | Owned Projects, lifecycle/operational status, Idea → Project, project decisions, E2E | T-017..T-024 | merged |
+| 2. Project OS | Owned Projects, lifecycle/operational status, Idea → Project, project decisions, E2E (cross-owner gaps closed by T-038) | T-017..T-024, T-038 | merged |
 | 3. Finance OS | Owned transactions, exact decimals, optional project link, private UI, E2E | T-026..T-030 | merged (PR #25) |
-| 4. Research OS | Owned evidence on problems and ideas | T-032..T-037 | in progress |
-| Process | Agent coordination, branch/PR per card, phase roadmap | T-012, T-025, T-031 | done |
+| 4. Research OS | Owned evidence on problems and ideas | T-032..T-037, T-040 | in progress |
+| Process | Agent coordination, branch/PR per card, phase roadmap, review subagents | T-012, T-025, T-031, T-039 | done / T-039 in review |
 
-## Next (order approved by the owner, 2026-09-26)
+## Next (ADR-013; the owner reorders by merging a roadmap change)
 
-Each phase starts with a planning card, as T-017, T-026 and T-032 did.
+Each phase starts with a planning card, as T-017, T-026 and T-032 did. Planning cards for phases 7–10 are created when the phase before ends.
 
-1. **Research OS**: research workflows linked to problems and ideas. Current phase.
-2. **Distribution / portfolio**: explicit publishing of chosen records; everything else stays PRIVATE (ADR-003).
-3. **Integrations**: GitHub as source of truth for technical work; finance imports.
-4. **AI execution**: a real provider behind the `AIService` interface (ADR-004); humans still decide.
+| # | Phase | Scope | Planning card | Why here |
+|---|---|---|---|---|
+| 5 | Workspace cockpit | `/private` home with what needs attention, Problem detail and edit, Problem → Idea → Project → Finance links | T-041 (codex) | Connects Phases 1–4, as the PRD promises. Private and read-mostly |
+| 6 | Production readiness | Hosting and production DB, migration runbook, backup drill, security headers, auth rate limits, PII-free monitoring, privacy audit | T-042 (claude) | Nothing is deployed yet. Must come before anything is public |
+| 7 | Distribution / portfolio | Explicit publishing of chosen records; everything else stays PRIVATE (ADR-003) | later | First public surface |
+| 8 | GitHub integration | GitHub as source of truth for technical work, linked to Projects | later | Needs production for callbacks and webhooks |
+| 9 | Finance imports | File or bank imports, duplicate `external_id` policy (ADR-011) | later | Separate risk from GitHub |
+| 10 | AI execution | A real provider behind `AIService` (ADR-004); humans still decide | later | Needs the data and the audits above |
