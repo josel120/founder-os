@@ -29,7 +29,7 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-056 | Provision Vercel and Neon and deploy a preview | todo | human | S | T-052, T-055 |
 | T-057 | Apply production migrations, create the owner and run a restore drill | todo | human | S | T-053, T-054, T-056 |
 | T-058 | Smoke-check the deployment and sweep privacy | todo | claude | S | T-057 |
-| T-059 | Prune stale rate-limit rows so client IPs are not kept indefinitely | doing | claude | S | T-053 |
-| T-060 | Make anonymous E2E wait for the migrated database | doing | claude | S | T-053 |
-| T-061 | Fix lost client updates after server actions and navigations | doing | claude | M | none |
-| T-062 | One-command production setup for Vercel and Neon | doing | claude | M | T-052, T-053, T-055 |
+| T-059 | Prune stale rate-limit rows so client IPs are not kept indefinitely | review | claude | S | T-053 |
+| T-060 | Make anonymous E2E wait for the migrated database | review | claude | S | T-053 |
+| T-061 | Fix lost client updates after server actions and navigations | review | claude | M | none |
+| T-062 | One-command production setup for Vercel and Neon | review | claude | M | T-052, T-053, T-055 |
