@@ -43,7 +43,12 @@ Or via the console: vercel.com/new → Import Git Repository → `josel120/found
 
 ## 3. Set environment variables and deploy (human)
 
+The repo pins pnpm 12 in `package.json` (`packageManager`). Vercel only uses that version when corepack is on;
+otherwise its own pnpm refuses the install or skips build scripts, and the deploy fails in under a minute.
+
 ```bash
+npx vercel env add ENABLE_EXPERIMENTAL_COREPACK production   # value: 1
+npx vercel env add ENABLE_EXPERIMENTAL_COREPACK preview      # value: 1
 npx vercel env add DATABASE_URL production            # paste the Neon POOLED production string
 npx vercel env add BETTER_AUTH_SECRET production       # paste output of: openssl rand -base64 32
 npx vercel env add BETTER_AUTH_URL production           # https://<PRODUCTION_DOMAIN>
@@ -78,6 +83,7 @@ Do not set `OWNER_SETUP_TOKEN` yet — see Section 5.
 | `NEXT_PUBLIC_BETTER_AUTH_URL` | Same origin, exposed to the browser client | Vercel project env | Yes |
 | `OWNER_EMAIL` | The one account allowed to hold private data (ADR-005) | Vercel project env | Yes |
 | `OWNER_SETUP_TOKEN` | One-time privileged header value that unlocks the sign-up endpoint for the owner only | Vercel project env, set temporarily (Section 5) then removed | No — must be absent outside first-owner setup |
+| `ENABLE_EXPERIMENTAL_COREPACK` | Makes Vercel install the pnpm version pinned in `package.json` (value `1`) | Vercel project env (Production + Preview) | Yes (build) |
 | `NODE_ENV` | Standard Next.js environment flag | Set by the Vercel platform | N/A (platform-set) |
 | `VERCEL` | Marks the runtime as Vercel; strict env checks apply when it's `1` | Set by the Vercel platform | N/A (platform-set) |
 | `FOUNDER_OS_STRICT_ENV` | Forces the same strict startup checks outside Vercel | Only if self-hosting elsewhere | No |

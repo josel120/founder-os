@@ -21,11 +21,11 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-048 | `/private` home and login landing | done | claude | M | T-047 |
 | T-049 | Problem detail page with content edit and evidence | done | claude | M | T-041 |
 | T-050 | Show the Project → Idea and Project → Finance chain | done | claude | S | T-041 |
-| T-051 | Verify the cockpit end to end and sweep privacy | review | claude | M | T-048, T-049, T-050 |
-| T-052 | Fail fast on production env and tune the DB client for serverless | review | claude | M | T-042 |
-| T-053 | Store auth rate limits in the database and pin session settings | review | claude | M | T-042 |
+| T-051 | Verify the cockpit end to end and sweep privacy | done | claude | M | T-048, T-049, T-050 |
+| T-052 | Fail fast on production env and tune the DB client for serverless | done | claude | M | T-042 |
+| T-053 | Store auth rate limits in the database and pin session settings | done | claude | M | T-042 |
 | T-054 | Report server errors without private data | done | claude | S | T-042 |
-| T-055 | Write the production runbook | review | claude | S | T-042 |
+| T-055 | Write the production runbook | done | claude | S | T-042 |
 | T-056 | Provision Vercel and Neon and deploy a preview | todo | human | S | T-052, T-055 |
 | T-057 | Apply production migrations, create the owner and run a restore drill | todo | human | S | T-053, T-054, T-056 |
 | T-058 | Smoke-check the deployment and sweep privacy | todo | claude | S | T-057 |
