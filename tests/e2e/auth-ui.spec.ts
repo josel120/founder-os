@@ -47,6 +47,28 @@ test("responses carry security headers", async ({ request }) => {
   expect(headers["x-frame-options"]).toBe("DENY");
   expect(headers["x-content-type-options"]).toBe("nosniff");
   expect(headers["content-security-policy"]).toContain("frame-ancestors 'none'");
+  expect(headers["content-security-policy"]).toMatch(/script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic'/);
   expect(headers["x-robots-tag"]).toBe("noindex, nofollow");
   expect(headers["x-powered-by"]).toBeUndefined();
+  const again = (await request.get("/login")).headers()["content-security-policy"];
+  expect(again).not.toBe(headers["content-security-policy"]);
+  const redirect = await request.get("/private/ideas", { maxRedirects: 0 });
+  expect(redirect.status()).toBe(307);
+  expect(redirect.headers()["content-security-policy"]).toContain("frame-ancestors 'none'");
+  const api = await request.get("/api/auth/get-session");
+  expect(api.headers()["content-security-policy"]).toBe("default-src 'none'; frame-ancestors 'none'");
 });
+
+for (const path of ["/", "/login", "/register"]) {
+  test(`${path} runs under the nonce policy without CSP violations`, async ({ page }) => {
+    const violations: string[] = [];
+    page.on("console", (message) => { if (/Content Security Policy/i.test(message.text())) violations.push(message.text()); });
+    const response = await page.goto(path);
+    await page.waitForLoadState("networkidle");
+    expect(response?.headers()["content-security-policy"]).toContain("'strict-dynamic'");
+    // Next.js puts the per-request nonce on its own scripts; any unstamped script would log a violation.
+    const nonces = await page.locator("script[nonce]").count();
+    expect(nonces).toBeGreaterThan(0);
+    expect(violations).toEqual([]);
+  });
+}

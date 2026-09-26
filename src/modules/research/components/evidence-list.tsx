@@ -11,6 +11,7 @@ export function EvidenceList({ rows, parentOf, empty }: { rows: EvidenceRow[]; p
   if (rows.length === 0) return <p className="text-sm text-slate-500">{empty}</p>;
   return <div className="space-y-3">{rows.map((row) => {
     const parent = parentOf?.(row);
+    // Only the fields the client form edits cross into the client bundle (T-037 privacy sweep).
     return <article key={row.id} className="workspace-panel p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0"><p className="text-xs font-medium uppercase tracking-widest text-slate-500">{kindLabel(row.kind)}</p><h3 className="mt-1 break-words font-semibold">{row.title}</h3></div>
@@ -23,7 +24,7 @@ export function EvidenceList({ rows, parentOf, empty }: { rows: EvidenceRow[]; p
         {row.sourceUrl && <a href={row.sourceUrl} target="_blank" rel="noopener noreferrer nofollow" className="break-all font-medium text-indigo-700 underline-offset-4 hover:underline">Source</a>}
         <span className="ml-auto">Private</span>
       </div>
-      <details className="mt-2"><summary className="w-fit cursor-pointer text-sm font-medium text-indigo-700">Edit</summary><EditEvidenceForm evidence={row} /></details>
+      <details className="mt-2"><summary className="w-fit cursor-pointer text-sm font-medium text-indigo-700">Edit</summary><EditEvidenceForm evidence={{ id: row.id, title: row.title, summary: row.summary, kind: row.kind, signal: row.signal, sourceUrl: row.sourceUrl }} /></details>
     </article>;
   })}</div>;
 }

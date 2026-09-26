@@ -143,3 +143,38 @@ Authorization stays where ADR-005 put it: every private page, query and action c
 - **Registration UI**: `/register` explains that registration is closed instead of offering a form that can never succeed (ADR-005: only an operator request with the setup token creates the owner).
 - **Dependencies**: `@better-auth/cli` was unused and pulled a vulnerable `better-auth` < 1.6.22 (critical advisory), `lodash` and Prisma build scripts; it is removed. `drizzle-orm` moves to ^0.45.3 (GHSA-gpj5-g38j-94v9; also the peer range `better-auth` 1.7 declares). `next>postcss` is overridden to ^8.5.28 in `pnpm-workspace.yaml`. Remaining advisories are dev-only (Vitest 3, drizzle-kit's esbuild), tracked in T-044.
 - **Finance timestamps**: `occurredAt` from the form has no offset. It is stored as that wall-clock time in UTC, so the saved date no longer depends on the server's time zone. Explicit offsets from other callers are kept as given.
+
+Amendment (T-045): the Content-Security-Policy moved from `next.config.ts` into the middleware, which now runs on every page (not API routes or static assets). Each request gets a nonce (`btoa(crypto.randomUUID())`) in `script-src 'self' 'nonce-…' 'strict-dynamic'` (plus `'unsafe-eval'` only under `next dev`), alongside `default-src 'self'`, `style-src 'self' 'unsafe-inline'`, `img-src 'self' data: blob:`, `connect-src 'self'` and the earlier `frame-ancestors`/`object-src`/`base-uri`/`form-action` directives. The same policy is forwarded on the request so Next.js stamps the nonce on its scripts, and the root layout is `force-dynamic`, because a prerendered page would ship unstamped scripts. Styles keep `'unsafe-inline'`: the risk is CSS injection, not script execution. The `/private` redirect and server-action pass-through are unchanged. `X-Frame-Options: DENY` still covers responses outside the middleware.
+
+## ADR-015: Workspace cockpit MVP (Phase 5, T-041)
+
+Phases 1–4 built separate domains. The cockpit connects them for the owner. It is private and read-mostly, uses no new tables and does no AI scoring (ADR-004): it counts and lists, and the owner decides.
+
+Accepted:
+- **`/private` home** (today it returns 404). A read-only "needs attention" view: projects in `ACTION_REQUIRED` or `BLOCKED`; projects waiting (`WAITING_*`) longer than a threshold; projects whose `review_at` is today or past; ideas still in `INBOX`, oldest first; ideas in `RESEARCHING`/`VALIDATING` with no evidence, or with contradicting and no supporting evidence; the latest decisions; the last 30 days of finance per currency (exact decimals, ADR-011). Each item links to its detail page. Signed-in owners land here after login (the `safePrivatePath` fallback moves from `/private/ideas` to `/private`).
+- **Problem detail page** `/private/problems/[id]`: content edit (a new owner-scoped `updateProblemContent`, `UPDATE … RETURNING`), the ideas made from it, and its evidence with a capture form bound to the problem (reusing T-036 components). The problems list links to it.
+- **Chain on detail pages**: Problem → Ideas (list), Idea → Problem and Project (exists), Project → origin Idea and its finance transactions with per-currency totals (reusing `totalsByCurrency`).
+
+Rules: every count and list uses the session owner and `PRIVATE`, with one aggregation service per domain query module (no cross-owner joins; related rows are joined only with owner-scoped predicates on both sides). Thresholds are constants in code until the owner asks for settings. Nothing is cached across requests.
+
+Rejected for this phase: AI scoring or recommendations (ADR-004, Phase 10); notifications or email; a settings table; global cross-domain search (open question); decision links to problems (the `decision_log` table has no `problem_id`, so this would need a schema change).
+
+Open questions for the owner (the plan uses the proposed default until answered): 1) waiting threshold, proposed 14 days; 2) land on `/private` after login instead of Ideas, proposed yes; 3) show the 30-day finance snapshot on the home, proposed yes; 4) cross-domain search, proposed later.
+
+Cards: T-047 aggregation queries (codex) → T-048 `/private` home and login landing (codex); T-049 Problem detail and edit (codex); T-050 Project → Idea/Finance chain (codex); T-051 cockpit E2E and privacy sweep (claude), after T-048..T-050.
+
+## ADR-016: Production readiness (Phase 6, T-042)
+
+Nothing is deployed yet. This phase takes the private app to a hardened deployment before anything is published (Phase 7). Agents prepare; every deploy, secret and real-data step is a `human` card with exact commands (ROUTING.md).
+
+- **Hosting**: Vercel for the app and Neon Postgres, as SYSTEM_DESIGN names. The app keeps `postgres-js`. On Vercel it uses Neon's pooled URL with `prepare: false` and a small `max`, and migrations use the direct (unpooled) URL. The unused `@neondatabase/serverless` dependency is removed.
+- **Environment**: in production, `src/lib/env.ts` fails at boot if `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` (https) or `OWNER_EMAIL` is missing, instead of running with auth disabled. `OWNER_SETUP_TOKEN` exists only during first-owner setup (ADR-005). Secrets live only in Vercel env settings, never in the repo or logs.
+- **Migrations**: runbook in `docs/RUNBOOK.md`: Neon branch or `pg_dump` backup → `pnpm db:migrate` against the direct URL → ADR-006 adoption when historical rows exist → verification queries → rollback by restoring the branch or dump. A restore drill is done once before go-live.
+- **Security headers**: done in ADR-014 and T-045 (nonce CSP, HSTS, frame, referrer and permissions policies). Phase 6 verifies them on the deployed URL.
+- **Auth**: Better Auth rate limiting is on in production, but its default memory storage is per instance on serverless. Switch it to database storage (new `rate_limit` table, additive migration, `schema-reviewer`), with a stricter rule on `/sign-in/email`. Sessions keep the 7-day expiry and 1-day refresh; secure cookies on https. Better Auth telemetry is disabled explicitly.
+- **Errors**: server actions swallow errors today, which is private but blind. A `reportError(scope, error)` helper logs only the scope, error class, Postgres code and Next digest (never messages, SQL, parameters or form values) to Vercel runtime logs. A third-party monitor is an open question: it adds a dependency and an outbound flow.
+- **Privacy**: a `privacy-auditor` sweep of the tree plus a smoke check of the deployed app (headers, anonymous redirects, `noindex`) closes the phase; findings become cards.
+
+Open questions for the owner: 1) confirm Vercel + Neon, and the region; 2) the production domain; 3) logs only, or a third-party error monitor; 4) the sign-in rate limit, proposed 5 attempts per minute per IP.
+
+Cards: T-052 production env + DB client (claude) · T-053 auth rate limit storage, session and telemetry settings, migration 0007 (claude) · T-054 `reportError` (claude) · T-055 `docs/RUNBOOK.md` (claude) · T-056 provision Vercel + Neon and deploy a preview (human) · T-057 production migrations, owner setup and restore drill (human) · T-058 deployed smoke check and privacy sweep (claude).

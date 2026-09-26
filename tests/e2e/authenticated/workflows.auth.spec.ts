@@ -1,24 +1,6 @@
-import { expect, request as apiRequest, test, type Page } from "@playwright/test";
-import postgres from "postgres";
-import { e2eBaseUrl, e2eOwner, e2eSetupToken, requireDisposableDatabase } from "../e2e-env";
-
-// Interacting before React hydrates lets hydration reset controlled inputs; wait for the page to settle first.
-async function ready(page: Page, action: Promise<unknown>) {
-  await action;
-  await page.waitForLoadState("networkidle");
-}
-
-const unique = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
-
-// Direct SQL only ever touches the guarded disposable *_e2e database.
-async function withE2eDb<T>(run: (sql: postgres.Sql) => Promise<T>): Promise<T> {
-  const sql = postgres(requireDisposableDatabase(), { max: 1, onnotice: () => {} });
-  try {
-    return await run(sql);
-  } finally {
-    await sql.end();
-  }
-}
+import { expect, test, type Page } from "@playwright/test";
+import { e2eBaseUrl, e2eOwner, e2eSetupToken } from "../e2e-env";
+import { captureIdea, captureServerAction, ready, replayAnonymously, retargetServerActions, unique, withE2eDb } from "./helpers";
 
 // Owner B exists only as rows in the disposable database; closed signup means B can never sign in.
 async function seedOtherOwnerProject() {
@@ -51,58 +33,6 @@ async function createOwnProject(page: Page, name: string) {
   await page.getByRole("link", { name, exact: true }).click();
   await ready(page, page.waitForURL(/\/private\/projects\/[0-9a-f-]{36}$/));
   return new URL(page.url()).pathname.split("/").pop() ?? "";
-}
-
-// Rewrites the project ID inside outgoing server action bodies, bypassing whatever the client UI sends.
-async function retargetServerActions(page: Page, fromId: string, toId: string) {
-  const retargeted = { count: 0 };
-  await page.route("**/*", async (route) => {
-    const request = route.request();
-    if (request.method() !== "POST" || !request.headers()["next-action"]) return route.continue();
-    const body = request.postDataBuffer()?.toString("utf8") ?? "";
-    if (!body.includes(fromId)) return route.abort(); // never let an un-retargeted mutation through; the count check fails
-    retargeted.count += 1;
-    return route.continue({ postData: body.split(fromId).join(toId) });
-  });
-  return retargeted;
-}
-
-type CapturedAction ={ url: string; headers: Record<string, string>; body: Buffer };
-
-// Records the server action request a form sends and aborts it, so the signed-in owner persists nothing.
-async function captureServerAction(page: Page, submit: () => Promise<void>): Promise<CapturedAction> {
-  let captured: CapturedAction | undefined;
-  await page.route("**/*", async (route) => {
-    const request = route.request();
-    const headers = request.headers();
-    if (request.method() !== "POST" || !headers["next-action"]) return route.continue();
-    const forwarded = ["next-action", "next-router-state-tree", "content-type", "accept"].filter((name) => headers[name]);
-    captured = { url: request.url(), headers: Object.fromEntries(forwarded.map((name) => [name, headers[name] ?? ""])), body: request.postDataBuffer() ?? Buffer.alloc(0) };
-    return route.abort();
-  });
-  await submit();
-  await expect.poll(() => captured !== undefined).toBe(true);
-  await page.unroute("**/*");
-  if (!captured) throw new Error("No server action request was captured.");
-  return captured;
-}
-
-// Replays a captured server action with no cookies at all.
-async function replayAnonymously(action: CapturedAction) {
-  const api = await apiRequest.newContext({ baseURL: e2eBaseUrl, storageState: { cookies: [], origins: [] } });
-  try {
-    const response = await api.post(action.url, { headers: { ...action.headers, origin: e2eBaseUrl }, data: action.body, maxRedirects: 0 });
-    return { status: response.status(), body: await response.text() };
-  } finally {
-    await api.dispose();
-  }
-}
-
-async function captureIdea(page: Page, title: string) {
-  await ready(page, page.goto("/private/ideas"));
-  await page.getByLabel("Idea", { exact: true }).fill(title);
-  await page.getByRole("button", { name: "+ Capture idea" }).click();
-  await expect(page.getByText("Idea saved privately to your inbox.")).toBeVisible();
 }
 
 test("captured ideas appear in the private inbox", async ({ page }) => {
@@ -412,4 +342,17 @@ test("closed registration rejects other accounts and a second owner", async ({ p
   });
   expect(intruder.ok()).toBe(false);
   await api.dispose();
+});
+
+test("private pages run under the nonce policy without CSP violations", async ({ page }) => {
+  const violations: string[] = [];
+  page.on("console", (message) => { if (/Content Security Policy/i.test(message.text())) violations.push(message.text()); });
+  for (const path of ["/private/ideas", "/private/problems", "/private/research", "/private/decisions", "/private/projects", "/private/finance"]) {
+    const response = await page.goto(path);
+    await page.waitForLoadState("networkidle");
+    expect(response?.headers()["content-security-policy"]).toMatch(/script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic'/);
+  }
+  // Scripts ran: the capture form is interactive after hydration.
+  await captureIdea(page, `E2E CSP idea ${unique()}`);
+  expect(violations).toEqual([]);
 });
