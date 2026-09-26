@@ -16,7 +16,7 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - T-032 (planning) done, PR #27 merged: ADR-012 defines owner-scoped `evidence` records (kind, signal, optional http(s) source URL) attached to exactly one owned Problem or Idea. New table, `owner_id NOT NULL`, no historical rows to adopt.
 - T-033 in review: `evidence` schema + migration `0005_research_evidence.sql` generated, not applied; 149 unit tests, lint, typecheck pass.
 - Queue: T-034 apply locally (human) → T-035 domain (codex) → T-036 UI (codex) → T-037 E2E/privacy (claude).
-- In parallel: T-038 (claude) closes the Projects cross-owner/anonymous E2E gaps from `docs/QA-T024-FOLLOWUP.md` (still untracked; T-038 commits it).
+- In parallel: T-038 (claude) is in review, PR #29. It adds cross-owner (seeded owner B) and anonymous server-action E2E for Projects and commits `docs/QA-T024-FOLLOWUP.md` with a resolution. CI run `36259034146`: 149 unit and 18/18 E2E passed. No product bug found.
 
 ## Deployment prerequisites
 
