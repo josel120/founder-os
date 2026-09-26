@@ -53,7 +53,21 @@ async function createOwnProject(page: Page, name: string) {
   return new URL(page.url()).pathname.split("/").pop() ?? "";
 }
 
-type CapturedAction = { url: string; headers: Record<string, string>; body: Buffer };
+// Rewrites the project ID inside outgoing server action bodies, bypassing whatever the client UI sends.
+async function retargetServerActions(page: Page, fromId: string, toId: string) {
+  const retargeted = { count: 0 };
+  await page.route("**/*", async (route) => {
+    const request = route.request();
+    if (request.method() !== "POST" || !request.headers()["next-action"]) return route.continue();
+    const body = request.postDataBuffer()?.toString("utf8") ?? "";
+    if (!body.includes(fromId)) return route.abort(); // never let an un-retargeted mutation through; the count check fails
+    retargeted.count += 1;
+    return route.continue({ postData: body.split(fromId).join(toId) });
+  });
+  return retargeted;
+}
+
+type CapturedAction ={ url: string; headers: Record<string, string>; body: Buffer };
 
 // Records the server action request a form sends and aborts it, so the signed-in owner persists nothing.
 async function captureServerAction(page: Page, submit: () => Promise<void>): Promise<CapturedAction> {
@@ -175,7 +189,8 @@ test("an idea converts into a private project with an isolated decision log", as
   await ready(page, page.reload());
   await expect(page.getByRole("heading", { name: `${ideaTitle} edited` })).toBeVisible();
   await expect(page.locator("section > p.whitespace-pre-wrap")).toHaveText("A project description that survives reload");
-  await expect(page.getByLabel("Description", { exact: true })).toHaveValue("A project description that survives reload");
+  // The label's accessible name includes the textarea's content, so select the textbox by field name.
+  await expect(page.locator('textarea[name="description"]')).toHaveValue("A project description that survives reload");
   await expect(page.locator('select[name="lifecycle"]')).toHaveValue("BETA");
   await expect(page.locator('select[name="operationalStatus"]')).toHaveValue("WAITING_REVIEW");
   await expect(page.locator('input[name="waitingReason"]')).toHaveValue("Review the beta onboarding flow");
@@ -222,10 +237,10 @@ test("owner A cannot read or change owner B's project or add a decision to it", 
   await ready(page, page.goto("/private/decisions"));
   await expect(page.getByText(other.decision)).toHaveCount(0);
 
-  // Point the hidden projectId of A's own project forms at B's project, as a tampered client would.
+  // A tampered client: every server action sent from A's own project page is rewritten to target B's project.
   const ownProjectId = await createOwnProject(page, `E2E owner A project ${unique()}`);
   const ownBefore = await projectSnapshot(ownProjectId);
-  await page.locator('input[name="projectId"]').evaluateAll((inputs, id) => inputs.forEach((input) => { (input as HTMLInputElement).value = id; }), other.projectId);
+  const retargeted = await retargetServerActions(page, ownProjectId, other.projectId);
 
   const editForm = page.locator("form", { has: page.getByRole("button", { name: "Save project" }) });
   await page.getByLabel("Name", { exact: true }).fill("Hijacked by owner A");
@@ -248,6 +263,8 @@ test("owner A cannot read or change owner B's project or add a decision to it", 
   await page.getByRole("button", { name: "Record decision" }).click();
   await expect(decisionForm.getByRole("alert")).toHaveText("Project not found. The decision was not saved.");
 
+  expect(retargeted.count).toBe(3);
+  await page.unroute("**/*");
   expect(await projectSnapshot(other.projectId)).toEqual(before);
   expect(await projectSnapshot(ownProjectId)).toEqual(ownBefore);
   const injectedRows = await withE2eDb((sql) => sql`SELECT id FROM decision_log WHERE title = ${injected}`);
