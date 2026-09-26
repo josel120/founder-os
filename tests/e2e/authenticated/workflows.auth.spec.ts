@@ -1,5 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
-import { e2eBaseUrl, e2eOwner, e2eSetupToken } from "../e2e-env";
+import { expect, request as apiRequest, test, type Page } from "@playwright/test";
+import postgres from "postgres";
+import { e2eBaseUrl, e2eOwner, e2eSetupToken, requireDisposableDatabase } from "../e2e-env";
 
 // Interacting before React hydrates lets hydration reset controlled inputs; wait for the page to settle first.
 async function ready(page: Page, action: Promise<unknown>) {
@@ -8,6 +9,80 @@ async function ready(page: Page, action: Promise<unknown>) {
 }
 
 const unique = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+
+// Direct SQL only ever touches the guarded disposable *_e2e database.
+async function withE2eDb<T>(run: (sql: postgres.Sql) => Promise<T>): Promise<T> {
+  const sql = postgres(requireDisposableDatabase(), { max: 1, onnotice: () => {} });
+  try {
+    return await run(sql);
+  } finally {
+    await sql.end();
+  }
+}
+
+// Owner B exists only as rows in the disposable database; closed signup means B can never sign in.
+async function seedOtherOwnerProject() {
+  const id = unique();
+  const ownerId = `e2e-owner-b-${id}`;
+  const seeded = { name: `E2E owner B project ${id}`, description: `Owner B private description ${id}`, decision: `Owner B private decision ${id}` };
+  return withE2eDb(async (sql) => {
+    await sql`INSERT INTO "user" (id, name, email) VALUES (${ownerId}, 'E2E Owner B', ${`owner-b-${id}@e2e.test`})`;
+    const [project] = await sql<{ id: string }[]>`INSERT INTO project (owner_id, name, slug, description, visibility) VALUES (${ownerId}, ${seeded.name}, ${`owner-b-${id}`}, ${seeded.description}, 'PRIVATE') RETURNING id`;
+    if (!project) throw new Error("Could not seed owner B's project.");
+    await sql`INSERT INTO decision_log (owner_id, project_id, title, decision, reason, visibility) VALUES (${ownerId}, ${project.id}, ${seeded.decision}, 'Keep it private', 'Owner B only', 'PRIVATE')`;
+    return { ...seeded, projectId: project.id };
+  });
+}
+
+async function projectSnapshot(projectId: string) {
+  return withE2eDb(async (sql) => ({
+    project: [...(await sql`SELECT * FROM project WHERE id = ${projectId}`)],
+    decisions: [...(await sql`SELECT * FROM decision_log WHERE project_id = ${projectId} ORDER BY id`)],
+  }));
+}
+
+async function createOwnProject(page: Page, name: string) {
+  await ready(page, page.goto("/private/projects"));
+  await page.locator('input[name="name"]').fill(name);
+  await page.locator('input[name="slug"]').fill(`project-${unique()}`);
+  await page.getByRole("button", { name: "+ Create project" }).click();
+  await expect(page.getByText("Project created privately.")).toBeVisible();
+  await ready(page, page.reload());
+  await page.getByRole("link", { name, exact: true }).click();
+  await ready(page, page.waitForURL(/\/private\/projects\/[0-9a-f-]{36}$/));
+  return new URL(page.url()).pathname.split("/").pop() ?? "";
+}
+
+type CapturedAction = { url: string; headers: Record<string, string>; body: Buffer };
+
+// Records the server action request a form sends and aborts it, so the signed-in owner persists nothing.
+async function captureServerAction(page: Page, submit: () => Promise<void>): Promise<CapturedAction> {
+  let captured: CapturedAction | undefined;
+  await page.route("**/*", async (route) => {
+    const request = route.request();
+    const headers = request.headers();
+    if (request.method() !== "POST" || !headers["next-action"]) return route.continue();
+    const forwarded = ["next-action", "next-router-state-tree", "content-type", "accept"].filter((name) => headers[name]);
+    captured = { url: request.url(), headers: Object.fromEntries(forwarded.map((name) => [name, headers[name] ?? ""])), body: request.postDataBuffer() ?? Buffer.alloc(0) };
+    return route.abort();
+  });
+  await submit();
+  await expect.poll(() => captured !== undefined).toBe(true);
+  await page.unroute("**/*");
+  if (!captured) throw new Error("No server action request was captured.");
+  return captured;
+}
+
+// Replays a captured server action with no cookies at all.
+async function replayAnonymously(action: CapturedAction) {
+  const api = await apiRequest.newContext({ baseURL: e2eBaseUrl, storageState: { cookies: [], origins: [] } });
+  try {
+    const response = await api.post(action.url, { headers: { ...action.headers, origin: e2eBaseUrl }, data: action.body, maxRedirects: 0 });
+    return { status: response.status(), body: await response.text() };
+  } finally {
+    await api.dispose();
+  }
+}
 
 async function captureIdea(page: Page, title: string) {
   await ready(page, page.goto("/private/ideas"));
@@ -99,7 +174,8 @@ test("an idea converts into a private project with an isolated decision log", as
   const projectUrl = page.url();
   await ready(page, page.reload());
   await expect(page.getByRole("heading", { name: `${ideaTitle} edited` })).toBeVisible();
-  await expect(page.locator("p").filter({ hasText: "A project description that survives reload" })).toBeVisible();
+  await expect(page.locator("section > p.whitespace-pre-wrap")).toHaveText("A project description that survives reload");
+  await expect(page.getByLabel("Description", { exact: true })).toHaveValue("A project description that survives reload");
   await expect(page.locator('select[name="lifecycle"]')).toHaveValue("BETA");
   await expect(page.locator('select[name="operationalStatus"]')).toHaveValue("WAITING_REVIEW");
   await expect(page.locator('input[name="waitingReason"]')).toHaveValue("Review the beta onboarding flow");
@@ -128,6 +204,98 @@ test("an idea converts into a private project with an isolated decision log", as
   await stranger.goto(projectUrl);
   await expect(stranger).toHaveURL(/\/login(?:\?.*)?$/);
   await anonymous.close();
+});
+
+test("owner A cannot read or change owner B's project or add a decision to it", async ({ page }) => {
+  const other = await seedOtherOwnerProject();
+  const before = await projectSnapshot(other.projectId);
+  expect(before.project).toHaveLength(1);
+  expect(before.decisions).toHaveLength(1);
+
+  await ready(page, page.goto(`/private/projects/${other.projectId}`));
+  await expect(page.getByText(other.name)).toHaveCount(0);
+  await expect(page.getByText(other.description)).toHaveCount(0);
+  await expect(page.getByText(other.decision)).toHaveCount(0);
+  await expect(page.locator('input[name="projectId"]')).toHaveCount(0);
+  await ready(page, page.goto("/private/projects"));
+  await expect(page.getByText(other.name)).toHaveCount(0);
+  await ready(page, page.goto("/private/decisions"));
+  await expect(page.getByText(other.decision)).toHaveCount(0);
+
+  // Point the hidden projectId of A's own project forms at B's project, as a tampered client would.
+  const ownProjectId = await createOwnProject(page, `E2E owner A project ${unique()}`);
+  const ownBefore = await projectSnapshot(ownProjectId);
+  await page.locator('input[name="projectId"]').evaluateAll((inputs, id) => inputs.forEach((input) => { (input as HTMLInputElement).value = id; }), other.projectId);
+
+  const editForm = page.locator("form", { has: page.getByRole("button", { name: "Save project" }) });
+  await page.getByLabel("Name", { exact: true }).fill("Hijacked by owner A");
+  await page.getByLabel("Description", { exact: true }).fill("Owner A overwrote this");
+  await page.getByRole("button", { name: "Save project" }).click();
+  await expect(editForm.getByRole("alert")).toHaveText("Project not found. Changes were not saved.");
+
+  const statusForm = page.locator("form", { has: page.getByRole("button", { name: "Save status" }) });
+  await page.locator('select[name="lifecycle"]').selectOption("ARCHIVED");
+  await page.locator('select[name="operationalStatus"]').selectOption("BLOCKED");
+  await page.locator('input[name="nextAction"]').fill("Owner A took over");
+  await page.getByRole("button", { name: "Save status" }).click();
+  await expect(statusForm.getByRole("alert")).toHaveText("Project not found. Changes were not saved.");
+
+  const decisionForm = page.locator("form", { has: page.getByRole("button", { name: "Record decision" }) });
+  const injected = `E2E cross-owner decision ${unique()}`;
+  await page.getByLabel("What was decided about?").fill(injected);
+  await page.getByLabel("Decision", { exact: true }).fill("Write into owner B's log");
+  await page.getByLabel("Why").fill("Cross-owner attempt");
+  await page.getByRole("button", { name: "Record decision" }).click();
+  await expect(decisionForm.getByRole("alert")).toHaveText("Project not found. The decision was not saved.");
+
+  expect(await projectSnapshot(other.projectId)).toEqual(before);
+  expect(await projectSnapshot(ownProjectId)).toEqual(ownBefore);
+  const injectedRows = await withE2eDb((sql) => sql`SELECT id FROM decision_log WHERE title = ${injected}`);
+  expect(injectedRows).toHaveLength(0);
+});
+
+test("anonymous project mutations are rejected and leave rows unchanged", async ({ page }) => {
+  const ownProjectId = await createOwnProject(page, `E2E anonymous target ${unique()}`);
+  const before = await projectSnapshot(ownProjectId);
+
+  const content = await captureServerAction(page, async () => {
+    await page.getByLabel("Name", { exact: true }).fill("Renamed anonymously");
+    await page.getByRole("button", { name: "Save project" }).click();
+  });
+  const status = await captureServerAction(page, async () => {
+    await page.locator('select[name="lifecycle"]').selectOption("ARCHIVED");
+    await page.getByRole("button", { name: "Save status" }).click();
+  });
+  const anonymousDecision = `E2E anonymous decision ${unique()}`;
+  const decision = await captureServerAction(page, async () => {
+    await page.getByLabel("What was decided about?").fill(anonymousDecision);
+    await page.getByLabel("Decision", { exact: true }).fill("Anonymous write");
+    await page.getByLabel("Why").fill("No session");
+    await page.getByRole("button", { name: "Record decision" }).click();
+  });
+
+  const anonymousName = `E2E anonymous create ${unique()}`;
+  await ready(page, page.goto("/private/projects"));
+  const create = await captureServerAction(page, async () => {
+    await page.locator('input[name="name"]').fill(anonymousName);
+    await page.locator('input[name="slug"]').fill(`anonymous-${unique()}`);
+    await page.getByRole("button", { name: "+ Create project" }).click();
+  });
+
+  for (const action of [content, status, decision, create]) {
+    const result = await replayAnonymously(action);
+    expect(result.status).toBe(200);
+    expect(result.body).toContain("Sign in again");
+    expect(result.body).not.toContain('"ok":true');
+  }
+
+  expect(await projectSnapshot(ownProjectId)).toEqual(before);
+  const leaked = await withE2eDb(async (sql) => ({
+    projects: [...(await sql`SELECT id FROM project WHERE name = ${anonymousName}`)],
+    decisions: [...(await sql`SELECT id FROM decision_log WHERE title = ${anonymousDecision}`)],
+  }));
+  expect(leaked.projects).toHaveLength(0);
+  expect(leaked.decisions).toHaveLength(0);
 });
 
 test("a problem becomes a linked idea that records decisions", async ({ page, browser }) => {

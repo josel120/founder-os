@@ -42,4 +42,4 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`.
 | T-035 | Build the owner-scoped Research evidence domain | todo | codex | M | T-033 |
 | T-036 | Build the private Research UI | todo | codex | M | T-034, T-035 |
 | T-037 | Verify Research workflows and privacy end to end | todo | claude | M | T-036 |
-| T-038 | Close the Projects cross-owner and anonymous E2E gaps | todo | claude | M | none |
+| T-038 | Close the Projects cross-owner and anonymous E2E gaps | doing | claude | M | none |
