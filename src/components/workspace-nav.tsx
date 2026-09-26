@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const sections = [
+  { href: "/private", label: "Home", mark: "00" },
   { href: "/private/ideas", label: "Ideas", mark: "01" },
   { href: "/private/problems", label: "Problems", mark: "02" },
   { href: "/private/research", label: "Research", mark: "03" },
@@ -11,8 +12,9 @@ const sections = [
   { href: "/private/finance", label: "Finance", mark: "06" },
 ] as const;
 
+// Home is active only on /private itself; every other section also covers its detail pages.
 function isActive(pathname: string, href: string) {
-  return pathname === href || pathname.startsWith(href + "/");
+  return pathname === href || (href !== "/private" && pathname.startsWith(href + "/"));
 }
 
 export function WorkspaceNav() {

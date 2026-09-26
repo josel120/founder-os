@@ -4,11 +4,11 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 
 ## Current state (2026-09-26)
 
-- Merged on `master` (1c85013): Phase 0 foundation, Idea OS (T-001..T-016), Project OS (T-017..T-024, T-038), Finance OS (T-026..T-030), Research T-032/T-033/T-040, audit T-043, process cards T-012/T-025/T-031/T-039.
+- Merged on `master` (51b6536): Phase 0 foundation, Idea OS (T-001..T-016), Project OS (T-017..T-024, T-038), Finance OS (T-026..T-030), Research OS (T-032..T-037, T-040), audit T-043/T-044/T-045, plans T-041/T-042, Phase 5–6 cards T-046/T-049/T-050/T-054, process cards T-012/T-025/T-031/T-039.
 - Security model: owner-only access via `OWNER_EMAIL`, closed signup, every private query/mutation uses session owner + `id + owner_id + PRIVATE` (ADR-005/006/008/009/011).
 - Web layer (ADR-014, T-043): security headers, `noindex`, cookie-presence middleware for `/private` pages with a validated `?next=`, sign-out, closed `/register` page. `pnpm audit`: 21 advisories (1 critical) → 3 dev-only (T-043) → 0 (T-044).
 - Migrations 0000..0006 exist; the owner reports all applied locally (T-034). Historical rows were adopted per ADR-006.
-- Last CI verification (PR #29, run `36259034146`): lint, typecheck, 149 unit tests, build, 18/18 authenticated/anonymous E2E passed.
+- Last CI verification (PR #35, run `36265228507`): lint, typecheck, 292 unit tests, build, 29/29 authenticated/anonymous E2E passed.
 - Branch/PR per card (ADR-010). Merges, force pushes, pushes to `master`, real-data migrations and secrets stay human.
 
 ## Phase 4: Research OS (done: PR #33 merged, E2E in PR #34)
@@ -16,13 +16,13 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - ADR-012 (+ T-040 amendment): owner-scoped `evidence` on exactly one owned problem or idea; no kind/signal defaults; parent indexes. Migrations 0005 + 0006 merged (PR #28, #32) and applied locally (T-034).
 - T-035 domain, T-036 UI (`/private/research`, idea Evidence section) and T-037 E2E (happy path, `javascript:` link, seeded owner B, anonymous replays) in PR #33 (merged) and #34. Local: 262 unit, 29/29 E2E. privacy-auditor: clean; optional finding → T-046.
 - Bug found in T-035: the Projects URL refine threw inside `safeParse` on non-URL input; fixed with `z.url({ protocol })`.
-- T-044 (Vitest 4 + esbuild override): `pnpm audit` → no known vulnerabilities.
 
-## Phases 5–6: plans in review (T-041, T-042)
+## Phase 5: Workspace cockpit (in progress)
 
-- ADR-015 cockpit: `/private` home (needs attention), Problem detail + edit + evidence, Project → Idea/Finance chain. Cards T-047..T-051. Four open questions (defaults proposed).
-- ADR-016 production: Vercel + Neon, fail-fast env, runbook + restore drill, DB-backed auth rate limit, telemetry off, private-safe `reportError`, deployed smoke check. Cards T-052..T-058 (T-056/T-057 human). Four open questions.
-- T-045 (nonce `script-src` CSP): implemented, all pages `force-dynamic`; 29/29 E2E with no CSP violations.
+- ADR-015 merged in PR #34; its open questions run on the proposed defaults (14-day waiting threshold, land on `/private`, 30-day finance, search later).
+- Merged in PR #35: T-046 (queries never select `owner_id`/`visibility`), T-049 (Problem detail + edit + evidence), T-050 (Project → Idea/Finance), T-054 (`reportError`: scope, class, SQLSTATE, digest only).
+- PR #36: T-047 `getAttention` (owner + PRIVATE on every table) and T-048 `/private` home, now the login landing. Local: 313 unit, 29/29 E2E.
+- Next: T-051 cockpit E2E and privacy sweep, then Phase 6 (T-052, T-053, T-055; human T-056/T-057).
 
 ## Plan and process (T-039, merged)
 

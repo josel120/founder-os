@@ -9,7 +9,7 @@ export default function PrivateLayout({ children }: Readonly<{ children: React.R
   return <div className="min-h-screen lg:grid lg:grid-cols-[232px_minmax(0,1fr)]">
     <a href="#workspace-content" className="sr-only focus:not-sr-only">Skip to content</a>
     <aside className="border-b border-slate-200 bg-white px-5 py-5 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:border-r lg:border-b-0 lg:py-6">
-      <Link href="/private/ideas" className="mb-4 flex items-center gap-3 text-lg font-bold tracking-tight lg:mb-0">
+      <Link href="/private" className="mb-4 flex items-center gap-3 text-lg font-bold tracking-tight lg:mb-0">
         <span aria-hidden="true" className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-600 text-sm text-white">F.</span>Founder OS
       </Link>
       <p className="mb-7 mt-3 hidden text-xs text-slate-500 lg:block">Your space to build deliberately.</p>

@@ -4,7 +4,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
 
 /** Sign-in form. `next` must already be validated server-side with `safePrivatePath`. */
-export function AuthForm({ next = "/private/ideas" }: { next?: string }) {
+export function AuthForm({ next = "/private" }: { next?: string }) {
   const pending = useRef(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +17,7 @@ export function AuthForm({ next = "/private/ideas" }: { next?: string }) {
     setLoading(true);
     setError(null);
     try {
-      const result = await authClient.signIn.email({ email: String(data.get("email")), password: String(data.get("password")), callbackURL: "/private/ideas" });
+      const result = await authClient.signIn.email({ email: String(data.get("email")), password: String(data.get("password")), callbackURL: "/private" });
       if (result.error) setError(result.error.message || "We could not complete your request. Please try again.");
       else window.location.assign(next);
     } catch {
