@@ -35,4 +35,11 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`.
 | T-028 | Implement owner-scoped Finance transactions | done | codex | M | T-027 |
 | T-029 | Build the private Finance UI | done | codex | M | T-028 |
 | T-030 | Verify Finance workflows and privacy end to end | done | codex | M | T-029 |
-| T-031 | Add a phase roadmap | review | claude | S | T-030 |
+| T-031 | Add a phase roadmap | done | claude | S | T-030 |
+| T-032 | Plan Research OS MVP and ownership boundaries | review | claude | M | T-031 |
+| T-033 | Add Research evidence schema and migration 0005 (generate only) | todo | claude | S | T-032 |
+| T-034 | Apply migration 0005 to the local database | todo | human | S | T-033 |
+| T-035 | Build the owner-scoped Research evidence domain | todo | codex | M | T-033 |
+| T-036 | Build the private Research UI | todo | codex | M | T-034, T-035 |
+| T-037 | Verify Research workflows and privacy end to end | todo | claude | M | T-036 |
+| T-038 | Close the Projects cross-owner and anonymous E2E gaps | todo | claude | M | none |
