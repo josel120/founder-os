@@ -10,3 +10,5 @@ test-results
 coverage
 *.tsbuildinfo
 work/
+# Agent worktrees are local scratch copies of this repo, never content
+.claude/worktrees/
