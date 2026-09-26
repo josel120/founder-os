@@ -1,8 +1,8 @@
-import type { financeTransactions, projects } from "@/db/schema";
+import type { listPrivateFinanceTransactions } from "../queries/finance.queries";
 import { formatAmount } from "../services/totals";
 
-type Transaction = typeof financeTransactions.$inferSelect;
-type Project = typeof projects.$inferSelect;
+type Transaction = Awaited<ReturnType<typeof listPrivateFinanceTransactions>>[number];
+type Project = { id: string; name: string };
 
 export function FinanceList({ transactions, projects }: { transactions: Transaction[]; projects: Project[] }) {
   const names = new Map(projects.map((project) => [project.id, project.name]));

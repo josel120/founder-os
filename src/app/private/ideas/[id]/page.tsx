@@ -26,7 +26,7 @@ export default async function IdeaDetailPage({ params }: { params: Promise<{ id:
   if (!(await requireAuth())) redirect("/login");
   const { id } = await params;
   const idea = await getPrivateIdea(id);
-  if (!idea || idea.visibility !== "PRIVATE") notFound();
+  if (!idea) notFound();
   const [problem, decisions, project, evidenceRows] = await Promise.all([
     idea.problemId ? getPrivateProblem(idea.problemId) : null,
     listDecisionsForIdea(idea.id),

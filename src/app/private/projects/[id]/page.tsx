@@ -17,7 +17,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   if (!(await requireAuth())) redirect("/login");
   const { id } = await params;
   const [project, decisions] = await Promise.all([getPrivateProject(id), listDecisionsForProject(id)]);
-  if (!project || project.visibility !== "PRIVATE") notFound();
+  if (!project) notFound();
   const links = [["Repository", project.repository], ["Website", project.website], ["Play Store", project.playStoreUrl], ["App Store", project.appStoreUrl]].filter((link): link is [string, string] => Boolean(link[1]));
   const waiting = isWaiting(project.operationalStatus);
   return <section className="max-w-2xl"><Link href="/private/projects" className="text-sm text-slate-500 underline">← Back to projects</Link>
