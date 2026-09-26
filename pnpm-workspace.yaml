@@ -6,3 +6,5 @@ allowBuilds:
 overrides:
   # next pins postcss 8.4.31, which has source-map path traversal advisories (GHSA-6g55-p6wh-862q and others).
   next>postcss: ^8.5.28
+  # drizzle-kit's @esbuild-kit loader pins esbuild 0.18 (dev-server advisory GHSA-67mh-4wv8-2f99). T-044.
+  '@esbuild-kit/core-utils>esbuild': ^0.25.12
