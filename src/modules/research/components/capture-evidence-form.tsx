@@ -41,7 +41,7 @@ export function CaptureEvidenceForm({ parents, fixedParent }: Props) {
   }
 
   return <form id="capture-evidence" onSubmit={submit} aria-busy={pending} className="workspace-panel space-y-4 p-6">
-    <div><p className="workspace-eyebrow">What did the research say?</p><h2 className="mt-2 text-xl font-semibold tracking-tight">Record evidence</h2><p className="mt-2 text-sm leading-6 text-slate-500">{fixedParent ? <>About this idea. Stays private.</> : <>Attach it to one of your problems or ideas. Stays private.</>}</p></div>
+    <div><p className="workspace-eyebrow">What did the research say?</p><h2 className="mt-2 text-xl font-semibold tracking-tight">Record evidence</h2><p className="mt-2 text-sm leading-6 text-slate-500">{fixedParent ? <>About this {fixedParent.value.startsWith("problem:") ? "problem" : "idea"}. Stays private.</> : <>Attach it to one of your problems or ideas. Stays private.</>}</p></div>
     {fixedParent ? <input type="hidden" name="parent" value={fixedParent.value} /> : <label className="block text-sm font-medium">About
       <select name="parent" required defaultValue="" disabled={pending || noParents} className="mt-2 block w-full rounded-md border p-3">
         <option value="" disabled>{noParents ? "Capture a problem or idea first" : "Choose a problem or idea"}</option>

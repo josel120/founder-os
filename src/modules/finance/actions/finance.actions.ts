@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { financeTransactions, projects } from "@/db/schema";
+import { reportError } from "@/lib/report-error";
 import { requireAuth } from "@/lib/require-auth";
 import { createFinanceTransactionSchema } from "../schemas/finance.schema";
 
@@ -43,5 +44,5 @@ export async function createFinanceTransaction(formData: FormData): Promise<Resu
     if (!created) return failure;
     revalidatePath("/private/finance");
     return { ok: true, transactionId: created.id };
-  } catch { return failure; }
+  } catch (error) { reportError("finance.create", error); return failure; }
 }

@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { decisionLogs, ideas, projects } from "@/db/schema";
+import { reportError } from "@/lib/report-error";
 import { requireAuth } from "@/lib/require-auth";
 import { createDecisionSchema } from "../schemas/decision.schema";
 
@@ -41,7 +42,8 @@ export async function createDecision(formData: FormData): Promise<{ ok: true } |
       reason: parsed.data.reason,
       visibility: "PRIVATE",
     });
-  } catch {
+  } catch (error) {
+    reportError("decisions.create", error);
     return { ok: false, error: "Could not save the decision. Please try again." };
   }
   revalidatePath("/private/decisions");

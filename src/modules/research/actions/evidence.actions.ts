@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { evidence, ideas, problems } from "@/db/schema";
+import { reportError } from "@/lib/report-error";
 import { requireAuth } from "@/lib/require-auth";
 import { createEvidenceSchema, updateEvidenceContentSchema } from "../schemas/evidence.schema";
 
@@ -58,7 +59,8 @@ export async function createEvidence(formData: FormData): Promise<EvidenceResult
     if (!created) return failed;
     refresh({ ideaId });
     return { ok: true, evidenceId: created.id };
-  } catch {
+  } catch (error) {
+    reportError("evidence.create", error);
     return failed;
   }
 }
@@ -83,7 +85,8 @@ export async function updateEvidenceContent(formData: FormData): Promise<Evidenc
     if (!changed) return { ok: false, reason: "not_found", error: "Evidence not found. Changes were not saved." };
     refresh({ ideaId: changed.ideaId });
     return { ok: true, evidenceId: changed.id };
-  } catch {
+  } catch (error) {
+    reportError("evidence.updateContent", error);
     return failed;
   }
 }
