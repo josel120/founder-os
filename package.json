@@ -20,7 +20,6 @@
     "db:seed": "tsx src/db/seed.ts"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.2",
     "@tailwindcss/postcss": "^4.1.13",
     "better-auth": "^1.4.7",
     "clsx": "^2.1.1",
