@@ -43,6 +43,13 @@
       "when": 1790441953824,
       "tag": "0005_research_evidence",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790446735761,
+      "tag": "0006_evidence_hardening",
+      "breakpoints": true
     }
   ]
 }

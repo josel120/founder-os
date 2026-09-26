@@ -231,8 +231,9 @@ export const evidence = pgTable(
     ideaId: uuid("idea_id").references(() => ideas.id, { onDelete: "restrict" }),
     title: text("title").notNull(),
     summary: text("summary").notNull(),
-    kind: evidenceKind("kind").notNull().default("NOTE"),
-    signal: evidenceSignal("signal").notNull().default("NEUTRAL"),
+    // No defaults (T-040): an insert that omits kind or signal must fail, not record NOTE/NEUTRAL silently.
+    kind: evidenceKind("kind").notNull(),
+    signal: evidenceSignal("signal").notNull(),
     sourceUrl: text("source_url"),
     visibility: visibility("visibility").notNull().default("PRIVATE"),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -240,7 +241,8 @@ export const evidence = pgTable(
       .defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
-      .defaultNow(),
+      .defaultNow()
+      .$onUpdate(() => new Date()),
   },
   (table) => [
     check(
@@ -248,5 +250,7 @@ export const evidence = pgTable(
       sql`num_nonnulls(${table.problemId}, ${table.ideaId}) = 1`,
     ),
     index("evidence_owner_id_idx").on(table.ownerId),
+    index("evidence_problem_id_idx").on(table.problemId),
+    index("evidence_idea_id_idx").on(table.ideaId),
   ],
 );
