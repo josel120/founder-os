@@ -16,3 +16,4 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-043 | Project-wide audit: security hardening, bug fixes and UX polish | done | claude | M | none |
 | T-044 | Upgrade Vitest to 4.x to clear the remaining dev-only advisories | todo | codex | S | T-043 |
 | T-045 | Add a nonce-based script-src Content Security Policy | todo | claude | M | T-043 |
+| T-046 | Select explicit columns in the older domain queries | todo | codex | S | none |

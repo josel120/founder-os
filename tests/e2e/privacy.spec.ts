@@ -6,6 +6,7 @@ const routes = [
   { path: "/private/projects", privateField: 'input[name="projectId"]' },
   { path: "/private/projects/00000000-0000-4000-8000-000000000002", privateField: 'input[name="projectId"]' },
   { path: "/private/finance", privateField: 'input[name="amount"]' },
+  { path: "/private/research", privateField: 'select[name="parent"]' },
 ] as const;
 
 for (const route of routes) {
