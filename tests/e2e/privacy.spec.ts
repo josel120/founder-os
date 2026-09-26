@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
 
 const routes = [
+  { path: "/private", privateField: '[aria-labelledby="home-projects"]' },
+  { path: "/private/problems/00000000-0000-4000-8000-000000000003", privateField: 'input[name="problemId"]' },
   { path: "/private/ideas", privateField: 'input[name="ideaId"]' },
   { path: "/private/ideas/00000000-0000-4000-8000-000000000001", privateField: 'input[name="ideaId"]' },
   { path: "/private/projects", privateField: 'input[name="projectId"]' },

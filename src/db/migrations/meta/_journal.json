@@ -50,6 +50,13 @@
       "when": 1790446735761,
       "tag": "0006_evidence_hardening",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790451297947,
+      "tag": "0007_rate_limit",
+      "breakpoints": true
     }
   ]
 }

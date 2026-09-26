@@ -5,7 +5,7 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 
 ## Now
 
-**Phase 5: Workspace cockpit** (in progress). Phase 4 closed with PR #33 and PR #34, which also merged the plans ADR-015 (cockpit) and ADR-016 (production readiness). PR #35 merged T-046, T-049, T-050 and T-054; PR #36 carries T-047 and T-048 (the `/private` home, now the login landing). T-051 (cockpit E2E and privacy sweep) closes the phase. Phase 6 cards T-052, T-053 and T-055 can run in parallel; T-056/T-057 are human.
+**Phase 6: Production readiness** (in progress, ADR-016). Phase 5 closed with PR #35, PR #36 and T-051 (cockpit E2E and privacy sweep). T-054 is merged; T-052 (fail-fast env, serverless DB client), T-053 (database-backed auth rate limit, migration 0007) and T-055 (runbook) are in progress. Then the owner provisions Vercel + Neon (T-056) and runs production migrations with a restore drill (T-057); T-058 smoke-checks the deployment.
 
 ## Done
 
@@ -16,6 +16,7 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 | 2. Project OS | Owned Projects, lifecycle/operational status, Idea → Project, project decisions, E2E (cross-owner gaps closed by T-038) | T-017..T-024, T-038 | merged |
 | 3. Finance OS | Owned transactions, exact decimals, optional project link, private UI, E2E | T-026..T-030 | merged (PR #25) |
 | 4. Research OS | Owned evidence on problems and ideas: domain, `/private/research`, idea evidence, cross-owner/anonymous E2E, privacy sweep | T-032..T-037, T-040 | merged (PR #32, #33, #34) |
+| 5. Workspace cockpit | `/private` home (what needs attention, login landing), Problem detail + edit + evidence, Project → Idea/Finance chain, explicit query columns, cross-owner/anonymous E2E | T-041, T-046..T-051 | merged (PR #34, #35, #36) / T-051 |
 | Process | Agent coordination, branch/PR per card, phase roadmap, review subagents | T-012, T-025, T-031, T-039, T-043 | done |
 
 ## Next (ADR-013; the owner reorders by merging a roadmap change)
@@ -24,8 +25,7 @@ Each phase starts with a planning card, as T-017, T-026 and T-032 did. Planning 
 
 | # | Phase | Scope | Planning card | Why here |
 |---|---|---|---|---|
-| 5 | Workspace cockpit | `/private` home with what needs attention, Problem detail and edit, Problem → Idea → Project → Finance links | T-041 → ADR-015, T-047..T-051 | Connects Phases 1–4, as the PRD promises. Private and read-mostly |
-| 6 | Production readiness | Hosting and production DB, migration runbook, backup drill, auth rate limits, PII-free error reporting, privacy audit (headers done: ADR-014, T-045) | T-042 → ADR-016, T-052..T-058 | Nothing is deployed yet. Must come before anything is public |
+| 6 | Production readiness (current) | Hosting and production DB, migration runbook, backup drill, auth rate limits, PII-free error reporting (T-054 done), privacy audit (headers done: ADR-014, T-045) | T-042 → ADR-016, T-052..T-058 | Nothing is deployed yet. Must come before anything is public |
 | 7 | Distribution / portfolio | Explicit publishing of chosen records; everything else stays PRIVATE (ADR-003) | later | First public surface |
 | 8 | GitHub integration | GitHub as source of truth for technical work, linked to Projects | later | Needs production for callbacks and webhooks |
 | 9 | Finance imports | File or bank imports, duplicate `external_id` policy (ADR-011) | later | Separate risk from GitHub |
