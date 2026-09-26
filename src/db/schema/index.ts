@@ -1,5 +1,10 @@
+import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
+  check,
+  index,
+  integer,
   numeric,
   pgEnum,
   pgTable,
@@ -47,6 +52,19 @@ export const operationalStatus = pgEnum("operational_status", [
 export const transactionType = pgEnum("transaction_type", [
   "INCOME",
   "EXPENSE",
+]);
+
+export const evidenceKind = pgEnum("evidence_kind", [
+  "NOTE",
+  "INTERVIEW",
+  "MARKET",
+  "COMPETITOR",
+  "SOURCE",
+]);
+export const evidenceSignal = pgEnum("evidence_signal", [
+  "SUPPORTS",
+  "CONTRADICTS",
+  "NEUTRAL",
 ]);
 
 export const users = pgTable("user", {
@@ -110,6 +128,13 @@ export const verifications = pgTable("verification", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+// Better Auth "rateLimit" model (rateLimit.storage = "database"): one row per `ip|path` key, lastRequest in epoch ms.
+export const rateLimits = pgTable("rate_limit", {
+  id: text("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  count: integer("count").notNull(),
+  lastRequest: bigint("last_request", { mode: "number" }).notNull(),
 });
 
 export const problems = pgTable("problem", {
@@ -187,6 +212,7 @@ export const decisionLogs = pgTable("decision_log", {
 });
 export const financeTransactions = pgTable("finance_transaction", {
   id: uuid("id").defaultRandom().primaryKey(),
+  ownerId: text("owner_id").references(() => users.id, { onDelete: "restrict" }),
   projectId: uuid("project_id").references(() => projects.id),
   type: transactionType("type").notNull(),
   category: text("category").notNull(),
@@ -194,8 +220,46 @@ export const financeTransactions = pgTable("finance_transaction", {
   currency: text("currency").notNull(),
   source: text("source").notNull(),
   externalId: text("external_id"),
+  visibility: visibility("visibility").notNull().default("PRIVATE"),
   occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
 });
+export const evidence = pgTable(
+  "evidence",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    // New table (ADR-012): no historical rows, so ownership is mandatory.
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    problemId: uuid("problem_id").references(() => problems.id, {
+      onDelete: "restrict",
+    }),
+    ideaId: uuid("idea_id").references(() => ideas.id, { onDelete: "restrict" }),
+    title: text("title").notNull(),
+    summary: text("summary").notNull(),
+    // No defaults (T-040): an insert that omits kind or signal must fail, not record NOTE/NEUTRAL silently.
+    kind: evidenceKind("kind").notNull(),
+    signal: evidenceSignal("signal").notNull(),
+    sourceUrl: text("source_url"),
+    visibility: visibility("visibility").notNull().default("PRIVATE"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    check(
+      "evidence_exactly_one_parent",
+      sql`num_nonnulls(${table.problemId}, ${table.ideaId}) = 1`,
+    ),
+    index("evidence_owner_id_idx").on(table.ownerId),
+    index("evidence_problem_id_idx").on(table.problemId),
+    index("evidence_idea_id_idx").on(table.ideaId),
+  ],
+);

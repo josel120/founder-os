@@ -85,10 +85,96 @@ Migration `0002_decision_log_ownership.sql` adds a nullable `owner_id` (FK to `u
 
 Project OS starts as a private, owner-scoped workspace. The `project` table must gain a nullable `owner_id` foreign key to `user.id` with `ON DELETE RESTRICT`, using the same additive migration and explicit adoption procedure as ADR-006 and ADR-008. Project reads and mutations must use the session owner plus `id + owner_id + PRIVATE`; NULL-owner rows remain inaccessible until explicitly reviewed by a human.
 
-The MVP keeps Project lifecycle and operational status independent. Lifecycle describes the product state (`PLANNING`, `ACTIVE`, `PAUSED`, `RELEASED`, `ARCHIVED`); operational status describes attention needed (`NO_ACTION_REQUIRED`, `NEXT_ACTION_DUE`, `WAITING`, `BLOCKED`, `REVIEW_DUE`). Waiting fields are meaningful only for waiting state, and status changes must not silently change lifecycle.
+The MVP keeps Project lifecycle and operational status independent, using the approved product requirements and existing database enums. Lifecycle: `PLANNING`, `BUILDING`, `TESTING`, `BETA`, `RELEASED`, `MONETIZING`, `PAUSED`, `ARCHIVED`. Operational status: `READY`, `ACTION_REQUIRED`, `WAITING_PLATFORM`, `WAITING_USERS`, `WAITING_REVIEW`, `WAITING_PAYMENT`, `BLOCKED`, `NO_ACTION_REQUIRED`. T-020 corrects the earlier planning-only aliases; no database enum migration is needed. Waiting statuses require a reason and an explicit ISO start timestamp; leaving waiting clears its reason and timestamp. Status updates take both independent values explicitly. Content updates never change either status. New projects start PRIVATE, PLANNING and NO_ACTION_REQUIRED, regardless of client-supplied status or visibility. These actions do not publish projects.
 
 An Idea -> Project conversion verifies the source Idea with the session owner and PRIVATE visibility, sets the Project owner from the session, stores `origin_idea_id`, and returns an explicit result. Repeated conversion is rejected or returns the existing owned Project according to the implementation card; it never creates an unowned or duplicate Project silently. Project decisions use the existing owner-scoped Decision Log. Finance transactions, public publishing, integrations and AI execution remain outside this phase; nullable finance `project_id` must not be treated as an ownership boundary.
 
 ## ADR-010: One branch and one PR per task card
 
 Each card is implemented on its own `task/T-XXX-<slug>` branch cut from `origin/master` (or from an unmerged dependency's branch, which then becomes the PR base). When the gate passes, the agent commits only the card's files, pushes that branch and opens a PR; the branch and PR URL go in the card's Handoff. This replaces the earlier rule that agents never commit or push: pushing a card's own `task/` branch and opening its PR are pre-approved by the owner. Merges, force pushes, pushes to `master`, branch deletion, real-data migrations, secrets and deploys still require explicit human approval. Stacked PRs must be retargeted to `master` once their base merges, so work never stops in a task branch.
+
+## ADR-011: Finance OS starts with owner-scoped manual transactions
+
+Finance OS begins as a private ledger for manually recorded income and expenses. Every transaction read and mutation must derive the owner from the authenticated server session and enforce the owner plus `PRIVATE` boundary. The existing nullable `finance_transaction.project_id` is only a relationship; it cannot authorize access. A project link is accepted only after verifying that the referenced project belongs to the same owner and is private.
+
+The first implementation slice supports transaction type (`INCOME` or `EXPENSE`), category, positive decimal amount, ISO currency code, source, optional external ID, occurred-at timestamp and optional owned-project link. Amounts remain exact decimal values at the database boundary; calculations must not use binary floating point. Duplicate external IDs are not rejected globally until an integration-specific uniqueness policy exists. No external imports, payment-provider synchronization, portfolio publishing or tax/accounting claims are included in the MVP.
+
+The current `finance_transaction` table has no `owner_id` or `visibility`, so implementation starts with an additive ownership migration generated and reviewed in a separate card. A human must apply that migration to real data and explicitly adopt any historical rows before the Finance UI or queries expose them. Follow-up cards are: T-027 generate the ownership migration and schema contract, T-028 implement owner-scoped transaction actions and queries, T-029 add the private Finance UI and project linking, and T-030 verify ledger behavior and privacy end to end. T-028 and T-029 depend on T-027; T-030 depends on both.
+
+## ADR-012: Research OS starts with owner-scoped evidence on problems and ideas
+
+Phase order approved by the owner on 2026-09-26: 1) Research OS, 2) Distribution/portfolio, 3) Integrations, 4) AI execution.
+
+Research OS begins as a private evidence log. One record (`evidence`) captures something the owner learned while researching: a title, a summary, a kind (`NOTE`, `INTERVIEW`, `MARKET`, `COMPETITOR`, `SOURCE`), a signal (`SUPPORTS`, `CONTRADICTS`, `NEUTRAL`) and an optional source URL. This matches the existing `AIService.analyzeEvidence(evidenceId)` interface, which stays interface-only (ADR-004).
+
+Ownership and visibility:
+- `evidence` is a new table, so it has no historical rows. `owner_id` is `NOT NULL` (FK to `user.id`, `ON DELETE RESTRICT`), unlike the nullable legacy columns of ADR-006/008/009/011. `visibility` defaults to `PRIVATE`. The migration is purely additive (new enums and table, no UPDATE or DELETE).
+- Reads and mutations derive the owner from the session and use `id + owner_id + PRIVATE`, as ADR-005 requires.
+- Each record belongs to exactly one parent: a Problem or an Idea (`problem_id` and `idea_id` nullable FKs with `ON DELETE RESTRICT`, plus a `CHECK (num_nonnulls(problem_id, idea_id) = 1)`). The server verifies that the parent belongs to the same owner and is `PRIVATE` before inserting. A foreign key never authorizes access by itself.
+
+Behavior:
+- The MVP covers create, content edit (title, summary, kind, signal, source URL) and listing. The parent cannot be changed after creation. There is no delete, which matches Ideas, Projects and Decisions.
+- Mutations return explicit results, and updates check `UPDATE … RETURNING`.
+- Source URLs must be `http` or `https` (Zod). The server stores them and never fetches them, so there is no SSRF surface. They render as external links with `rel="noopener noreferrer nofollow"`.
+- Evidence never changes an Idea's status, never creates decisions and never publishes anything. The human decides (PRD).
+- Out of scope: file uploads, web clipping, imports, AI summaries, scoring, publishing and cross-owner sharing.
+
+Follow-up cards: T-033 schema contract and migration 0005 (generate only). T-034 human applies 0005 locally. T-035 owner-scoped evidence domain. T-036 private Research UI. T-037 Research workflow and privacy E2E. T-035 depends on T-033; T-036 depends on T-034 and T-035; T-037 depends on T-036.
+
+Amendment (T-040, migration 0006): `problem_id` and `idea_id` are indexed; `kind` and `signal` have no defaults, so every insert states both; `updated_at` is set on every update. Owner/parent consistency (the parent belongs to the same owner) cannot be a composite FK while `problem.owner_id` and `idea.owner_id` are nullable (ADR-006), so the server enforces it; T-035 tests it and T-037 proves it end to end.
+
+## ADR-013: Phase plan extended; specialized review subagents
+
+Supersedes the phase order in ADR-012. After Research OS, the order is: 5) Workspace cockpit, 6) Production readiness, 7) Distribution/portfolio, 8) GitHub integration, 9) Finance imports, 10) AI execution. The owner approves it by merging T-039 and can reorder later phases in the same way.
+
+- Workspace cockpit: the PRD promises a workspace that connects problems, ideas, research, projects and finance, but Phases 1–4 build separate domains. Problems have no detail or edit page, and nothing shows what needs attention across domains. The phase is private and read-mostly.
+- Production readiness: nothing is deployed yet (no hosting config, security headers, backup drill or production migration runbook). Distribution is the first phase that puts data on the public internet, so a hardened deployment comes first.
+- Integrations is split: GitHub (OAuth or app tokens, webhooks, source of truth for technical work) and finance imports (file or bank formats, the duplicate `external_id` policy ADR-011 deferred) have different risks and no shared code.
+
+Review: the generic `reviewer` approved T-033, and two later reviews then found gaps in indexes, defaults and test strength. `schema-reviewer` now runs on every card that changes the schema or adds a migration. `privacy-auditor` sweeps the whole tree at each phase's closing E2E card and on any card that adds a public or outbound surface. `ci-triager` reads failed CI runs and returns a short diagnosis, because Playwright only runs in CI and its logs are expensive to read in the main session. E2E test patterns are shared as helpers referenced from CONTEXT.md, not as a separate subagent, so Codex can reuse them too. No external agent is added. Cards are routed across claude, codex and chatgpt per `ROUTING.md` to keep claude from being the bottleneck.
+
+## ADR-014: Defense-in-depth for the web layer (T-043)
+
+Authorization stays where ADR-005 put it: every private page, query and action calls `requireAuth()` and scopes by owner. The web layer adds cheap outer checks that never replace it:
+
+- **Middleware** (`src/middleware.ts`, Edge runtime) redirects `GET`/`HEAD` page requests under `/private` without a Better Auth session cookie to `/login?next=<path>`. It only checks that a cookie exists, never that it is valid. Server action POSTs (`Next-Action` header) always pass through so they keep returning explicit `{ ok: false }` results (T-038 E2E). The cookie names mirror `getSessionCookie` from `better-auth/cookies`, which the Edge runtime cannot import (it pulls in `jose`); `tests/middleware.test.ts` asserts both agree. Node.js middleware was tried and rejected: it reads request bodies and logged uncaught `ECONNRESET` when clients aborted server actions.
+- **`?next=`** is accepted only through `safePrivatePath` (same-origin `/private` paths), so it cannot become an open redirect. A signed-in owner visiting `/login` is sent straight there.
+- **Headers** (`next.config.ts`): `frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `X-Frame-Options: DENY`, `nosniff`, `strict-origin-when-cross-origin`, a restrictive `Permissions-Policy` and HSTS on every response; `X-Robots-Tag: noindex, nofollow` on `/private`, auth pages and `/api`. No `script-src` yet: Next.js inline scripts would need per-request nonces (follow-up T-045).
+- **Registration UI**: `/register` explains that registration is closed instead of offering a form that can never succeed (ADR-005: only an operator request with the setup token creates the owner).
+- **Dependencies**: `@better-auth/cli` was unused and pulled a vulnerable `better-auth` < 1.6.22 (critical advisory), `lodash` and Prisma build scripts; it is removed. `drizzle-orm` moves to ^0.45.3 (GHSA-gpj5-g38j-94v9; also the peer range `better-auth` 1.7 declares). `next>postcss` is overridden to ^8.5.28 in `pnpm-workspace.yaml`. Remaining advisories are dev-only (Vitest 3, drizzle-kit's esbuild), tracked in T-044.
+- **Finance timestamps**: `occurredAt` from the form has no offset. It is stored as that wall-clock time in UTC, so the saved date no longer depends on the server's time zone. Explicit offsets from other callers are kept as given.
+
+Amendment (T-045): the Content-Security-Policy moved from `next.config.ts` into the middleware, which now runs on every page (not API routes or static assets). Each request gets a nonce (`btoa(crypto.randomUUID())`) in `script-src 'self' 'nonce-…' 'strict-dynamic'` (plus `'unsafe-eval'` only under `next dev`), alongside `default-src 'self'`, `style-src 'self' 'unsafe-inline'`, `img-src 'self' data: blob:`, `connect-src 'self'` and the earlier `frame-ancestors`/`object-src`/`base-uri`/`form-action` directives. The same policy is forwarded on the request so Next.js stamps the nonce on its scripts, and the root layout is `force-dynamic`, because a prerendered page would ship unstamped scripts. Styles keep `'unsafe-inline'`: the risk is CSS injection, not script execution. The `/private` redirect and server-action pass-through are unchanged. `X-Frame-Options: DENY` still covers responses outside the middleware.
+
+## ADR-015: Workspace cockpit MVP (Phase 5, T-041)
+
+Phases 1–4 built separate domains. The cockpit connects them for the owner. It is private and read-mostly, uses no new tables and does no AI scoring (ADR-004): it counts and lists, and the owner decides.
+
+Accepted:
+- **`/private` home** (today it returns 404). A read-only "needs attention" view: projects in `ACTION_REQUIRED` or `BLOCKED`; projects waiting (`WAITING_*`) longer than a threshold; projects whose `review_at` is today or past; ideas still in `INBOX`, oldest first; ideas in `RESEARCHING`/`VALIDATING` with no evidence, or with contradicting and no supporting evidence; the latest decisions; the last 30 days of finance per currency (exact decimals, ADR-011). Each item links to its detail page. Signed-in owners land here after login (the `safePrivatePath` fallback moves from `/private/ideas` to `/private`).
+- **Problem detail page** `/private/problems/[id]`: content edit (a new owner-scoped `updateProblemContent`, `UPDATE … RETURNING`), the ideas made from it, and its evidence with a capture form bound to the problem (reusing T-036 components). The problems list links to it.
+- **Chain on detail pages**: Problem → Ideas (list), Idea → Problem and Project (exists), Project → origin Idea and its finance transactions with per-currency totals (reusing `totalsByCurrency`).
+
+Rules: every count and list uses the session owner and `PRIVATE`, with one aggregation service per domain query module (no cross-owner joins; related rows are joined only with owner-scoped predicates on both sides). Thresholds are constants in code until the owner asks for settings. Nothing is cached across requests.
+
+Rejected for this phase: AI scoring or recommendations (ADR-004, Phase 10); notifications or email; a settings table; global cross-domain search (open question); decision links to problems (the `decision_log` table has no `problem_id`, so this would need a schema change).
+
+Open questions for the owner (the plan uses the proposed default until answered): 1) waiting threshold, proposed 14 days; 2) land on `/private` after login instead of Ideas, proposed yes; 3) show the 30-day finance snapshot on the home, proposed yes; 4) cross-domain search, proposed later.
+
+Cards: T-047 aggregation queries (codex) → T-048 `/private` home and login landing (codex); T-049 Problem detail and edit (codex); T-050 Project → Idea/Finance chain (codex); T-051 cockpit E2E and privacy sweep (claude), after T-048..T-050.
+
+## ADR-016: Production readiness (Phase 6, T-042)
+
+Nothing is deployed yet. This phase takes the private app to a hardened deployment before anything is published (Phase 7). Agents prepare; every deploy, secret and real-data step is a `human` card with exact commands (ROUTING.md).
+
+- **Hosting**: Vercel for the app and Neon Postgres, as SYSTEM_DESIGN names. The app keeps `postgres-js`. On Vercel it uses Neon's pooled URL with `prepare: false` and a small `max`, and migrations use the direct (unpooled) URL. The unused `@neondatabase/serverless` dependency is removed.
+- **Environment**: in production, `src/lib/env.ts` fails at boot if `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` (https) or `OWNER_EMAIL` is missing, instead of running with auth disabled. `OWNER_SETUP_TOKEN` exists only during first-owner setup (ADR-005). Secrets live only in Vercel env settings, never in the repo or logs. *Amended by T-052:* "in production" means `VERCEL=1` (preview and production deploys) or an explicit `FOUNDER_OS_STRICT_ENV=1`, and never during `next build`; not `NODE_ENV=production`, because CI and local E2E run `next start` with no auth env (anonymous) or an http `BETTER_AUTH_URL` (authenticated). The error names the variables, never their values. Pooled client options (`prepare: false`, `max: 3`) apply to hosts containing `-pooler.` or with `DATABASE_POOLED=1`.
+- **Migrations**: runbook in `docs/RUNBOOK.md`: Neon branch or `pg_dump` backup → `pnpm db:migrate` against the direct URL → ADR-006 adoption when historical rows exist → verification queries → rollback by restoring the branch or dump. A restore drill is done once before go-live.
+- **Security headers**: done in ADR-014 and T-045 (nonce CSP, HSTS, frame, referrer and permissions policies). Phase 6 verifies them on the deployed URL.
+- **Auth**: Better Auth rate limiting is on in production, but its default memory storage is per instance on serverless. Switch it to database storage (new `rate_limit` table, additive migration, `schema-reviewer`), with a stricter rule on `/sign-in/email`. Sessions keep the 7-day expiry and 1-day refresh; secure cookies on https. Better Auth telemetry is disabled explicitly. *Amended by T-053:* the limiter keys on `x-forwarded-for` + path; Vercel overwrites that header with the client IP, while a self-hosted deployment needs a proxy that does the same or the limit is bypassable. Every `/api/auth/*` request reads `rate_limit`, so migration 0007 is applied before this code is deployed (RUNBOOK section 6).
+- **Errors**: server actions swallow errors today, which is private but blind. A `reportError(scope, error)` helper logs only the scope, error class, Postgres code and Next digest (never messages, SQL, parameters or form values) to Vercel runtime logs. A third-party monitor is an open question: it adds a dependency and an outbound flow.
+- **Privacy**: a `privacy-auditor` sweep of the tree plus a smoke check of the deployed app (headers, anonymous redirects, `noindex`) closes the phase; findings become cards.
+
+Open questions for the owner: 1) confirm Vercel + Neon, and the region; 2) the production domain; 3) logs only, or a third-party error monitor; 4) the sign-in rate limit, proposed 5 attempts per minute per IP.
+
+Cards: T-052 production env + DB client (claude) · T-053 auth rate limit storage, session and telemetry settings, migration 0007 (claude) · T-054 `reportError` (claude) · T-055 `docs/RUNBOOK.md` (claude) · T-056 provision Vercel + Neon and deploy a preview (human) · T-057 production migrations, owner setup and restore drill (human) · T-058 deployed smoke check and privacy sweep (claude).

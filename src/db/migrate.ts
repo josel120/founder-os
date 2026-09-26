@@ -2,6 +2,7 @@ import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { loadDatabaseEnvironment } from "./load-environment";
+import { reportError } from "../lib/report-error";
 
 async function main(): Promise<void> {
   loadDatabaseEnvironment();
@@ -16,8 +17,9 @@ async function main(): Promise<void> {
   }
 }
 
-void main().catch(() => {
-  // Do not log driver errors: they can contain credentials, SQL or private values.
+void main().catch((error: unknown) => {
+  // Never log driver messages: they can contain credentials, SQL or private values. Only the error class and SQLSTATE.
+  reportError("db.migrate", error);
   console.error("Migration failed. Check DATABASE_URL, database availability and migration prerequisites.");
   process.exitCode = 1;
 });

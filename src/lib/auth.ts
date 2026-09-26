@@ -16,10 +16,21 @@ export const auth =
             session: schema.sessions,
             account: schema.accounts,
             verification: schema.verifications,
+            rateLimit: schema.rateLimits,
           },
         }),
         secret: env.BETTER_AUTH_SECRET,
         baseURL: env.BETTER_AUTH_URL,
+        // ADR-016: counters live in Postgres so every serverless instance shares them; keyed per client IP and path.
+        // Gated on NODE_ENV (Better Auth's default), not env.ts's Vercel rule, so CI's `next start` exercises it;
+        // self-hosting needs a proxy that overwrites x-forwarded-for, or the key is client-controlled.
+        rateLimit: {
+          enabled: process.env.NODE_ENV === "production",
+          storage: "database",
+          customRules: { "/sign-in/email": { window: 60, max: 5 } },
+        },
+        session: { expiresIn: 60 * 60 * 24 * 7, updateAge: 60 * 60 * 24 },
+        telemetry: { enabled: false },
         emailAndPassword: {
           enabled: true,
           disableSignUp: !env.OWNER_EMAIL || !env.OWNER_SETUP_TOKEN,

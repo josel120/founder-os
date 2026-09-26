@@ -20,7 +20,7 @@ Several agents (ChatGPT, Codex, Claude Code) share this repo and pass tasks thro
 2. Work only on a task card: `docs/agents/tasks/T-XXX.md`. No card → create one from `_TEMPLATE.md` first.
 3. Before editing, create the card's branch (see "Git per card"), then set the card and its `BOARD.md` row to `doing` with your agent name. Never edit files in scope of another `doing` card.
 4. Stay inside the card's "Files in scope". Read other files only if needed, and note why in the handoff.
-5. Finish every session by filling the card's Handoff block and updating `BOARD.md` and `docs/PROGRESS.md`. A finished card (gate passed, status `review` or `done`) is then committed, pushed and opened as a PR.
+5. Finish every session by filling the card's Handoff block and updating `BOARD.md` and `docs/PROGRESS.md` (and `docs/ROADMAP.md` when a phase starts or ends). A finished card (gate passed, status `review` or `done`) is then committed, pushed and opened as a PR.
 6. Stuck twice on the same step, or past 2× the size budget: stop, set `blocked`, hand off per `docs/agents/ROUTING.md`.
 7. Migrations against real data, secrets, deploys, merges, force pushes, pushes to `master` and branch deletion need explicit human approval. Pushing a card's own `task/` branch and opening its PR are pre-approved.
 

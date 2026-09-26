@@ -20,12 +20,10 @@
     "db:seed": "tsx src/db/seed.ts"
   },
   "dependencies": {
-    "@better-auth/cli": "^1.4.7",
-    "@neondatabase/serverless": "^1.0.2",
     "@tailwindcss/postcss": "^4.1.13",
     "better-auth": "^1.4.7",
     "clsx": "^2.1.1",
-    "drizzle-orm": "^0.44.5",
+    "drizzle-orm": "^0.45.3",
     "next": "^15.5.3",
     "postgres": "^3.4.7",
     "react": "^19.1.1",
@@ -49,6 +47,6 @@
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "vite": "^7.1.5",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.11"
   }
 }

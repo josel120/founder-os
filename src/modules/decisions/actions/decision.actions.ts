@@ -3,7 +3,8 @@
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { decisionLogs, ideas } from "@/db/schema";
+import { decisionLogs, ideas, projects } from "@/db/schema";
+import { reportError } from "@/lib/report-error";
 import { requireAuth } from "@/lib/require-auth";
 import { createDecisionSchema } from "../schemas/decision.schema";
 
@@ -11,11 +12,13 @@ export async function createDecision(formData: FormData): Promise<{ ok: true } |
   const owner = await requireAuth();
   if (!owner) return { ok: false, error: "Sign in again to save this decision." };
   const ideaId = formData.get("ideaId");
+  const projectId = formData.get("projectId");
   const parsed = createDecisionSchema.safeParse({
     title: formData.get("title"),
     decision: formData.get("decision"),
     reason: formData.get("reason"),
     ideaId: typeof ideaId === "string" && ideaId !== "" ? ideaId : undefined,
+    projectId: typeof projectId === "string" && projectId !== "" ? projectId : undefined,
   });
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid decision." };
   if (!db) return { ok: false, error: "Database is unavailable." };
@@ -25,18 +28,26 @@ export async function createDecision(formData: FormData): Promise<{ ok: true } |
         .where(and(eq(ideas.id, parsed.data.ideaId), eq(ideas.ownerId, owner.id), eq(ideas.visibility, "PRIVATE"))).limit(1);
       if (!idea) return { ok: false, error: "Idea not found. The decision was not saved." };
     }
+    if (parsed.data.projectId) {
+      const [project] = await db.select({ id: projects.id }).from(projects)
+        .where(and(eq(projects.id, parsed.data.projectId), eq(projects.ownerId, owner.id), eq(projects.visibility, "PRIVATE"))).limit(1);
+      if (!project) return { ok: false, error: "Project not found. The decision was not saved." };
+    }
     await db.insert(decisionLogs).values({
       ownerId: owner.id,
       ideaId: parsed.data.ideaId ?? null,
+      projectId: parsed.data.projectId ?? null,
       title: parsed.data.title,
       decision: parsed.data.decision,
       reason: parsed.data.reason,
       visibility: "PRIVATE",
     });
-  } catch {
+  } catch (error) {
+    reportError("decisions.create", error);
     return { ok: false, error: "Could not save the decision. Please try again." };
   }
   revalidatePath("/private/decisions");
   if (parsed.data.ideaId) revalidatePath(`/private/ideas/${parsed.data.ideaId}`);
+  if (parsed.data.projectId) revalidatePath(`/private/projects/${parsed.data.projectId}`);
   return { ok: true };
 }
