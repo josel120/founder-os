@@ -9,13 +9,13 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-034 | Apply migrations 0005 and 0006 to the local database | done | human | S | T-033, T-040 |
 | T-035 | Build the owner-scoped Research evidence domain | done | claude | M | T-033, T-040 |
 | T-036 | Build the private Research UI | done | claude | M | T-034, T-035 |
-| T-037 | Verify Research workflows and privacy end to end | review | claude | M | T-036 |
+| T-037 | Verify Research workflows and privacy end to end | done | claude | M | T-036 |
 | T-039 | Extend the phase plan and add specialized review subagents | done | claude | M | T-033 |
-| T-041 | Plan the Workspace cockpit (Phase 5) and its boundaries | review | claude | M | T-037 |
-| T-042 | Plan Production readiness (Phase 6) and its boundaries | review | claude | M | T-041 |
+| T-041 | Plan the Workspace cockpit (Phase 5) and its boundaries | done | claude | M | T-037 |
+| T-042 | Plan Production readiness (Phase 6) and its boundaries | done | claude | M | T-041 |
 | T-043 | Project-wide audit: security hardening, bug fixes and UX polish | done | claude | M | none |
-| T-044 | Upgrade Vitest to 4.x to clear the remaining dev-only advisories | review | claude | S | T-043 |
-| T-045 | Add a nonce-based script-src Content Security Policy | review | claude | M | T-043 |
+| T-044 | Upgrade Vitest to 4.x to clear the remaining dev-only advisories | done | claude | S | T-043 |
+| T-045 | Add a nonce-based script-src Content Security Policy | done | claude | M | T-043 |
 | T-046 | Select explicit columns in the older domain queries | todo | codex | S | none |
 | T-047 | Cockpit aggregation queries | todo | codex | M | T-041 |
 | T-048 | `/private` home and login landing | todo | codex | M | T-047 |
