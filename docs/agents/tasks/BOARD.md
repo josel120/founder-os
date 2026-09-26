@@ -16,15 +16,15 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-043 | Project-wide audit: security hardening, bug fixes and UX polish | done | claude | M | none |
 | T-044 | Upgrade Vitest to 4.x to clear the remaining dev-only advisories | done | claude | S | T-043 |
 | T-045 | Add a nonce-based script-src Content Security Policy | done | claude | M | T-043 |
-| T-046 | Select explicit columns in the older domain queries | review | claude | S | none |
+| T-046 | Select explicit columns in the older domain queries | done | claude | S | none |
 | T-047 | Cockpit aggregation queries | review | claude | M | T-041 |
 | T-048 | `/private` home and login landing | todo | codex | M | T-047 |
-| T-049 | Problem detail page with content edit and evidence | review | claude | M | T-041 |
-| T-050 | Show the Project → Idea and Project → Finance chain | review | claude | S | T-041 |
+| T-049 | Problem detail page with content edit and evidence | done | claude | M | T-041 |
+| T-050 | Show the Project → Idea and Project → Finance chain | done | claude | S | T-041 |
 | T-051 | Verify the cockpit end to end and sweep privacy | todo | claude | M | T-048, T-049, T-050 |
 | T-052 | Fail fast on production env and tune the DB client for serverless | todo | claude | M | T-042 |
 | T-053 | Store auth rate limits in the database and pin session settings | todo | claude | M | T-042 |
-| T-054 | Report server errors without private data | review | claude | S | T-042 |
+| T-054 | Report server errors without private data | done | claude | S | T-042 |
 | T-055 | Write the production runbook | todo | claude | S | T-042 |
 | T-056 | Provision Vercel and Neon and deploy a preview | todo | human | S | T-052, T-055 |
 | T-057 | Apply production migrations, create the owner and run a restore drill | todo | human | S | T-053, T-054, T-056 |
