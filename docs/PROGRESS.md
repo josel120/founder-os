@@ -18,11 +18,16 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - Bug found in T-035: the Projects URL refine threw inside `safeParse` on non-URL input; fixed with `z.url({ protocol })`.
 - T-044 (Vitest 4 + esbuild override): `pnpm audit` → no known vulnerabilities.
 
+## Phases 5–6: plans in review (T-041, T-042)
+
+- ADR-015 cockpit: `/private` home (needs attention), Problem detail + edit + evidence, Project → Idea/Finance chain. Cards T-047..T-051. Four open questions (defaults proposed).
+- ADR-016 production: Vercel + Neon, fail-fast env, runbook + restore drill, DB-backed auth rate limit, telemetry off, private-safe `reportError`, deployed smoke check. Cards T-052..T-058 (T-056/T-057 human). Four open questions.
+- T-045 (nonce `script-src` CSP): implemented, all pages `force-dynamic`; 29/29 E2E with no CSP violations.
+
 ## Plan and process (T-039, merged)
 
 - ADR-013 extends the phase plan after Research: 5 Workspace cockpit (T-041, codex) → 6 Production readiness (T-042, claude) → 7 Distribution → 8 GitHub integration → 9 Finance imports → 10 AI execution. Merging T-039 approves it.
 - New Claude subagents: `schema-reviewer` (schema/migration cards), `privacy-auditor` (phase-close and public-surface cards) and `ci-triager` (failed CI runs). `/next-task` now marks merged `review` cards `done`.
-- Done board rows moved to `docs/agents/archive/board-done.md`.
 
 ## Audit (T-043, done, PR #31 merged)
 

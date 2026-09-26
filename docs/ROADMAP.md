@@ -5,7 +5,7 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 
 ## Now
 
-**Phase 5: Workspace cockpit (planning).** Phase 4 closes with PR #33 (T-035..T-037). Next: T-041 plans the cockpit (codex), then T-042 plans Production readiness (claude). T-045 (nonce script CSP) and T-046 (explicit query columns) run in parallel.
+**Phase 5: Workspace cockpit.** Phase 4 closes with PR #33 (T-035..T-037). Plans are written and in review: ADR-015 (cockpit, cards T-047..T-051) and ADR-016 (production readiness, cards T-052..T-058). Each lists open questions for the owner. T-047, T-049 and T-050 (codex) can start after approval; T-052..T-055 (claude) can run in parallel. T-045 (nonce CSP) and T-046 (explicit query columns) are side cards.
 
 ## Done
 
@@ -24,8 +24,8 @@ Each phase starts with a planning card, as T-017, T-026 and T-032 did. Planning 
 
 | # | Phase | Scope | Planning card | Why here |
 |---|---|---|---|---|
-| 5 | Workspace cockpit | `/private` home with what needs attention, Problem detail and edit, Problem → Idea → Project → Finance links | T-041 (codex) | Connects Phases 1–4, as the PRD promises. Private and read-mostly |
-| 6 | Production readiness | Hosting and production DB, migration runbook, backup drill, security headers, auth rate limits, PII-free monitoring, privacy audit | T-042 (claude) | Nothing is deployed yet. Must come before anything is public |
+| 5 | Workspace cockpit | `/private` home with what needs attention, Problem detail and edit, Problem → Idea → Project → Finance links | T-041 → ADR-015, T-047..T-051 | Connects Phases 1–4, as the PRD promises. Private and read-mostly |
+| 6 | Production readiness | Hosting and production DB, migration runbook, backup drill, auth rate limits, PII-free error reporting, privacy audit (headers done: ADR-014, T-045) | T-042 → ADR-016, T-052..T-058 | Nothing is deployed yet. Must come before anything is public |
 | 7 | Distribution / portfolio | Explicit publishing of chosen records; everything else stays PRIVATE (ADR-003) | later | First public surface |
 | 8 | GitHub integration | GitHub as source of truth for technical work, linked to Projects | later | Needs production for callbacks and webhooks |
 | 9 | Finance imports | File or bank imports, duplicate `external_id` policy (ADR-011) | later | Separate risk from GitHub |
