@@ -7,7 +7,7 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - Merged on `master` (41c5c59): Phase 0 foundation, Idea OS (T-001..T-016), Project OS (T-017..T-024, T-038), Finance OS (T-026..T-030), Research OS (T-032..T-037, T-040), audit T-043/T-044/T-045, plans T-041/T-042, Phase 5–6 cards T-046..T-050/T-054, process cards T-012/T-025/T-031/T-039.
 - Security model: owner-only access via `OWNER_EMAIL`, closed signup, every private query/mutation uses session owner + `id + owner_id + PRIVATE` (ADR-005/006/008/009/011).
 - Web layer (ADR-014, T-043): security headers, `noindex`, cookie-presence middleware for `/private` pages with a validated `?next=`, sign-out, closed `/register` page. `pnpm audit`: 21 advisories (1 critical) → 3 dev-only (T-043) → 0 (T-044).
-- Migrations 0000..0006 exist; the owner reports all applied locally (T-034). Historical rows were adopted per ADR-006.
+- Migrations 0000..0007 exist; 0000..0006 applied locally (T-034). 0007 (`rate_limit`, T-053) must be applied before running the T-053 code in production mode. Historical rows were adopted per ADR-006.
 - Last CI verification (PR #36, run `36266137620`): lint, typecheck, 313 unit tests, build, 29/29 authenticated/anonymous E2E passed.
 - Branch/PR per card (ADR-010). Merges, force pushes, pushes to `master`, real-data migrations and secrets stay human.
 
@@ -22,7 +22,7 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - ADR-015 merged in PR #34; its open questions run on the proposed defaults (14-day waiting threshold, land on `/private`, 30-day finance, search later).
 - PR #35: T-046 (queries never select `owner_id`/`visibility`), T-049 (Problem detail + edit + evidence), T-050 (Project → Idea/Finance), T-054 (`reportError`). PR #36: T-047 `getAttention` and T-048 `/private` home, now the login landing.
 - T-051: `cockpit.auth.spec.ts` (home items and links, problem edit/ideas/evidence, project chain, owner B absent everywhere incl. a B transaction on A's project and a cross-owner origin idea, anonymous replay) + `/private` in the anonymous spec. Local: 35/35 E2E.
-- Phase 6 in progress: T-052, T-053, T-055 (claude, delegated to subagents); human T-056/T-057 next.
+- Phase 6 in PR #37: T-052 (fail-fast env on Vercel or `FOUNDER_OS_STRICT_ENV=1`, pooled DB options, `@neondatabase/serverless` removed), T-053 (DB-backed auth rate limit, 5 sign-ins/60 s/IP, migration 0007), T-055 (`docs/RUNBOOK.md`). Written by subagents in worktrees, reviewed and integrated here. Local: 329 unit, 36/36 E2E. Human T-056/T-057 next.
 
 ## Plan and process (T-039, merged)
 
