@@ -121,6 +121,8 @@ Behavior:
 
 Follow-up cards: T-033 schema contract and migration 0005 (generate only). T-034 human applies 0005 locally. T-035 owner-scoped evidence domain. T-036 private Research UI. T-037 Research workflow and privacy E2E. T-035 depends on T-033; T-036 depends on T-034 and T-035; T-037 depends on T-036.
 
+Amendment (T-040, migration 0006): `problem_id` and `idea_id` are indexed; `kind` and `signal` have no defaults, so every insert states both; `updated_at` is set on every update. Owner/parent consistency (the parent belongs to the same owner) cannot be a composite FK while `problem.owner_id` and `idea.owner_id` are nullable (ADR-006), so the server enforces it; T-035 tests it and T-037 proves it end to end.
+
 ## ADR-013: Phase plan extended; specialized review subagents
 
 Supersedes the phase order in ADR-012. After Research OS, the order is: 5) Workspace cockpit, 6) Production readiness, 7) Distribution/portfolio, 8) GitHub integration, 9) Finance imports, 10) AI execution. The owner approves it by merging T-039 and can reorder later phases in the same way.
