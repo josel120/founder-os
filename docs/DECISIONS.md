@@ -120,3 +120,13 @@ Behavior:
 - Out of scope: file uploads, web clipping, imports, AI summaries, scoring, publishing and cross-owner sharing.
 
 Follow-up cards: T-033 schema contract and migration 0005 (generate only). T-034 human applies 0005 locally. T-035 owner-scoped evidence domain. T-036 private Research UI. T-037 Research workflow and privacy E2E. T-035 depends on T-033; T-036 depends on T-034 and T-035; T-037 depends on T-036.
+
+## ADR-013: Phase plan extended; specialized review subagents
+
+Supersedes the phase order in ADR-012. After Research OS, the order is: 5) Workspace cockpit, 6) Production readiness, 7) Distribution/portfolio, 8) GitHub integration, 9) Finance imports, 10) AI execution. The owner approves it by merging T-039 and can reorder later phases in the same way.
+
+- Workspace cockpit: the PRD promises a workspace that connects problems, ideas, research, projects and finance, but Phases 1–4 build separate domains. Problems have no detail or edit page, and nothing shows what needs attention across domains. The phase is private and read-mostly.
+- Production readiness: nothing is deployed yet (no hosting config, security headers, backup drill or production migration runbook). Distribution is the first phase that puts data on the public internet, so a hardened deployment comes first.
+- Integrations is split: GitHub (OAuth or app tokens, webhooks, source of truth for technical work) and finance imports (file or bank formats, the duplicate `external_id` policy ADR-011 deferred) have different risks and no shared code.
+
+Review: the generic `reviewer` approved T-033, and two later reviews then found gaps in indexes, defaults and test strength. `schema-reviewer` now runs on every card that changes the schema or adds a migration. `privacy-auditor` sweeps the whole tree at each phase's closing E2E card and on any card that adds a public or outbound surface. No external agent is added. Cards are routed across claude, codex and chatgpt per `ROUTING.md` to keep claude from being the bottleneck.

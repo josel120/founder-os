@@ -12,8 +12,8 @@ Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind 4 · Drizzl
 | Path | Owns |
 |---|---|
 | `src/app` | Routing and composition only. `private/` = authenticated area, `login`, `register`, `api/auth/[...all]` |
-| `src/modules/<domain>/{actions,queries,schemas,services,components}` | Domain behavior. Domains: `ideas`, `problems`, `ai` (interface only) |
-| `src/db/schema/index.ts` | All tables (auth tables + Problem, Idea, Project, DecisionLog, FinanceTransaction) |
+| `src/modules/<domain>/{actions,queries,schemas,services,components}` | Domain behavior. Domains: `ideas`, `problems`, `decisions`, `projects`, `finance`, `research` (from T-035), `ai` (interface only) |
+| `src/db/schema/index.ts` | All tables (auth tables + Problem, Idea, Project, DecisionLog, FinanceTransaction, Evidence) |
 | `src/db/migrations` | Generated SQL. Never edit existing files; add new migrations |
 | `src/lib/auth.ts`, `require-auth.ts`, `env.ts` | Better Auth config, owner check, env validation |
 | `src/middleware.ts` | Redirects anonymous users away from `/private` |
