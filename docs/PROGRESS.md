@@ -20,7 +20,7 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 ## Plan and process (T-039, in review)
 
 - ADR-013 extends the phase plan after Research: 5 Workspace cockpit (T-041, codex) → 6 Production readiness (T-042, claude) → 7 Distribution → 8 GitHub integration → 9 Finance imports → 10 AI execution. Merging T-039 approves it.
-- New Claude subagents: `schema-reviewer` (schema/migration cards) and `privacy-auditor` (phase-close and public-surface cards). `/next-task` now marks merged `review` cards `done`.
+- New Claude subagents: `schema-reviewer` (schema/migration cards), `privacy-auditor` (phase-close and public-surface cards) and `ci-triager` (failed CI runs). `/next-task` now marks merged `review` cards `done`.
 - Done board rows moved to `docs/agents/archive/board-done.md`.
 
 ## Deployment prerequisites

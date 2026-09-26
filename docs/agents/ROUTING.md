@@ -18,7 +18,8 @@ Send each task to the cheapest agent that can do it well. Save the scarce budget
 | `implementer` | sonnet | Mechanical S/M cards |
 | `reviewer` | sonnet | Every card, before `review` |
 | `schema-reviewer` | sonnet | Also, when a card changes `src/db/schema` or adds a migration |
-| `privacy-auditor` | sonnet | Each phase's closing E2E card, and any card that adds routes outside `/private`, metadata, publishing, logging or outbound calls |
+| `privacy-auditor` | sonnet | Each phase's closing E2E card, and any card that adds routes outside `/private`, metadata, publishing, logging or outbound calls. Override to the stronger model for the pre-public audits in phases 6–7 |
+| `ci-triager` | sonnet | Any failed CI run. It returns ≤15 lines, so full logs never enter the main session |
 
 ## Card sizes (budget)
 
