@@ -1,5 +1,8 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
+  index,
   numeric,
   pgEnum,
   pgTable,
@@ -47,6 +50,19 @@ export const operationalStatus = pgEnum("operational_status", [
 export const transactionType = pgEnum("transaction_type", [
   "INCOME",
   "EXPENSE",
+]);
+
+export const evidenceKind = pgEnum("evidence_kind", [
+  "NOTE",
+  "INTERVIEW",
+  "MARKET",
+  "COMPETITOR",
+  "SOURCE",
+]);
+export const evidenceSignal = pgEnum("evidence_signal", [
+  "SUPPORTS",
+  "CONTRADICTS",
+  "NEUTRAL",
 ]);
 
 export const users = pgTable("user", {
@@ -201,3 +217,36 @@ export const financeTransactions = pgTable("finance_transaction", {
     .notNull()
     .defaultNow(),
 });
+export const evidence = pgTable(
+  "evidence",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    // New table (ADR-012): no historical rows, so ownership is mandatory.
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    problemId: uuid("problem_id").references(() => problems.id, {
+      onDelete: "restrict",
+    }),
+    ideaId: uuid("idea_id").references(() => ideas.id, { onDelete: "restrict" }),
+    title: text("title").notNull(),
+    summary: text("summary").notNull(),
+    kind: evidenceKind("kind").notNull().default("NOTE"),
+    signal: evidenceSignal("signal").notNull().default("NEUTRAL"),
+    sourceUrl: text("source_url"),
+    visibility: visibility("visibility").notNull().default("PRIVATE"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    check(
+      "evidence_exactly_one_parent",
+      sql`num_nonnulls(${table.problemId}, ${table.ideaId}) = 1`,
+    ),
+    index("evidence_owner_id_idx").on(table.ownerId),
+  ],
+);
