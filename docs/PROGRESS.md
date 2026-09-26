@@ -11,10 +11,10 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - Last CI verification (PR #29, run `36259034146`): lint, typecheck, 149 unit tests, build, 18/18 authenticated/anonymous E2E passed.
 - Branch/PR per card (ADR-010). Merges, force pushes, pushes to `master`, real-data migrations and secrets stay human.
 
-## Phase 4: Research OS (closing, PR #33)
+## Phase 4: Research OS (done: PR #33 merged, E2E in PR #34)
 
 - ADR-012 (+ T-040 amendment): owner-scoped `evidence` on exactly one owned problem or idea; no kind/signal defaults; parent indexes. Migrations 0005 + 0006 merged (PR #28, #32) and applied locally (T-034).
-- T-035 domain, T-036 UI (`/private/research`, idea Evidence section) and T-037 E2E (happy path, `javascript:` link, seeded owner B, anonymous replays) in PR #33. Local: 258 unit, 25/25 E2E. privacy-auditor: clean; optional finding → T-046.
+- T-035 domain, T-036 UI (`/private/research`, idea Evidence section) and T-037 E2E (happy path, `javascript:` link, seeded owner B, anonymous replays) in PR #33 (merged) and #34. Local: 262 unit, 29/29 E2E. privacy-auditor: clean; optional finding → T-046.
 - Bug found in T-035: the Projects URL refine threw inside `safeParse` on non-URL input; fixed with `z.url({ protocol })`.
 - T-044 (Vitest 4 + esbuild override): `pnpm audit` → no known vulnerabilities.
 

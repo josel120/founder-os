@@ -5,7 +5,7 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 
 ## Now
 
-**Phase 5: Workspace cockpit.** Phase 4 closes with PR #33 (T-035..T-037). Plans are written and in review: ADR-015 (cockpit, cards T-047..T-051) and ADR-016 (production readiness, cards T-052..T-058). Each lists open questions for the owner. T-047, T-049 and T-050 (codex) can start after approval; T-052..T-055 (claude) can run in parallel. T-045 (nonce CSP) and T-046 (explicit query columns) are side cards.
+**Phase 5: Workspace cockpit.** Phase 4 closes with PR #33 (T-035, T-036, merged) and PR #34 (T-037). Plans are written and in review: ADR-015 (cockpit, cards T-047..T-051) and ADR-016 (production readiness, cards T-052..T-058). Each lists open questions for the owner. T-047, T-049 and T-050 (codex) can start after approval; T-052..T-055 (claude) can run in parallel. T-045 (nonce CSP) and T-046 (explicit query columns) are side cards.
 
 ## Done
 
