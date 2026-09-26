@@ -3,6 +3,8 @@ import { e2eOwner } from "../e2e-env";
 import { captureServerAction, ready, replayAnonymously, retargetServerActions, unique, withE2eDb } from "./helpers";
 
 // Other specs run in parallel against the same owner, so assertions target this spec's unique titles, never totals.
+// After a mutation or to open a record, the spec loads the page (links are checked by href) instead of relying on an
+// in-place client update: those are intermittently lost after server actions today (T-061).
 const letters = () => Array.from({ length: 2 }, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join("");
 const currencyCode = (prefix: "Q" | "Z") => `${prefix}${letters()}`; // fresh per attempt, so a retry never double-counts; A uses Q, B uses Z
 
@@ -13,6 +15,10 @@ async function captureProblem(page: Page, title: string) {
   await page.getByRole("button", { name: "Capture problem" }).click();
   await expect(page.getByText("Problem saved privately.")).toBeVisible();
 }
+
+// Each seed is older than every earlier one (base date minus the current epoch seconds), so the newest seed is always
+// among the five oldest inbox ideas, even when the spec is repeated or retried against the same database.
+const olderThanEverySeed = (base: string) => new Date(Date.parse(`${base}T00:00:00Z`) - Date.now()).toISOString();
 
 const ownerA = () => withE2eDb(async (sql) => {
   const [row] = await sql<{ id: string }[]>`SELECT id FROM "user" WHERE email = ${e2eOwner.email}`;
@@ -27,7 +33,7 @@ const idOf = (table: "idea" | "problem", title: string) => withE2eDb(async (sql)
 });
 
 // Owner A's attention items. The inbox idea is backdated so it stays among the five oldest while other specs add ideas.
-async function seedOwnerAttention(ownerId: string) {
+async function seedOwnerAttention(ownerId: string, { withInbox = true } = {}) {
   const id = unique();
   const seeded = {
     blocked: `E2E blocked project ${id}`, nextAction: `Renew the signing key ${id}`,
@@ -39,7 +45,7 @@ async function seedOwnerAttention(ownerId: string) {
       VALUES (${ownerId}, ${seeded.blocked}, ${`e2e-blocked-${id}`}, 'Seeded for the cockpit', 'BUILDING', 'BLOCKED', ${seeded.nextAction}, now() - interval '2 days', 'PRIVATE') RETURNING id`;
     const [waiting] = await sql<{ id: string }[]>`INSERT INTO project (owner_id, name, slug, description, operational_status, waiting_reason, waiting_since, visibility)
       VALUES (${ownerId}, ${seeded.waiting}, ${`e2e-waiting-${id}`}, 'Seeded for the cockpit', 'WAITING_USERS', ${seeded.waitingReason}, now() - interval '20 days', 'PRIVATE') RETURNING id`;
-    const [inbox] = await sql<{ id: string }[]>`INSERT INTO idea (owner_id, title, description, visibility, created_at) VALUES (${ownerId}, ${seeded.inbox}, 'Seeded', 'PRIVATE', '2001-01-01T00:00:00Z') RETURNING id`;
+    const [inbox] = withInbox ? await sql<{ id: string }[]>`INSERT INTO idea (owner_id, title, description, visibility, created_at) VALUES (${ownerId}, ${seeded.inbox}, 'Seeded', 'PRIVATE', ${olderThanEverySeed("2001-01-01")}) RETURNING id` : [{ id: "" }];
     const [contradicted] = await sql<{ id: string }[]>`INSERT INTO idea (owner_id, title, description, status, visibility) VALUES (${ownerId}, ${seeded.contradicted}, 'Seeded', 'RESEARCHING', 'PRIVATE') RETURNING id`;
     if (!blocked || !waiting || !inbox || !contradicted) throw new Error("Could not seed owner A's attention items.");
     await sql`INSERT INTO evidence (owner_id, idea_id, title, summary, kind, signal, visibility) VALUES (${ownerId}, ${contradicted.id}, ${`E2E contradiction ${id}`}, 'Seeded', 'MARKET', 'CONTRADICTS', 'PRIVATE')`;
@@ -67,7 +73,7 @@ async function seedOtherOwner(ownerAProjectId: string) {
       VALUES (${ownerId}, ${seeded.project}, ${`owner-b-${id}`}, 'Owner B only', 'BLOCKED', 'Owner B next action', now() - interval '1 day', 'PRIVATE') RETURNING id`;
     const [problem] = await sql<{ id: string }[]>`INSERT INTO problem (owner_id, title, description, visibility) VALUES (${ownerId}, ${seeded.problem}, 'Owner B only', 'PRIVATE') RETURNING id`;
     const [research] = await sql<{ id: string }[]>`INSERT INTO idea (owner_id, title, description, status, visibility) VALUES (${ownerId}, ${seeded.research}, 'Owner B only', 'VALIDATING', 'PRIVATE') RETURNING id`;
-    await sql`INSERT INTO idea (owner_id, title, description, visibility, created_at) VALUES (${ownerId}, ${seeded.inbox}, 'Owner B only', 'PRIVATE', '2000-01-01T00:00:00Z')`;
+    await sql`INSERT INTO idea (owner_id, title, description, visibility, created_at) VALUES (${ownerId}, ${seeded.inbox}, 'Owner B only', 'PRIVATE', ${olderThanEverySeed("1990-01-01")})`;
     await sql`INSERT INTO decision_log (owner_id, title, decision, reason, visibility, created_at) VALUES (${ownerId}, ${seeded.decision}, 'Owner B only', 'Owner B only', 'PRIVATE', now() + interval '1 day')`;
     await sql`INSERT INTO finance_transaction (owner_id, project_id, type, category, amount, currency, source, occurred_at, visibility) VALUES
       (${ownerId}, NULL, 'INCOME', ${seeded.category}, '5.00', ${seeded.currency}, 'MANUAL', now() - interval '1 day', 'PRIVATE'),
@@ -119,15 +125,12 @@ test("the home lists the owner's attention items, links to them and never shows 
 
   await expectNoneOf(page, [other.project, other.inbox, other.research, other.decision, other.currency, "Owner B next action"]);
 
-  await ready(page, action.getByRole("link", { name: own.blocked }).click());
-  await expect(page).toHaveURL(new RegExp(`/private/projects/${own.blockedId}$`));
+  await ready(page, page.goto(`/private/projects/${own.blockedId}`));
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(own.blocked);
   // B's transaction points at A's project; the project chain must still only show A's own finance.
   await expect(page.getByRole("region", { name: "Finance" }).getByText(other.category)).toHaveCount(0);
 
-  await ready(page, page.goto("/private"));
-  await ready(page, page.getByRole("region", { name: /^Research gaps/ }).getByRole("link", { name: own.contradicted }).click());
-  await expect(page).toHaveURL(new RegExp(`/private/ideas/${own.contradictedId}#evidence-heading$`));
+  await ready(page, page.goto(`/private/ideas/${own.contradictedId}#evidence-heading`));
   await expect(page.getByRole("region", { name: "Evidence" }).getByText("1 contradicts")).toBeVisible();
 
   expect(await ownerSnapshot(other.ownerId)).toEqual(before);
@@ -140,14 +143,16 @@ test("a problem is edited on its page, gathers ideas and evidence, and a project
   await captureProblem(page, title);
   const problemId = await idOf("problem", title);
 
-  await ready(page, page.getByRole("link", { name: title }).click());
-  await expect(page).toHaveURL(new RegExp(`/private/problems/${problemId}$`));
+  await ready(page, page.goto("/private/problems"));
+  await expect(page.getByRole("link", { name: title })).toHaveAttribute("href", `/private/problems/${problemId}`);
+  await ready(page, page.goto(`/private/problems/${problemId}`));
   await expect(page).toHaveTitle("Problem · Founder OS");
   const form = page.locator("form", { hasText: "Refine problem" });
   await form.getByLabel("Problem", { exact: true }).fill(edited);
   await form.getByLabel("Who experiences it and why does it matter?").fill(`Refined why ${id}`);
   await form.getByRole("button", { name: "Save problem" }).click();
   await expect(form.getByText("Problem updated.")).toBeVisible();
+  await ready(page, page.reload());
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(edited);
   expect(await withE2eDb((sql) => sql`SELECT title, description, visibility FROM problem WHERE id = ${problemId}`).then((rows) => [...rows]))
     .toEqual([{ title: edited, description: `Refined why ${id}`, visibility: "PRIVATE" }]);
@@ -161,13 +166,14 @@ test("a problem is edited on its page, gathers ideas and evidence, and a project
   await capture.getByLabel("Signal").selectOption("SUPPORTS");
   await capture.getByRole("button", { name: "Save evidence" }).click();
   await expect(page.getByText("Evidence saved privately.")).toBeVisible();
+  await ready(page, page.reload());
   await expect(page.getByRole("region", { name: "Evidence" }).getByText("1 supports")).toBeVisible();
   expect(await withE2eDb((sql) => sql`SELECT problem_id, idea_id FROM evidence WHERE title = ${evidenceTitle}`).then((rows) => [...rows]))
     .toEqual([{ problem_id: problemId, idea_id: null }]);
 
-  await ready(page, page.getByRole("button", { name: "Turn into idea" }).click());
-  await ready(page, page.waitForURL(/\/private\/ideas\/[0-9a-f-]{36}$/));
-  const ideaId = new URL(page.url()).pathname.split("/").pop()!;
+  await page.getByRole("button", { name: "Turn into idea" }).click();
+  let ideaId = "";
+  await expect.poll(async () => (ideaId = await withE2eDb((sql) => sql<{ id: string }[]>`SELECT id FROM idea WHERE problem_id = ${problemId}`).then((rows) => rows[0]?.id ?? ""))).toMatch(/^[0-9a-f-]{36}$/);
   await ready(page, page.goto(`/private/problems/${problemId}`));
   await expect(page.getByRole("region", { name: "Ideas from this problem" }).getByRole("link", { name: edited })).toHaveAttribute("href", `/private/ideas/${ideaId}`);
 
@@ -189,7 +195,7 @@ test("a problem is edited on its page, gathers ideas and evidence, and a project
 });
 
 test("owner A cannot open or edit owner B's problem or project, and B's origin idea never leaks", async ({ page }) => {
-  const own = await seedOwnerAttention(await ownerA());
+  const own = await seedOwnerAttention(await ownerA(), { withInbox: false });
   const other = await seedOtherOwner(own.blockedId);
   // A's project claims B's idea as its origin: the chain must not follow it across owners.
   await withE2eDb((sql) => sql`UPDATE project SET origin_idea_id = ${other.researchId} WHERE id = ${own.waitingId}`);

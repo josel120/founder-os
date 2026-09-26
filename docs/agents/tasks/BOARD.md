@@ -31,3 +31,4 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-058 | Smoke-check the deployment and sweep privacy | todo | claude | S | T-057 |
 | T-059 | Prune stale rate-limit rows so client IPs are not kept indefinitely | todo | claude | S | T-053 |
 | T-060 | Make anonymous E2E wait for the migrated database | todo | claude | S | T-053 |
+| T-061 | Fix lost client updates after server actions and navigations | todo | claude | M | none |
