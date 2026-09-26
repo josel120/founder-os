@@ -19,7 +19,7 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-046 | Select explicit columns in the older domain queries | review | claude | S | none |
 | T-047 | Cockpit aggregation queries | todo | codex | M | T-041 |
 | T-048 | `/private` home and login landing | todo | codex | M | T-047 |
-| T-049 | Problem detail page with content edit and evidence | todo | codex | M | T-041 |
+| T-049 | Problem detail page with content edit and evidence | review | claude | M | T-041 |
 | T-050 | Show the Project → Idea and Project → Finance chain | todo | codex | S | T-041 |
 | T-051 | Verify the cockpit end to end and sweep privacy | todo | claude | M | T-048, T-049, T-050 |
 | T-052 | Fail fast on production env and tune the DB client for serverless | todo | claude | M | T-042 |

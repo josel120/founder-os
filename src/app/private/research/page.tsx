@@ -26,7 +26,7 @@ export default async function ResearchPage({ searchParams }: { searchParams: Pro
   const ideaNames = new Map(ideas.map((idea) => [idea.id, idea.title]));
   const parentOf = (row: { ideaId: string | null; problemId: string | null }) => {
     if (row.ideaId && ideaNames.has(row.ideaId)) return { href: `/private/ideas/${row.ideaId}`, label: `Idea: ${ideaNames.get(row.ideaId)}` };
-    if (row.problemId && problemNames.has(row.problemId)) return { href: `/private/problems#problem-${row.problemId}`, label: `Problem: ${problemNames.get(row.problemId)}` };
+    if (row.problemId && problemNames.has(row.problemId)) return { href: `/private/problems/${row.problemId}`, label: `Problem: ${problemNames.get(row.problemId)}` };
     return undefined;
   };
   return <section>

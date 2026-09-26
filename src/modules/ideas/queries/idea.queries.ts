@@ -21,3 +21,10 @@ export async function getPrivateIdea(id: string) {
   const result = await db.select(columns).from(ideas).where(and(eq(ideas.id, id), eq(ideas.ownerId, owner.id), eq(ideas.visibility, "PRIVATE"))).limit(1);
   return result[0] ?? null;
 }
+
+/** The owner's ideas made from one problem, newest first. */
+export async function listIdeasForProblem(problemId: string) {
+  const owner = await requireAuth();
+  if (!owner || !db || !z.uuid().safeParse(problemId).success) return [];
+  return db.select(columns).from(ideas).where(and(eq(ideas.problemId, problemId), eq(ideas.ownerId, owner.id), eq(ideas.visibility, "PRIVATE"))).orderBy(desc(ideas.createdAt));
+}
