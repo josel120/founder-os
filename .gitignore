@@ -1,9 +1,10 @@
 node_modules
 .next
 out
-.env
-.env.*
+# `.env*` and `.vercel` exactly as the Vercel CLI writes them, so `vercel link` leaves this file unchanged (T-062)
+.env*
 !.env.example
+.vercel
 playwright-report
 test-results
 coverage

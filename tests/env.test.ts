@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseEnv } from "../src/lib/env";
+import { parseEnv, vercelAuthUrl, vercelOrigins } from "../src/lib/env";
 import { resolvePostgresOptions } from "../src/db";
 
 function source(overrides: Partial<NodeJS.ProcessEnv> = {}): NodeJS.ProcessEnv {
@@ -62,6 +62,77 @@ describe("parseEnv", () => {
     expect(thrown).toBeInstanceOf(Error);
     expect(String(thrown)).toContain("BETTER_AUTH_URL");
     for (const value of [values.BETTER_AUTH_SECRET, values.DATABASE_URL, values.BETTER_AUTH_URL, values.OWNER_EMAIL]) expect(String(thrown)).not.toContain(value);
+  });
+});
+
+const vercelHosts = {
+  VERCEL_URL: "founder-os-abc123-team.vercel.app",
+  VERCEL_BRANCH_URL: "founder-os-git-feature-team.vercel.app",
+  VERCEL_PROJECT_PRODUCTION_URL: "founder-os.vercel.app",
+};
+const prodEnvWithoutUrl = { ...validProdEnv, BETTER_AUTH_URL: undefined };
+
+describe("BETTER_AUTH_URL on Vercel (T-062)", () => {
+  it("defaults to the production domain in production", () => {
+    const parsed = parseEnv(source({ ...prodEnvWithoutUrl, ...vercelHosts, VERCEL_ENV: "production" }));
+    expect(parsed.BETTER_AUTH_URL).toBe("https://founder-os.vercel.app");
+  });
+
+  it("defaults to the branch URL in a preview, then to the unique deployment URL", () => {
+    expect(parseEnv(source({ ...prodEnvWithoutUrl, ...vercelHosts, VERCEL_ENV: "preview" })).BETTER_AUTH_URL).toBe(
+      "https://founder-os-git-feature-team.vercel.app",
+    );
+    expect(
+      parseEnv(source({ ...prodEnvWithoutUrl, VERCEL_ENV: "preview", VERCEL_URL: vercelHosts.VERCEL_URL })).BETTER_AUTH_URL,
+    ).toBe("https://founder-os-abc123-team.vercel.app");
+  });
+
+  it("keeps an explicit BETTER_AUTH_URL over the derived one", () => {
+    const parsed = parseEnv(source({ ...validProdEnv, ...vercelHosts, VERCEL_ENV: "production" }));
+    expect(parsed.BETTER_AUTH_URL).toBe("https://example.com");
+  });
+
+  it("still fails fast when no https origin can be derived", () => {
+    expect(() => parseEnv(source({ ...prodEnvWithoutUrl, VERCEL_ENV: "production" }))).toThrow(/BETTER_AUTH_URL/);
+    // A production deploy never falls back to a preview-style URL.
+    expect(() => parseEnv(source({ ...prodEnvWithoutUrl, VERCEL_ENV: "production", VERCEL_URL: vercelHosts.VERCEL_URL }))).toThrow(
+      /BETTER_AUTH_URL \(must be https\)/,
+    );
+  });
+
+  it("leaves non-Vercel sources unchanged, including CI and E2E shapes", () => {
+    expect(parseEnv(source({ ...vercelHosts })).BETTER_AUTH_URL).toBe("http://localhost:3000");
+    expect(parseEnv(source({ BETTER_AUTH_URL: "http://localhost:3000", CI: "true" })).BETTER_AUTH_URL).toBe("http://localhost:3000");
+    expect(() => parseEnv(source({ CI: "true", NODE_ENV: "production" }))).not.toThrow();
+    expect(vercelAuthUrl(source({ ...vercelHosts, VERCEL_ENV: "production" }))).toBeUndefined();
+  });
+
+  it("does not throw during next build on Vercel without any auth env", () => {
+    expect(() => parseEnv(source({ VERCEL: "1", NEXT_PHASE: "phase-production-build", ...vercelHosts }))).not.toThrow();
+  });
+});
+
+describe("vercelOrigins", () => {
+  it("lists every https origin of the deployment, without duplicates", () => {
+    expect(vercelOrigins(source({ VERCEL: "1", ...vercelHosts }))).toEqual([
+      "https://founder-os-abc123-team.vercel.app",
+      "https://founder-os-git-feature-team.vercel.app",
+      "https://founder-os.vercel.app",
+    ]);
+    expect(vercelOrigins(source({ VERCEL: "1", VERCEL_URL: "a.vercel.app", VERCEL_BRANCH_URL: "a.vercel.app" }))).toEqual([
+      "https://a.vercel.app",
+    ]);
+  });
+
+  it("skips empty or invalid hosts and accepts an https-prefixed one", () => {
+    expect(vercelOrigins(source({ VERCEL: "1", VERCEL_URL: " ", VERCEL_BRANCH_URL: "bad host", VERCEL_PROJECT_PRODUCTION_URL: "https://app.example.com" }))).toEqual([
+      "https://app.example.com",
+    ]);
+  });
+
+  it("is empty off Vercel", () => {
+    expect(vercelOrigins(source({ ...vercelHosts }))).toEqual([]);
+    expect(vercelOrigins(source())).toEqual([]);
   });
 });
 

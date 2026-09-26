@@ -19,7 +19,8 @@ const mocks = vi.hoisted(() => ({
 vi.mock("better-auth", () => ({ betterAuth: mocks.configure, APIError: class extends Error {} }));
 vi.mock("better-auth/adapters/drizzle", () => ({ drizzleAdapter: mocks.adapter }));
 vi.mock("@/db", () => ({ db: {} }));
-vi.mock("../src/lib/env", () => ({ env: mocks.env }));
+// Only `env` is replaced; pure helpers such as vercelOrigins stay real.
+vi.mock("../src/lib/env", async (importOriginal) => ({ ...(await importOriginal<typeof import("../src/lib/env")>()), env: mocks.env }));
 vi.mock("@/modules/auth/services/rate-limit-retention", () => ({ pruneStaleRateLimits: mocks.prune }));
 
 beforeEach(() => {
@@ -97,4 +98,34 @@ it("prunes stale rate-limit rows after every auth request, not only after sign-i
   await after!({ path: "/get-session", context: {} } as never);
   expect(mocks.prune).toHaveBeenCalledTimes(1);
   expect(mocks.prune).toHaveBeenCalledWith({}, expect.any(Number));
+});
+
+it("trusts no extra origins off Vercel (T-062)", async () => {
+  const { options } = await configuration("production");
+  expect(options.trustedOrigins).toEqual([]);
+  expect(options.baseURL).toBe("http://localhost:3000");
+});
+
+it("trusts only this Vercel deployment's own origins and keeps every other option (T-062)", async () => {
+  // The real env module is evaluated too, so the stub is a complete, valid production deployment.
+  for (const [key, value] of Object.entries({
+    VERCEL: "1",
+    VERCEL_ENV: "production",
+    VERCEL_URL: "founder-os-abc123-team.vercel.app",
+    VERCEL_BRANCH_URL: "founder-os-git-master-team.vercel.app",
+    VERCEL_PROJECT_PRODUCTION_URL: "founder-os.vercel.app",
+    DATABASE_URL: "postgresql://user:pass@host:5432/db",
+    BETTER_AUTH_SECRET: "test-auth-secret-not-for-production-123456",
+    OWNER_EMAIL: "owner@example.com",
+  })) vi.stubEnv(key, value);
+  const { options } = await configuration("production");
+  expect(options.trustedOrigins).toEqual([
+    "https://founder-os-abc123-team.vercel.app",
+    "https://founder-os-git-master-team.vercel.app",
+    "https://founder-os.vercel.app",
+  ]);
+  expect(options.baseURL).toBe(mocks.env.BETTER_AUTH_URL);
+  expect(options.session).toEqual({ expiresIn: 604_800, updateAge: 86_400 });
+  expect(options.telemetry).toEqual({ enabled: false });
+  expect(options.emailAndPassword).toEqual({ enabled: true, disableSignUp: true });
 });
