@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation";
 const sections = [
   { href: "/private/ideas", label: "Ideas", mark: "01" },
   { href: "/private/problems", label: "Problems", mark: "02" },
-  { href: "/private/decisions", label: "Decisions", mark: "03" },
-  { href: "/private/projects", label: "Projects", mark: "04" },
-  { href: "/private/finance", label: "Finance", mark: "05" },
+  { href: "/private/research", label: "Research", mark: "03" },
+  { href: "/private/decisions", label: "Decisions", mark: "04" },
+  { href: "/private/projects", label: "Projects", mark: "05" },
+  { href: "/private/finance", label: "Finance", mark: "06" },
 ] as const;
 
 function isActive(pathname: string, href: string) {
