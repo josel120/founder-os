@@ -27,10 +27,18 @@ export default defineConfig({
     env: serverEnv,
   },
   projects: [
-    { name: "chromium", testIgnore: /authenticated\//, use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "chromium",
+      testIgnore: /authenticated\//,
+      // A fresh CI database has no `rate_limit` table until `migrate` runs; without this dependency
+      // an anonymous /api/auth/* request can race the migration and get a 500 (T-060).
+      dependencies: authenticated ? ["migrate"] : [],
+      use: { ...devices["Desktop Chrome"] },
+    },
     ...(authenticated
       ? [
-          { name: "setup", testMatch: /authenticated\/auth\.setup\.ts/ },
+          { name: "migrate", testMatch: /migrate\.setup\.ts/ },
+          { name: "setup", testMatch: /authenticated\/auth\.setup\.ts/, dependencies: ["migrate"] },
           { name: "authenticated", testMatch: /\.auth\.spec\.ts/, dependencies: ["setup"], use: { ...devices["Desktop Chrome"], storageState: e2eStorageState } },
         ]
       : []),
