@@ -100,3 +100,23 @@ Finance OS begins as a private ledger for manually recorded income and expenses.
 The first implementation slice supports transaction type (`INCOME` or `EXPENSE`), category, positive decimal amount, ISO currency code, source, optional external ID, occurred-at timestamp and optional owned-project link. Amounts remain exact decimal values at the database boundary; calculations must not use binary floating point. Duplicate external IDs are not rejected globally until an integration-specific uniqueness policy exists. No external imports, payment-provider synchronization, portfolio publishing or tax/accounting claims are included in the MVP.
 
 The current `finance_transaction` table has no `owner_id` or `visibility`, so implementation starts with an additive ownership migration generated and reviewed in a separate card. A human must apply that migration to real data and explicitly adopt any historical rows before the Finance UI or queries expose them. Follow-up cards are: T-027 generate the ownership migration and schema contract, T-028 implement owner-scoped transaction actions and queries, T-029 add the private Finance UI and project linking, and T-030 verify ledger behavior and privacy end to end. T-028 and T-029 depend on T-027; T-030 depends on both.
+
+## ADR-012: Research OS starts with owner-scoped evidence on problems and ideas
+
+Phase order approved by the owner on 2026-09-26: 1) Research OS, 2) Distribution/portfolio, 3) Integrations, 4) AI execution.
+
+Research OS begins as a private evidence log. One record (`evidence`) captures something the owner learned while researching: a title, a summary, a kind (`NOTE`, `INTERVIEW`, `MARKET`, `COMPETITOR`, `SOURCE`), a signal (`SUPPORTS`, `CONTRADICTS`, `NEUTRAL`) and an optional source URL. This matches the existing `AIService.analyzeEvidence(evidenceId)` interface, which stays interface-only (ADR-004).
+
+Ownership and visibility:
+- `evidence` is a new table, so it has no historical rows. `owner_id` is `NOT NULL` (FK to `user.id`, `ON DELETE RESTRICT`), unlike the nullable legacy columns of ADR-006/008/009/011. `visibility` defaults to `PRIVATE`. The migration is purely additive (new enums and table, no UPDATE or DELETE).
+- Reads and mutations derive the owner from the session and use `id + owner_id + PRIVATE`, as ADR-005 requires.
+- Each record belongs to exactly one parent: a Problem or an Idea (`problem_id` and `idea_id` nullable FKs with `ON DELETE RESTRICT`, plus a `CHECK (num_nonnulls(problem_id, idea_id) = 1)`). The server verifies that the parent belongs to the same owner and is `PRIVATE` before inserting. A foreign key never authorizes access by itself.
+
+Behavior:
+- The MVP covers create, content edit (title, summary, kind, signal, source URL) and listing. The parent cannot be changed after creation. There is no delete, which matches Ideas, Projects and Decisions.
+- Mutations return explicit results, and updates check `UPDATE … RETURNING`.
+- Source URLs must be `http` or `https` (Zod). The server stores them and never fetches them, so there is no SSRF surface. They render as external links with `rel="noopener noreferrer nofollow"`.
+- Evidence never changes an Idea's status, never creates decisions and never publishes anything. The human decides (PRD).
+- Out of scope: file uploads, web clipping, imports, AI summaries, scoring, publishing and cross-owner sharing.
+
+Follow-up cards: T-033 schema contract and migration 0005 (generate only). T-034 human applies 0005 locally. T-035 owner-scoped evidence domain. T-036 private Research UI. T-037 Research workflow and privacy E2E. T-035 depends on T-033; T-036 depends on T-034 and T-035; T-037 depends on T-036.
