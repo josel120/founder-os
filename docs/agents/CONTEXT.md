@@ -62,4 +62,4 @@ Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind 4 · Drizzl
 
 ## Doc map (Tier 2: open only when a card links it)
 
-`docs/PRD.md` product invariants · `docs/SYSTEM_DESIGN.md` runtime/boundaries · `docs/DECISIONS.md` ADRs · `docs/QA-REPORT.md` last QA · `docs/agents/archive/` old progress logs.
+`docs/PRD.md` product invariants · `docs/SYSTEM_DESIGN.md` runtime/boundaries · `docs/DECISIONS.md` ADRs · `docs/RUNBOOK.md` deploy/migrate/rollback procedure (ADR-016) · `docs/QA-REPORT.md` last QA · `docs/agents/archive/` old progress logs.
