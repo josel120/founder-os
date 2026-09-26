@@ -83,7 +83,7 @@ describe("research evidence ownership contract", () => {
 describe("evidence migrations", () => {
   it("follow 0004 in order in the journal", () => {
     expect(journal.entries.map((entry) => entry.idx)).toEqual(journal.entries.map((_, index) => index));
-    expect(journal.entries.slice(-2).map((entry) => entry.tag)).toEqual(["0005_research_evidence", "0006_evidence_hardening"]);
+    expect(journal.entries.slice(5, 7).map((entry) => entry.tag)).toEqual(["0005_research_evidence", "0006_evidence_hardening"]);
   });
 
   it.each(Object.entries(evidenceMigrations))("%s is additive only", (_file, sqlText) => {

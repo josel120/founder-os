@@ -84,6 +84,10 @@ Do not set `OWNER_SETUP_TOKEN` yet — see Section 5.
 
 ## 5. First-owner setup (human)
 
+**Prerequisite: the schema exists.** A fresh Neon database has no tables, and every auth request
+(sign-up included) reads them, `rate_limit` too. Run 6.2 against the direct URL first (an empty
+database needs no backup), then continue here.
+
 Run 5.2 immediately after 5.1: anyone who can reach the deployment and knows the token can create
 the one owner account before you do (ADR-005).
 
@@ -108,6 +112,9 @@ npx vercel --prod
 ```
 
 ## 6. Migration procedure (human)
+
+**Order: migrate first, then deploy the code that needs it.** Code from T-053 on reads `rate_limit`
+on every `/api/auth/*` request, so until migration 0007 is applied every sign-in fails with a 500.
 
 **6.1 Back up** — pick one:
 
@@ -223,7 +230,10 @@ npx vercel --prod`).
   var change — Vercel does not hot-reload them.
 
 **429 on `/api/auth/sign-in/email`**
-- Expected after 5 failed attempts from one IP within 60 seconds (ADR-016/T-053). Wait 60s and retry.
+- Expected after 5 sign-in requests (any outcome) from one IP within 60 seconds (ADR-016/T-053). Wait
+  for the `X-Retry-After` seconds and retry.
+- The IP comes from `x-forwarded-for`. Vercel overwrites that header with the real client IP; a
+  self-hosted deployment without a proxy that does the same lets a client bypass the limit.
 - Do not disable rate limiting to work around a legitimate lockout; a shared/proxied owner IP is a
   known open tradeoff (ADR-016).
 

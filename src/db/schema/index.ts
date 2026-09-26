@@ -1,8 +1,10 @@
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   check,
   index,
+  integer,
   numeric,
   pgEnum,
   pgTable,
@@ -126,6 +128,13 @@ export const verifications = pgTable("verification", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+// Better Auth "rateLimit" model (rateLimit.storage = "database"): one row per `ip|path` key, lastRequest in epoch ms.
+export const rateLimits = pgTable("rate_limit", {
+  id: text("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  count: integer("count").notNull(),
+  lastRequest: bigint("last_request", { mode: "number" }).notNull(),
 });
 
 export const problems = pgTable("problem", {

@@ -8,7 +8,7 @@ setup("reset the disposable database and sign in as the owner", async ({ page, r
   const client = postgres(requireDisposableDatabase(), { max: 1, onnotice: () => {} });
   try {
     await migrate(drizzle(client), { migrationsFolder: "src/db/migrations" });
-    await client`TRUNCATE decision_log, idea, problem, session, account, verification, "user" CASCADE`;
+    await client`TRUNCATE decision_log, idea, problem, session, account, verification, rate_limit, "user" CASCADE`;
   } finally {
     await client.end();
   }
