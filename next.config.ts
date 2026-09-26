@@ -1,11 +1,7 @@
 import type { NextConfig } from "next";
 
-// No script-src here: Next.js injects inline scripts, so a script policy would need per-request nonces.
-// These directives stop framing, plugin content, base-tag hijacking and cross-origin form posts.
-const contentSecurityPolicy = "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'";
-
+// Content-Security-Policy is set per request in src/middleware.ts, because its script-src carries a nonce (T-045).
 const securityHeaders = [
-  { key: "Content-Security-Policy", value: contentSecurityPolicy },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

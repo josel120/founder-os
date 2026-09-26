@@ -17,8 +17,8 @@ Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind 4 · Drizzl
 | `src/db/migrations` | Generated SQL. Never edit existing files; add new migrations |
 | `src/lib/auth.ts`, `require-auth.ts`, `env.ts` | Better Auth config, owner check, env validation |
 | `src/lib/safe-redirect.ts`, `session-cookie.ts` | `?next=` validation; Edge-safe session cookie presence check |
-| `src/middleware.ts` | Optimistic guard: cookieless GET/HEAD under `/private` → `/login?next=…`. Server actions pass through (ADR-014) |
-| `next.config.ts` | Security headers and `noindex` (ADR-014) |
+| `src/middleware.ts` | Per-request nonce CSP on every page; optimistic guard: cookieless GET/HEAD under `/private` → `/login?next=…`. Server actions pass through (ADR-014 + T-045) |
+| `next.config.ts` | Other security headers and `noindex` (ADR-014). Root layout is `force-dynamic` so every page gets the nonce |
 | `tests/*.test.ts(x)` | Vitest unit tests. `tests/e2e/*.spec.ts` = Playwright |
 | `work/` | Git-ignored scratch space (backups, temp). Never read `*.dump` files |
 

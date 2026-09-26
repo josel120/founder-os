@@ -343,3 +343,16 @@ test("closed registration rejects other accounts and a second owner", async ({ p
   expect(intruder.ok()).toBe(false);
   await api.dispose();
 });
+
+test("private pages run under the nonce policy without CSP violations", async ({ page }) => {
+  const violations: string[] = [];
+  page.on("console", (message) => { if (/Content Security Policy/i.test(message.text())) violations.push(message.text()); });
+  for (const path of ["/private/ideas", "/private/problems", "/private/research", "/private/decisions", "/private/projects", "/private/finance"]) {
+    const response = await page.goto(path);
+    await page.waitForLoadState("networkidle");
+    expect(response?.headers()["content-security-policy"]).toMatch(/script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic'/);
+  }
+  // Scripts ran: the capture form is interactive after hydration.
+  await captureIdea(page, `E2E CSP idea ${unique()}`);
+  expect(violations).toEqual([]);
+});

@@ -15,5 +15,5 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-042 | Plan Production readiness (Phase 6) and its boundaries | todo | claude | M | T-041 |
 | T-043 | Project-wide audit: security hardening, bug fixes and UX polish | done | claude | M | none |
 | T-044 | Upgrade Vitest to 4.x to clear the remaining dev-only advisories | review | claude | S | T-043 |
-| T-045 | Add a nonce-based script-src Content Security Policy | todo | claude | M | T-043 |
+| T-045 | Add a nonce-based script-src Content Security Policy | review | claude | M | T-043 |
 | T-046 | Select explicit columns in the older domain queries | todo | codex | S | none |
