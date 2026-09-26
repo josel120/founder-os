@@ -52,6 +52,11 @@ test("responses carry security headers", async ({ request }) => {
   expect(headers["x-powered-by"]).toBeUndefined();
   const again = (await request.get("/login")).headers()["content-security-policy"];
   expect(again).not.toBe(headers["content-security-policy"]);
+  const redirect = await request.get("/private/ideas", { maxRedirects: 0 });
+  expect(redirect.status()).toBe(307);
+  expect(redirect.headers()["content-security-policy"]).toContain("frame-ancestors 'none'");
+  const api = await request.get("/api/auth/get-session");
+  expect(api.headers()["content-security-policy"]).toBe("default-src 'none'; frame-ancestors 'none'");
 });
 
 for (const path of ["/", "/login", "/register"]) {

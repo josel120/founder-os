@@ -10,12 +10,15 @@ const securityHeaders = [
 ];
 
 const noIndex = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
+// API routes are outside the middleware matcher and return JSON, so they get a policy that allows nothing.
+const apiPolicy = [{ key: "Content-Security-Policy", value: "default-src 'none'; frame-ancestors 'none'" }];
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      { source: "/api/:path*", headers: apiPolicy },
       ...["/private/:path*", "/login", "/register", "/api/:path*"].map((source) => ({ source, headers: noIndex })),
     ];
   },

@@ -22,15 +22,17 @@ export function contentSecurityPolicy(nonce: string, dev = process.env.NODE_ENV 
 // validates the session and owner on the server (requireAuth). Server action POSTs pass through so they
 // return their explicit "sign in again" results instead of a redirect.
 export function middleware(request: NextRequest) {
+  const nonce = btoa(crypto.randomUUID());
+  const policy = contentSecurityPolicy(nonce);
   const isPrivate = request.nextUrl.pathname === "/private" || request.nextUrl.pathname.startsWith("/private/");
   const pageRequest = (request.method === "GET" || request.method === "HEAD") && !request.headers.has("next-action");
   if (isPrivate && pageRequest && !hasSessionCookie(request.cookies)) {
     const login = new URL("/login", request.url);
     login.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
-    return NextResponse.redirect(login);
+    const redirect = NextResponse.redirect(login);
+    redirect.headers.set("Content-Security-Policy", policy); // every page response carries the policy, redirects included
+    return redirect;
   }
-  const nonce = btoa(crypto.randomUUID());
-  const policy = contentSecurityPolicy(nonce);
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("content-security-policy", policy);
   const response = NextResponse.next({ request: { headers: requestHeaders } });

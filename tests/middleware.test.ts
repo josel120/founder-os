@@ -63,7 +63,9 @@ describe("content security policy (T-045)", () => {
   });
 
   it("keeps the /private redirect and lets server actions through with the policy attached", () => {
-    expect(middleware(request("/private/finance")).status).toBe(307);
+    const redirect = middleware(request("/private/finance"));
+    expect(redirect.status).toBe(307);
+    expect(redirect.headers.get("content-security-policy")).toContain("frame-ancestors 'none'");
     const action = middleware(request("/private/projects", { method: "POST", action: true }));
     expect(action.headers.get("location")).toBeNull();
     expect(action.headers.get("content-security-policy")).toContain("'strict-dynamic'");
