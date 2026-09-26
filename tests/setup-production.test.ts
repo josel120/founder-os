@@ -46,13 +46,14 @@ const ESC = String.fromCharCode(27);
 
 describe("parseSetupArgs", () => {
   it("defaults to the founder-os project, no scope and a real run", () => {
-    expect(parseSetupArgs([])).toEqual({ ok: true, options: { dryRun: false, help: false, project: "founder-os" } });
+    expect(parseSetupArgs([])).toEqual({ ok: true, options: { dryRun: false, help: false, resetOwner: false, project: "founder-os" } });
+    expect(parseSetupArgs(["--reset-owner"])).toMatchObject({ ok: true, options: { resetOwner: true } });
   });
 
   it("reads --dry-run, --help, --project and --scope in both forms, and ignores a bare --", () => {
     expect(parseSetupArgs(["--", "--dry-run", "--project", "my-app", "--scope=my-team"])).toEqual({
       ok: true,
-      options: { dryRun: true, help: false, project: "my-app", scope: "my-team" },
+      options: { dryRun: true, help: false, resetOwner: false, project: "my-app", scope: "my-team" },
     });
     expect(parseSetupArgs(["-h", "--project=a.b_c-d", "--scope", "team_AbC123"])).toMatchObject({
       ok: true,
@@ -364,12 +365,18 @@ describe("deploy output and smoke check", () => {
 });
 
 describe("owner creation", () => {
-  const input = { email: "owner@example.com", password: "a-long-password", setupToken: "t".repeat(43) };
+  const input = { email: "owner@example.com", password: "a-long-password", setupToken: "t".repeat(43), reset: false };
   const apiError = (status: string, code?: string) => Object.assign(new Error("message with a secret: a-long-password"), { status, body: { code } });
+  const auth = (overrides: Partial<OwnerAuth> = {}): OwnerAuth => ({
+    listAccounts: async () => [],
+    signUpEmail: async () => ({}),
+    resetOwner: async () => undefined,
+    ...overrides,
+  });
 
   it("signs up through Better Auth with the setup header", async () => {
     const signUpEmail = vi.fn<OwnerAuth["signUpEmail"]>(async () => ({}));
-    const result = await createOwnerAccount({ findUserByEmail: async () => null, signUpEmail }, input);
+    const result = await createOwnerAccount(auth({ signUpEmail }), input);
     expect(result).toEqual({ outcome: "created" });
     const request = signUpEmail.mock.calls[0]?.[0];
     if (!request) throw new Error("signUpEmail was not called.");
@@ -377,20 +384,48 @@ describe("owner creation", () => {
     expect(request.headers.get("x-founder-setup-token")).toBe(input.setupToken);
   });
 
-  it("treats an existing owner as done, before or during sign-up", async () => {
+  it("treats an existing owner with the same email as done, before or during sign-up", async () => {
     const signUpEmail = vi.fn(async () => ({}));
-    expect(await createOwnerAccount({ findUserByEmail: async () => ({ user: {} }), signUpEmail }, input)).toEqual({ outcome: "exists" });
+    const resetOwner = vi.fn(async () => undefined);
+    const existing = async () => [{ id: "u1", email: "Owner@Example.com " }];
+    expect(await createOwnerAccount(auth({ listAccounts: existing, signUpEmail, resetOwner }), input)).toEqual({ outcome: "exists" });
     expect(signUpEmail).not.toHaveBeenCalled();
+    expect(resetOwner).not.toHaveBeenCalled();
     for (const error of [apiError("FORBIDDEN"), apiError("UNPROCESSABLE_ENTITY", "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL")]) {
       expect(isOwnerAlreadyExistsError(error)).toBe(true);
       const failing = async () => Promise.reject(error);
-      expect(await createOwnerAccount({ findUserByEmail: async () => null, signUpEmail: failing }, input)).toEqual({ outcome: "exists" });
+      expect(await createOwnerAccount(auth({ signUpEmail: failing }), input)).toEqual({ outcome: "exists" });
     }
+  });
+
+  it("stops when the owner exists under another email instead of leaving nobody able to sign in (T-063)", async () => {
+    const resetOwner = vi.fn(async () => undefined);
+    const other = async () => [{ id: "u1", email: "old@example.com" }];
+    expect(await createOwnerAccount(auth({ listAccounts: other, resetOwner }), input)).toEqual({ outcome: "email-mismatch" });
+    expect(resetOwner).not.toHaveBeenCalled();
+  });
+
+  it("gives the existing owner the new email and password with --reset-owner (T-063)", async () => {
+    const resetOwner = vi.fn<OwnerAuth["resetOwner"]>(async () => undefined);
+    const signUpEmail = vi.fn(async () => ({}));
+    const other = async () => [{ id: "u1", email: "old@example.com" }];
+    expect(await createOwnerAccount(auth({ listAccounts: other, resetOwner, signUpEmail }), { ...input, reset: true })).toEqual({ outcome: "reset" });
+    expect(resetOwner).toHaveBeenCalledWith("u1", "owner@example.com", "a-long-password");
+    expect(signUpEmail).not.toHaveBeenCalled();
+    // With no owner yet, --reset-owner simply creates one.
+    expect(await createOwnerAccount(auth({ signUpEmail }), { ...input, reset: true })).toEqual({ outcome: "created" });
+    const failingReset = async () => Promise.reject(new TypeError("postgres://u:secret@h/db"));
+    expect(await createOwnerAccount(auth({ listAccounts: other, resetOwner: failingReset }), { ...input, reset: true })).toEqual({ outcome: "failed", label: "TypeError" });
+  });
+
+  it("refuses to guess when the database holds more than one account", async () => {
+    const two = async () => [{ id: "u1", email: "a@example.com" }, { id: "u2", email: "b@example.com" }];
+    expect(await createOwnerAccount(auth({ listAccounts: two }), { ...input, reset: true })).toEqual({ outcome: "failed", label: "MORE_THAN_ONE_ACCOUNT" });
   });
 
   it("reports other failures by status or class only, never by message", async () => {
     const reject = (error: unknown) => async () => Promise.reject(error);
-    const tooShort = await createOwnerAccount({ findUserByEmail: async () => null, signUpEmail: reject(apiError("BAD_REQUEST", "PASSWORD_TOO_SHORT")) }, input);
+    const tooShort = await createOwnerAccount(auth({ signUpEmail: reject(apiError("BAD_REQUEST", "PASSWORD_TOO_SHORT")) }), input);
     expect(tooShort).toEqual({ outcome: "failed", label: "BAD_REQUEST" });
     expect(isOwnerAlreadyExistsError(apiError("UNPROCESSABLE_ENTITY", "FAILED_TO_CREATE_USER"))).toBe(false);
     expect(signUpFailureLabel(new TypeError("postgres://u:secret@h/db"))).toBe("TypeError");
@@ -412,7 +447,7 @@ describe("no secret in any output", () => {
   });
 
   it("renders the dry-run plan from placeholders only", () => {
-    const plan = renderPlan({ dryRun: true, help: false, project: "founder-os", scope: "my-team" }).join("\n");
+    const plan = renderPlan({ dryRun: true, help: false, resetOwner: false, project: "founder-os", scope: "my-team" }).join("\n");
     for (const secret of generated) expect(plan).not.toContain(secret);
     expect(plan).toContain("<generated>");
     expect(plan).not.toMatch(/--value|BETTER_AUTH_URL|\.env\.local/);

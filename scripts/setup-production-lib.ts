@@ -16,10 +16,14 @@ export const MAX_PASSWORD_LENGTH = 128;
 export const SETUP_AUTH_URL = "https://founder-os-setup.invalid";
 /** create-owner.ts exit code when the owner account already existed and was left unchanged. */
 export const OWNER_EXISTS_EXIT_CODE = 3;
+/** create-owner.ts exit code: the existing owner got the new email and password (--reset-owner). */
+export const OWNER_RESET_EXIT_CODE = 4;
+/** create-owner.ts exit code: an owner exists under a different email; only --reset-owner may change it. */
+export const OWNER_EMAIL_MISMATCH_EXIT_CODE = 5;
 /** Neon's direct (unpooled) connection string, as the Vercel Marketplace integration names it. */
 export const DIRECT_URL_KEYS = ["DATABASE_URL_UNPOOLED", "POSTGRES_URL_NON_POOLING"] as const;
 
-export type SetupOptions = { dryRun: boolean; help: boolean; project: string; scope?: string };
+export type SetupOptions = { dryRun: boolean; help: boolean; resetOwner: boolean; project: string; scope?: string };
 export type Target = "production" | "preview";
 
 // ---------------------------------------------------------------------------------------------
@@ -39,12 +43,16 @@ export function isValidScope(value: string): boolean {
 export type ParsedArgs = { ok: true; options: SetupOptions } | { ok: false; error: string };
 
 export function parseSetupArgs(argv: readonly string[]): ParsedArgs {
-  const options: SetupOptions = { dryRun: false, help: false, project: DEFAULT_PROJECT };
+  const options: SetupOptions = { dryRun: false, help: false, resetOwner: false, project: DEFAULT_PROJECT };
   for (let index = 0; index < argv.length; index++) {
     const arg = argv[index] ?? "";
     if (arg === "--") continue;
     if (arg === "--dry-run") {
       options.dryRun = true;
+      continue;
+    }
+    if (arg === "--reset-owner") {
+      options.resetOwner = true;
       continue;
     }
     if (arg === "--help" || arg === "-h") {
@@ -360,19 +368,45 @@ export function signUpFailureLabel(error: unknown): string {
   return error instanceof Error && /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(error.name) ? error.name : "unknown error";
 }
 
-/** The two Better Auth calls create-owner needs, so the flow is testable without a database. */
+/** The Better Auth calls create-owner needs, so the flow is testable without a database. */
 export type OwnerAuth = {
-  findUserByEmail(email: string): Promise<unknown>;
+  /** Every account in the database (the app allows exactly one: the owner, ADR-005). */
+  listAccounts(): Promise<readonly { id: string; email: string }[]>;
   signUpEmail(input: { body: { email: string; password: string; name: string }; headers: Headers }): Promise<unknown>;
+  /** Gives the existing owner a new email and password and signs out every session. */
+  resetOwner(userId: string, email: string, password: string): Promise<void>;
 };
-export type OwnerResult = { outcome: "created" } | { outcome: "exists" } | { outcome: "failed"; label: string };
+export type OwnerResult =
+  | { outcome: "created" }
+  | { outcome: "exists" }
+  | { outcome: "reset" }
+  | { outcome: "email-mismatch" }
+  | { outcome: "failed"; label: string };
 
 /**
  * Creates the owner through Better Auth's own sign-up endpoint, with the setup header the owner hook in
- * src/lib/auth.ts requires (ADR-005). An owner that already exists is "exists": left unchanged, not a failure.
+ * src/lib/auth.ts requires (ADR-005). With an owner already there: same email → "exists" (left unchanged);
+ * `reset` → that account gets the new email and password; a different email without `reset` → "email-mismatch",
+ * because OWNER_EMAIL would no longer match any account and nobody could sign in (T-063).
  */
-export async function createOwnerAccount(auth: OwnerAuth, input: { email: string; password: string; setupToken: string }): Promise<OwnerResult> {
-  if (await auth.findUserByEmail(input.email)) return { outcome: "exists" };
+export async function createOwnerAccount(
+  auth: OwnerAuth,
+  input: { email: string; password: string; setupToken: string; reset: boolean },
+): Promise<OwnerResult> {
+  const accounts = await auth.listAccounts();
+  if (accounts.length > 1) return { outcome: "failed", label: "MORE_THAN_ONE_ACCOUNT" };
+  const owner = accounts[0];
+  if (owner) {
+    try {
+      if (input.reset) {
+        await auth.resetOwner(owner.id, input.email, input.password);
+        return { outcome: "reset" };
+      }
+    } catch (error) {
+      return { outcome: "failed", label: signUpFailureLabel(error) };
+    }
+    return owner.email.trim().toLowerCase() === input.email ? { outcome: "exists" } : { outcome: "email-mismatch" };
+  }
   try {
     await auth.signUpEmail({
       body: { email: input.email, password: input.password, name: "Owner" },
@@ -555,7 +589,9 @@ export function renderPlan(options: SetupOptions): string[] {
     "    pnpm db:migrate   with DATABASE_URL=<direct database URL> (DATABASE_URL_UNPOOLED) for this command only",
     stepHeading(7),
     "    tsx scripts/create-owner.ts   with DATABASE_URL=<direct database URL>, OWNER_SETUP_TOKEN=<generated> (never sent to Vercel),",
-    "                                  password on stdin <hidden>; skipped when the owner account already exists",
+    options.resetOwner
+      ? "                                  password on stdin <hidden>; --reset-owner: the existing owner gets this email and password, and is signed out everywhere"
+      : "                                  password on stdin <hidden>; skipped when the owner account already exists",
     stepHeading(8),
     "    git fetch origin master, then the Step 0 git check again",
     "    git clone of master into a private temporary folder (so ignored files such as work/ and .env are never uploaded)",

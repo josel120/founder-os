@@ -242,8 +242,9 @@ async function smokeCheck(baseUrl: string): Promise<lib.SmokeRow[]> {
 }
 
 function usage(): void {
-  say("Usage: pnpm setup:production [--dry-run] [--project <name>] [--scope <team>]");
+  say("Usage: pnpm setup:production [--dry-run] [--reset-owner] [--project <name>] [--scope <team>]");
   say("  --dry-run          show every step and command without running or changing anything");
+  say("  --reset-owner      forgot the owner email or password? give the existing owner account new ones");
   say(`  --project <name>   Vercel project name (default: ${lib.DEFAULT_PROJECT})`);
   say("  --scope <team>     Vercel team slug or id, when your account has several teams");
   say("Details: docs/RUNBOOK.md, sections 1-5.");
@@ -335,7 +336,9 @@ async function setup(options: lib.SetupOptions, work: string): Promise<boolean> 
   say(lib.stepHeading(4));
   const email = await askOwnerEmail();
   say(`Choose the owner password: at least ${lib.MIN_PASSWORD_LENGTH} characters. Nothing is shown while you type.`);
-  say("If the owner account already exists, it keeps its current password.");
+  say(options.resetOwner
+    ? "--reset-owner: the existing owner account gets this email and password, and is signed out everywhere."
+    : "If the owner account already exists, it keeps its current password (forgot it? run again with --reset-owner).");
   const password = await askPassword();
   const productionSecret = randomBytes(32).toString("base64");
   const previewSecret = randomBytes(32).toString("base64");
@@ -379,11 +382,16 @@ async function setup(options: lib.SetupOptions, work: string): Promise<boolean> 
       BETTER_AUTH_URL: lib.SETUP_AUTH_URL,
       // Exists only in that child process: it never reaches Vercel, so sign-up stays closed in production (ADR-005).
       OWNER_SETUP_TOKEN: setupToken,
+      OWNER_RESET: options.resetOwner ? "1" : "0",
     }),
     { data: password },
   );
   if (owner.code === 0) say(`Owner account created for ${email}.`);
   else if (owner.code === lib.OWNER_EXISTS_EXIT_CODE) say(`An owner account for ${email} already exists. It was left unchanged, password included.`);
+  else if (owner.code === lib.OWNER_RESET_EXIT_CODE) say(`The owner account now signs in as ${email} with the new password. Old sessions were signed out.`);
+  else if (owner.code === lib.OWNER_EMAIL_MISMATCH_EXIT_CODE) {
+    throw new Stop(`An owner account already exists under a different email, so ${email} could not sign in. To give it this email and a new password, run: pnpm setup:production --reset-owner`);
+  }
   else throw new Stop("Creating the owner account failed; see the message above. Nothing was published. Run pnpm setup:production again.");
 
   say();
