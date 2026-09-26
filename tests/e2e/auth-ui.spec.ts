@@ -56,6 +56,7 @@ test("responses carry security headers", async ({ request }) => {
   expect(redirect.status()).toBe(307);
   expect(redirect.headers()["content-security-policy"]).toContain("frame-ancestors 'none'");
   const api = await request.get("/api/auth/get-session");
+  expect(api.status()).toBe(200);
   expect(api.headers()["content-security-policy"]).toBe("default-src 'none'; frame-ancestors 'none'");
 });
 

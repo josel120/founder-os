@@ -19,7 +19,8 @@ vi.mock("better-auth", () => ({
 }));
 vi.mock("better-auth/adapters/drizzle", () => ({ drizzleAdapter: () => ({}) }));
 vi.mock("@/db", () => ({ db: { select: () => ({ from: () => ({ where: () => ({ limit: mocks.rows }) }) }) } }));
-vi.mock("../src/lib/env", () => ({ env: mocks.env }));
+// Only `env` is replaced; pure helpers such as vercelOrigins stay real.
+vi.mock("../src/lib/env", async (importOriginal) => ({ ...(await importOriginal<typeof import("../src/lib/env")>()), env: mocks.env }));
 
 beforeEach(() => {
   vi.resetModules();

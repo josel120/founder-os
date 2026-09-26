@@ -1,13 +1,12 @@
 import { expect, test as setup } from "@playwright/test";
 import postgres from "postgres";
-import { drizzle } from "drizzle-orm/postgres-js";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { e2eBaseUrl, e2eOwner, e2eSetupToken, e2eStorageState, requireDisposableDatabase } from "../e2e-env";
 
+// Migration runs once in the `migrate` project (tests/e2e/migrate.setup.ts), which this project
+// depends on; this only truncates and seeds the owner.
 setup("reset the disposable database and sign in as the owner", async ({ page, request }) => {
   const client = postgres(requireDisposableDatabase(), { max: 1, onnotice: () => {} });
   try {
-    await migrate(drizzle(client), { migrationsFolder: "src/db/migrations" });
     await client`TRUNCATE decision_log, idea, problem, session, account, verification, rate_limit, "user" CASCADE`;
   } finally {
     await client.end();

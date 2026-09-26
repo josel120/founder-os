@@ -72,7 +72,7 @@ test("evidence is captured on ideas and problems, edited, filtered and shown on 
   expect(await evidenceTitled(supports)).toEqual([expect.objectContaining({ idea_id: ideaId, problem_id: null, kind: "INTERVIEW", signal: "SUPPORTS", visibility: "PRIVATE" })]);
   expect(await evidenceTitled(contradicts)).toEqual([expect.objectContaining({ idea_id: null, problem_id: problemId, kind: "COMPETITOR", signal: "CONTRADICTS", source_url: null })]);
 
-  await ready(page, page.reload());
+  // The list updates in place after each save, without a reload (T-061).
   const supportsCard = page.locator("article", { hasText: supports });
   await expect(supportsCard.getByRole("link", { name: `Idea: ${ideaTitle}` })).toBeVisible();
   const source = supportsCard.getByRole("link", { name: "Source" });
@@ -158,7 +158,6 @@ test("owner A cannot read, edit or attach evidence to owner B's records", async 
   await ready(page, page.goto("/private/research"));
   await recordEvidence(page, { about: ownIdeaTitle, title: ownEvidence, kind: "NOTE", signal: "NEUTRAL" });
   const ownEvidenceId = await idOf("evidence", ownEvidence);
-  await ready(page, page.reload());
   const card = page.locator("article", { hasText: ownEvidence });
   await card.getByText("Edit", { exact: true }).click();
   retargeted = await retargetServerActions(page, ownEvidenceId, other.evidenceId);
@@ -182,7 +181,6 @@ test("anonymous evidence mutations are rejected and leave rows unchanged", async
   await ready(page, page.goto("/private/research"));
   await recordEvidence(page, { about: ideaTitle, title: existing, kind: "NOTE", signal: "NEUTRAL" });
   const before = await evidenceTitled(existing);
-  await ready(page, page.reload());
 
   const anonymousTitle = `E2E anonymous evidence ${id}`;
   const create = await captureServerAction(page, () => submitEvidence(page.locator("#capture-evidence"), { about: ideaTitle, title: anonymousTitle, kind: "NOTE", signal: "SUPPORTS" }));

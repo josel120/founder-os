@@ -17,7 +17,8 @@
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
-    "db:seed": "tsx src/db/seed.ts"
+    "db:seed": "tsx src/db/seed.ts",
+    "setup:production": "tsx scripts/setup-production.ts"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.13",

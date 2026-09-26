@@ -2,9 +2,11 @@ import { betterAuth, APIError } from "better-auth";
 import { timingSafeEqual } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { createAuthMiddleware } from "better-auth/api";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
-import { env } from "./env";
+import { pruneStaleRateLimits } from "@/modules/auth/services/rate-limit-retention";
+import { env, vercelOrigins } from "./env";
 
 export const auth =
   db && env.BETTER_AUTH_SECRET
@@ -21,6 +23,8 @@ export const auth =
         }),
         secret: env.BETTER_AUTH_SECRET,
         baseURL: env.BETTER_AUTH_URL,
+        // T-062: on Vercel, also accept this deployment's own aliases (unique, branch and production URLs). Empty elsewhere.
+        trustedOrigins: vercelOrigins(process.env),
         // ADR-016: counters live in Postgres so every serverless instance shares them; keyed per client IP and path.
         // Gated on NODE_ENV (Better Auth's default), not env.ts's Vercel rule, so CI's `next start` exercises it;
         // self-hosting needs a proxy that overwrites x-forwarded-for, or the key is client-controlled.
@@ -66,6 +70,13 @@ export const auth =
               },
             },
           },
+        },
+        // T-059: after any auth endpoint (sign-in attempts and the per-page session check), prune stale
+        // rate_limit rows, throttled to once per hour per instance. It never throws, so it cannot fail a request.
+        hooks: {
+          after: createAuthMiddleware(async () => {
+            if (db) await pruneStaleRateLimits(db, Date.now());
+          }),
         },
       })
     : null;

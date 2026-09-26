@@ -29,7 +29,6 @@ async function createOwnProject(page: Page, name: string) {
   await page.locator('input[name="slug"]').fill(`project-${unique()}`);
   await page.getByRole("button", { name: "+ Create project" }).click();
   await expect(page.getByText("Project created privately.")).toBeVisible();
-  await ready(page, page.reload());
   await page.getByRole("link", { name, exact: true }).click();
   await ready(page, page.waitForURL(/\/private\/projects\/[0-9a-f-]{36}$/));
   return new URL(page.url()).pathname.split("/").pop() ?? "";
@@ -38,6 +37,7 @@ async function createOwnProject(page: Page, name: string) {
 test("captured ideas appear in the private inbox", async ({ page }) => {
   const title = `E2E idea ${unique()}`;
   await captureIdea(page, title);
+  await expect(page.getByRole("link", { name: title })).toBeVisible(); // in place, without a reload (T-061)
   await ready(page, page.reload());
   await expect(page.getByRole("link", { name: title })).toBeVisible();
 });
@@ -45,7 +45,6 @@ test("captured ideas appear in the private inbox", async ({ page }) => {
 test("idea status changes persist after reload", async ({ page }) => {
   const title = `E2E status ${unique()}`;
   await captureIdea(page, title);
-  await ready(page, page.reload());
   await page.getByRole("link", { name: title }).click();
   await ready(page, page.waitForURL(/\/private\/ideas\/[0-9a-f-]{36}$/));
   await page.getByLabel("Status").selectOption("RESEARCHING");
@@ -62,13 +61,13 @@ test("idea content edits persist and decisions stay with their idea", async ({ p
   await captureIdea(page, firstTitle);
   await captureIdea(page, secondTitle);
 
-  await ready(page, page.reload());
   await page.getByRole("link", { name: firstTitle }).click();
   await ready(page, page.waitForURL(/\/private\/ideas\/[0-9a-f-]{36}$/));
   await page.getByLabel("Title", { exact: true }).fill(`${firstTitle} refined`);
   await page.getByLabel("Description", { exact: true }).fill("A persisted description");
   await page.getByRole("button", { name: "Save idea" }).click();
   await expect(page.getByText("Idea updated.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: `${firstTitle} refined` })).toBeVisible();
   await ready(page, page.reload());
   await expect(page.getByRole("heading", { name: `${firstTitle} refined` })).toBeVisible();
   await expect(page.locator("p").filter({ hasText: "A persisted description" })).toBeVisible();
@@ -96,7 +95,6 @@ test("idea content edits persist and decisions stay with their idea", async ({ p
 test("an idea converts into a private project with an isolated decision log", async ({ page, browser }) => {
   const ideaTitle = `E2E project idea ${unique()}`;
   await captureIdea(page, ideaTitle);
-  await ready(page, page.reload());
   await page.getByRole("link", { name: ideaTitle }).click();
   await ready(page, page.waitForURL(/\/private\/ideas\/[0-9a-f-]{36}$/));
   const ideaUrl = page.url();
@@ -116,6 +114,7 @@ test("an idea converts into a private project with an isolated decision log", as
   await page.getByLabel("Description", { exact: true }).fill("A project description that survives reload");
   await page.getByRole("button", { name: "Save project" }).click();
   await expect(page.getByText("Project updated.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: `${ideaTitle} edited` })).toBeVisible();
 
   await page.locator('select[name="lifecycle"]').selectOption("BETA");
   await page.locator('select[name="operationalStatus"]').selectOption("WAITING_REVIEW");
@@ -140,13 +139,11 @@ test("an idea converts into a private project with an isolated decision log", as
   await page.getByLabel("Why").fill("Keep the first release focused");
   await page.getByRole("button", { name: "Record decision" }).click();
   await expect(page.getByText("Decision recorded privately.")).toBeVisible();
-  await ready(page, page.reload());
   await expect(page.getByText(decision)).toBeVisible();
 
   await ready(page, page.goto("/private/ideas"));
   const secondIdeaTitle = `E2E second project ${unique()}`;
   await captureIdea(page, secondIdeaTitle);
-  await ready(page, page.reload());
   await page.getByRole("link", { name: secondIdeaTitle }).click();
   await ready(page, page.waitForURL(/\/private\/ideas\/[0-9a-f-]{36}$/));
   await page.getByRole("button", { name: "Turn into project" }).click();
@@ -261,7 +258,6 @@ test("a problem becomes a linked idea that records decisions", async ({ page, br
   await page.getByLabel("Who experiences it and why does it matter?").fill("Founders lose context between tools");
   await page.getByRole("button", { name: "Capture problem" }).click();
   await expect(page.getByText("Problem saved privately.")).toBeVisible();
-  await ready(page, page.reload());
   await page.locator("article", { hasText: title }).getByRole("button", { name: "Turn into idea" }).click();
   await ready(page, page.waitForURL(/\/private\/ideas\/[0-9a-f-]{36}$/));
   await expect(page.getByRole("heading", { name: title })).toBeVisible();
@@ -286,6 +282,9 @@ test("a problem becomes a linked idea that records decisions", async ({ page, br
 
 test("Finance records private income and expenses with project context", async ({ page, browser }) => {
   const projectName = `E2E finance project ${unique()}`;
+  // Unique sources keep the ledger assertions exact when the spec is repeated against the same database.
+  const expenseSource = `Cloud provider ${unique()}`;
+  const incomeSource = `Customer ${unique()}`;
   await ready(page, page.goto("/private/projects"));
   await page.locator('input[name="name"]').fill(projectName);
   await page.locator('input[name="slug"]').fill(`finance-${unique()}`);
@@ -296,7 +295,7 @@ test("Finance records private income and expenses with project context", async (
   await expect(page.locator('select[name="projectId"] option', { hasText: projectName })).toHaveCount(1);
   await page.locator('input[name="amount"]').fill("12.3400");
   await page.locator('input[name="category"]').fill("Hosting");
-  await page.locator('input[name="source"]').fill("Cloud provider");
+  await page.locator('input[name="source"]').fill(expenseSource);
   await page.locator('input[name="occurredAt"]').fill("2026-09-24T12:00");
   await page.locator('select[name="projectId"]').selectOption({ label: projectName });
   await page.getByRole("button", { name: "Record transaction" }).click();
@@ -305,19 +304,16 @@ test("Finance records private income and expenses with project context", async (
   await page.locator('select[name="type"]').selectOption("INCOME");
   await page.locator('input[name="amount"]').fill("99.9900");
   await page.locator('input[name="category"]').fill("First sale");
-  await page.locator('input[name="source"]').fill("Customer");
+  await page.locator('input[name="source"]').fill(incomeSource);
   await page.locator('input[name="occurredAt"]').fill("2026-09-25T09:30");
   await page.locator('select[name="projectId"]').selectOption("");
   await page.getByRole("button", { name: "Record transaction" }).click();
   await expect(page.getByText("Transaction recorded privately.")).toBeVisible();
 
-  await ready(page, page.reload());
-  await expect(page.locator("article", { hasText: "Cloud provider" })).toContainText("12.34 USD");
-  await expect(page.locator("article", { hasText: "Customer" })).toContainText("99.99 USD");
+  await expect(page.locator("article", { hasText: expenseSource })).toContainText("12.34 USD");
+  await expect(page.locator("article", { hasText: incomeSource })).toContainText("99.99 USD");
   await expect(page.getByRole("region", { name: "Totals by currency" })).toContainText("USD");
-  await expect(page.getByText(`Project: ${projectName}`)).toBeVisible();
-  await expect(page.getByText("Cloud provider")).toBeVisible();
-  await expect(page.getByText("Customer")).toBeVisible();
+  await expect(page.locator("article", { hasText: expenseSource }).getByText(`Project: ${projectName}`)).toBeVisible();
 
   const anonymous = await browser.newContext({ storageState: { cookies: [], origins: [] } });
   const stranger = await anonymous.newPage();
