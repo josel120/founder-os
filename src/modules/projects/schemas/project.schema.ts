@@ -3,7 +3,8 @@ import { z } from "zod";
 export const projectLifecycleSchema = z.enum(["PLANNING", "BUILDING", "TESTING", "BETA", "RELEASED", "MONETIZING", "PAUSED", "ARCHIVED"]);
 export const projectOperationalStatusSchema = z.enum(["READY", "ACTION_REQUIRED", "WAITING_PLATFORM", "WAITING_USERS", "WAITING_REVIEW", "WAITING_PAYMENT", "BLOCKED", "NO_ACTION_REQUIRED"]);
 const optionalText = z.string().trim().max(2000).default("");
-const optionalUrl = z.union([z.literal(""), z.url().max(2048).refine(value => ["http:", "https:"].includes(new URL(value).protocol), "Use an HTTP or HTTPS URL.")]).default("");
+// The protocol option validates without throwing; the previous refine called new URL() and threw on non-URLs.
+const optionalUrl = z.union([z.literal(""), z.url({ protocol: /^https?$/, error: "Use an HTTP or HTTPS URL." }).max(2048)]).default("");
 const optionalDate = z.union([z.literal(""), z.iso.datetime({ offset: true })]).default("");
 
 export const createProjectSchema = z.object({

@@ -121,3 +121,8 @@ it("reports a slug collision plainly on create and edit, without database detail
   m.returning.mockRejectedValue(new Error("private detail"));
   expect(await createProject(input())).toEqual({ ok: false, error: "Could not save the project. Please try again." });
 });
+
+it.each(["not a link", "//example.com", "https://", "javascript:alert(1)"])("rejects the link %s without throwing", website => {
+  expect(() => createProjectSchema.safeParse({ name: "App", slug: "app", website })).not.toThrow();
+  expect(createProjectSchema.safeParse({ name: "App", slug: "app", website }).success).toBe(false);
+});
