@@ -6,6 +6,7 @@ import { getAuthTables } from "better-auth/db";
 import { getTableColumns, getTableName, type Table } from "drizzle-orm";
 
 const mocks = vi.hoisted(() => ({
+  prune: vi.fn(async () => {}),
   configure: vi.fn<(options: BetterAuthOptions) => object>(() => ({})),
   adapter: vi.fn<(db: unknown, config: { schema: Record<string, Table> }) => object>(() => ({})),
   env: {
@@ -19,11 +20,13 @@ vi.mock("better-auth", () => ({ betterAuth: mocks.configure, APIError: class ext
 vi.mock("better-auth/adapters/drizzle", () => ({ drizzleAdapter: mocks.adapter }));
 vi.mock("@/db", () => ({ db: {} }));
 vi.mock("../src/lib/env", () => ({ env: mocks.env }));
+vi.mock("@/modules/auth/services/rate-limit-retention", () => ({ pruneStaleRateLimits: mocks.prune }));
 
 beforeEach(() => {
   vi.resetModules();
   mocks.configure.mockClear();
   mocks.adapter.mockClear();
+  mocks.prune.mockClear();
 });
 afterEach(() => vi.unstubAllEnvs());
 
@@ -85,4 +88,13 @@ it("adds rate_limit with an additive migration 0007 after the existing journal",
   expect(statements[0]).toMatch(/^CREATE TABLE "rate_limit" \(/);
   expect(statements[0]).toContain('CONSTRAINT "rate_limit_key_unique" UNIQUE("key")');
   expect(sqlText).not.toMatch(/\b(DROP|ALTER|UPDATE|DELETE|TRUNCATE)\b/i);
+});
+
+it("prunes stale rate-limit rows after every auth request, not only after sign-in (T-059)", async () => {
+  const { options } = await configuration("production");
+  const after = options.hooks?.after;
+  expect(after).toBeTypeOf("function");
+  await after!({ path: "/get-session", context: {} } as never);
+  expect(mocks.prune).toHaveBeenCalledTimes(1);
+  expect(mocks.prune).toHaveBeenCalledWith({}, expect.any(Number));
 });

@@ -243,6 +243,17 @@ npx vercel --prod`).
 - Do not disable rate limiting to work around a legitimate lockout; a shared/proxied owner IP is a
   known open tradeoff (ADR-016).
 
+**`rate_limit` retention (ADR-016/T-059)**
+- Each row's key is a client IP + path, kept only until 24h after its `last_request` — far longer
+  than the longest window (60s, the sign-in rule), so an active limit is never affected.
+- Pruning is opportunistic: a `DELETE … WHERE last_request < now() - 24h` runs after any auth
+  request (sign-in attempts and the session check on every private page), throttled to at most once
+  per hour per server instance. It never blocks or fails the request; a failed delete is only logged
+  (`reportError("auth.rateLimitRetention", …)`).
+- Check it: `psql "<NEON_DIRECT_URL>" -c "SELECT count(*), to_timestamp(min(last_request) / 1000) FROM rate_limit;"`.
+  The oldest row should be at most ~25h old (24h retention plus up to an hour of throttle) whenever
+  the app has had any auth traffic in the last hour.
+
 **Database connection limit / "too many connections"**
 - Confirm `DATABASE_URL` in Vercel is the **pooled** Neon string (`-pooler.` in the host) — serverless
   functions each open a connection, and the direct URL has far fewer slots.

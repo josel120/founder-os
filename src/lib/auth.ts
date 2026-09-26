@@ -2,8 +2,10 @@ import { betterAuth, APIError } from "better-auth";
 import { timingSafeEqual } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { createAuthMiddleware } from "better-auth/api";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
+import { pruneStaleRateLimits } from "@/modules/auth/services/rate-limit-retention";
 import { env } from "./env";
 
 export const auth =
@@ -66,6 +68,13 @@ export const auth =
               },
             },
           },
+        },
+        // T-059: after any auth endpoint (sign-in attempts and the per-page session check), prune stale
+        // rate_limit rows, throttled to once per hour per instance. It never throws, so it cannot fail a request.
+        hooks: {
+          after: createAuthMiddleware(async () => {
+            if (db) await pruneStaleRateLimits(db, Date.now());
+          }),
         },
       })
     : null;
