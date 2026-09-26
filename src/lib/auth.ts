@@ -22,6 +22,8 @@ export const auth =
         secret: env.BETTER_AUTH_SECRET,
         baseURL: env.BETTER_AUTH_URL,
         // ADR-016: counters live in Postgres so every serverless instance shares them; keyed per client IP and path.
+        // Gated on NODE_ENV (Better Auth's default), not env.ts's Vercel rule, so CI's `next start` exercises it;
+        // self-hosting needs a proxy that overwrites x-forwarded-for, or the key is client-controlled.
         rateLimit: {
           enabled: process.env.NODE_ENV === "production",
           storage: "database",
