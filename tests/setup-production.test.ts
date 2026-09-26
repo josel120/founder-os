@@ -434,3 +434,27 @@ describe("no secret in any output", () => {
     expect(owner).not.toMatch(/console\.log/);
   });
 });
+
+// Privacy audit (T-062): output of any command that is handed a secret, or that downloads settings, must never reach
+// the terminal unfiltered. Inherited stdio would bypass redact().
+it("never lets a command that receives or downloads secrets print unfiltered output", async () => {
+  const { readFileSync } = await import("node:fs");
+  const source = readFileSync(new URL("../scripts/setup-production.ts", import.meta.url), "utf8");
+  const calls = source.split("await vercel(").slice(1).map((rest) => rest.slice(0, rest.indexOf(");")));
+  const withStdinData = calls.filter((call) => call.includes("stdin: { data"));
+  expect(withStdinData.length).toBeGreaterThan(0);
+  for (const call of withStdinData) {
+    expect(call).toContain('stdout: "tee"');
+    expect(call).toContain('stderr: "tee"');
+  }
+  const pullFunction = source.slice(source.indexOf("async function pullDirectDatabaseUrl"), source.indexOf("async function askDirectDatabaseUrl"));
+  const pull = pullFunction.split("await vercel(").slice(1).map((rest) => rest.slice(0, rest.indexOf(");")));
+  expect(pull).toHaveLength(1);
+  expect(pull[0]).toContain('stdout: "pipe"');
+  expect(pull[0]).toContain('stderr: "pipe"');
+  // `vercel link` writes .env.local where it runs: it must run in the temporary folder, never in the repo.
+  expect(source).toMatch(/const linked = await vercel\(args, \{ cwd: context \}\)/);
+  // Child scripts (migrate, create-owner) are filtered too.
+  expect(source).toMatch(/run\(process\.execPath, \[cli, script\], \{ env, stdin, stdout: "tee", stderr: "tee" \}\)/);
+  expect(calls.every((call) => !call.includes('stderr: "inherit"') || !call.includes("stdin: { data"))).toBe(true);
+});

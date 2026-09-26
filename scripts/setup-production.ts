@@ -4,7 +4,7 @@
 // child's stdin or env object, never a command line, and every line printed goes through redact().
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -85,7 +85,8 @@ function git(args: readonly string[], cwd = root): Promise<RunResult> {
 /** Runs a repo TypeScript file with the repo's own tsx, through this Node binary: no shell, no PATH lookup. */
 function tsx(script: string, env: NodeJS.ProcessEnv, stdin: Stdin): Promise<RunResult> {
   const cli = createRequire(join(root, "package.json")).resolve("tsx/cli");
-  return run(process.execPath, [cli, script], { env, stdin });
+  // Filtered like everything else this script prints, even though both scripts only log names and codes.
+  return run(process.execPath, [cli, script], { env, stdin, stdout: "tee", stderr: "tee" });
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -172,7 +173,7 @@ async function checkGit(): Promise<string> {
 }
 
 async function readEnvList(context: string): Promise<lib.EnvRecord[]> {
-  const result = await vercel(["env", "ls", "--format", "json"], { cwd: context, stdin: "ignore", stdout: "pipe", stderr: "inherit" });
+  const result = await vercel(["env", "ls", "--format", "json"], { cwd: context, stdin: "ignore", stdout: "pipe", stderr: "tee" });
   // The JSON holds readable values (it may include the database URL): parsed here, never printed.
   const records = result.code === 0 ? lib.parseEnvList(result.stdout) : undefined;
   if (!records) throw new Stop("Could not read the project's settings from Vercel. Run pnpm setup:production again.");
@@ -185,8 +186,12 @@ async function pullDirectDatabaseUrl(context: string): Promise<string | undefine
   const args = ["env", "pull", "production.env", "--environment", "production", "--yes"];
   say(`> ${lib.describeVercel(args, scope)}   (private temporary folder, deleted right after)`);
   try {
-    const result = await vercel(args, { cwd: context, stdin: "ignore", stdout: "inherit", stderr: "inherit" });
-    if (result.code !== 0 || !existsSync(file)) return undefined;
+    // Captured, never printed: the database URL is only known (and redactable) after this command.
+    const result = await vercel(args, { cwd: context, stdin: "ignore", stdout: "pipe", stderr: "pipe" });
+    if (result.code !== 0 || !existsSync(file)) {
+      say(`Could not download the settings (exit ${result.code}). You will be asked to paste the address instead.`);
+      return undefined;
+    }
     const vars = lib.parseEnvFile(readFileSync(file, "utf8"));
     for (const [key, value] of Object.entries(vars)) {
       if (/DATABASE|POSTGRES|^PG/.test(key)) keepSecret(...lib.databaseUrlSecrets(value));
@@ -234,13 +239,6 @@ async function smokeCheck(baseUrl: string): Promise<lib.SmokeRow[]> {
     await new Promise((resolve) => setTimeout(resolve, 10_000));
   }
   return rows;
-}
-
-function restoreGitignore(path: string, before: string | undefined): void {
-  if (before === undefined || !lib.gitignoreCoversVercel(before) || !existsSync(path)) return;
-  if (readFileSync(path, "utf8") === before) return;
-  writeFileSync(path, before);
-  say("Undid the Vercel CLI's edit to .gitignore: it already ignores .vercel and .env*.");
 }
 
 function usage(): void {
@@ -296,13 +294,15 @@ async function setup(options: lib.SetupOptions, work: string): Promise<boolean> 
     say(`Already connected to the Vercel project "${options.project}".`);
   } else {
     say(`Connecting this folder to the Vercel project "${options.project}" (created when it does not exist yet).`);
-    const gitignorePath = join(root, ".gitignore");
-    const gitignore = existsSync(gitignorePath) ? readFileSync(gitignorePath, "utf8") : undefined;
     const args = ["link", "--yes", "--project", options.project];
-    say(`> ${lib.describeVercel(args, scope)}`);
-    const linked = await vercel(args, {});
-    restoreGitignore(gitignorePath, gitignore);
-    if (linked.code !== 0) throw new Stop("Connecting to Vercel failed; see the message above. Run pnpm setup:production again.");
+    // Linked inside the private temporary folder: `vercel link` writes .env.local and edits .gitignore where it runs,
+    // and neither of this repo's files may change. Only the resulting project.json is copied into the repo.
+    say(`> ${lib.describeVercel(args, scope)}   (in a private temporary folder; your .env.local is not touched)`);
+    const linked = await vercel(args, { cwd: context });
+    const made = join(context, ".vercel", "project.json");
+    if (linked.code !== 0 || !existsSync(made)) throw new Stop("Connecting to Vercel failed; see the message above. Run pnpm setup:production again.");
+    mkdirSync(join(root, ".vercel"), { recursive: true });
+    copyFileSync(made, linkFile);
   }
   const link = existsSync(linkFile) ? lib.parseProjectLink(readFileSync(linkFile, "utf8")) : undefined;
   if (!link) throw new Stop("The Vercel link (.vercel/project.json) is missing or unreadable. Run pnpm setup:production again.");
@@ -352,7 +352,8 @@ async function setup(options: lib.SetupOptions, work: string): Promise<boolean> 
   if (writes.length === 0) say("Vercel already has every setting. Skipped.");
   for (const write of writes) {
     say(`> ${lib.describeEnvWrite(write, scope)}`);
-    const saved = await vercel(lib.envAddArgs(write), { cwd: context, stdin: { data: values[write.source] } });
+    // Output goes through redact(): the CLI must never be able to echo the value it just read from stdin.
+    const saved = await vercel(lib.envAddArgs(write), { cwd: context, stdin: { data: values[write.source] }, stdout: "tee", stderr: "tee" });
     if (saved.code !== 0) throw new Stop(`Saving ${write.name} in Vercel failed; see the message above. Run pnpm setup:production again.`);
   }
 

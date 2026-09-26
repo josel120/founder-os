@@ -52,7 +52,7 @@ twice (hidden, at least 12 characters). Nothing else.
 
 It never sets `BETTER_AUTH_URL` or `NEXT_PUBLIC_BETTER_AUTH_URL` (derived on Vercel, Section 4),
 `OWNER_SETUP_TOKEN`, or any preview database. No secret is printed. On your computer it leaves `.vercel/`
-(gitignored) and the `VERCEL_OIDC_TOKEN` line that `vercel link` adds to `.env.local` (the app ignores it).
+(gitignored). `vercel link` runs in a private temporary folder, so your `.env.local` and `.gitignore` are never changed.
 
 **Previews have no database, by design:** a preview build of an unreviewed branch must never reach the real
 data. Previews build, then refuse to boot (T-052 fail-fast); that error page is expected. To use previews,
