@@ -17,7 +17,7 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-044 | Upgrade Vitest to 4.x to clear the remaining dev-only advisories | done | claude | S | T-043 |
 | T-045 | Add a nonce-based script-src Content Security Policy | done | claude | M | T-043 |
 | T-046 | Select explicit columns in the older domain queries | review | claude | S | none |
-| T-047 | Cockpit aggregation queries | todo | codex | M | T-041 |
+| T-047 | Cockpit aggregation queries | review | claude | M | T-041 |
 | T-048 | `/private` home and login landing | todo | codex | M | T-047 |
 | T-049 | Problem detail page with content edit and evidence | review | claude | M | T-041 |
 | T-050 | Show the Project → Idea and Project → Finance chain | review | claude | S | T-041 |
