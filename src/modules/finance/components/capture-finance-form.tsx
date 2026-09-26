@@ -40,11 +40,11 @@ export function CaptureFinanceForm({ projects }: { projects: ProjectOption[] }) 
         <select name="type" defaultValue="EXPENSE" disabled={pending} className="mt-2 block w-full rounded-md border p-3"><option value="EXPENSE">Expense</option><option value="INCOME">Income</option></select>
       </label>
       <label className="block text-sm font-medium">Currency
-        <input name="currency" defaultValue="USD" required maxLength={3} pattern="[A-Z]{3}" readOnly={pending} className="mt-2 w-full rounded-md border p-3 uppercase" />
+        <input name="currency" defaultValue="USD" required maxLength={3} pattern="[A-Za-z]{3}" readOnly={pending} className="mt-2 w-full rounded-md border p-3 uppercase" />
       </label>
     </div>
     <label className="block text-sm font-medium">Amount
-      <input name="amount" required inputMode="decimal" pattern="\d+(\.\d{1,4})?" placeholder="0.00" readOnly={pending} className="mt-2 w-full rounded-md border p-3" />
+      <input name="amount" required inputMode="decimal" pattern="\d+([.,]\d{1,4})?" placeholder="0.00" readOnly={pending} className="mt-2 w-full rounded-md border p-3" />
     </label>
     <label className="block text-sm font-medium">Category
       <input name="category" required maxLength={160} placeholder="Hosting, subscriptions, sales" readOnly={pending} className="mt-2 w-full rounded-md border p-3" />

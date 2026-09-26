@@ -111,3 +111,13 @@ it("requires waiting context and rejects invalid dates", () => {
   expect(updateProjectStatusSchema.safeParse({ projectId: id, lifecycle: "BETA", operationalStatus: "WAITING_USERS" }).success).toBe(false);
   expect(updateProjectStatusSchema.safeParse({ projectId: id, lifecycle: "BETA", operationalStatus: "READY", reviewAt: "invalid" }).success).toBe(false);
 });
+
+it("reports a slug collision plainly on create and edit, without database details", async () => {
+  const collision = Object.assign(new Error("Failed query: insert into project ... private detail"), { cause: Object.assign(new Error("duplicate key"), { code: "23505", constraint_name: "project_slug_unique" }) });
+  m.returning.mockRejectedValue(collision);
+  const expected = { ok: false, error: "That slug is already in use. Choose another one." };
+  expect(await createProject(input())).toEqual(expected);
+  expect(await updateProjectContent(input())).toEqual(expected);
+  m.returning.mockRejectedValue(new Error("private detail"));
+  expect(await createProject(input())).toEqual({ ok: false, error: "Could not save the project. Please try again." });
+});

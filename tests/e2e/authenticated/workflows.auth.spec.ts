@@ -155,6 +155,7 @@ test("idea content edits persist and decisions stay with their idea", async ({ p
   await expect(page.getByText("Decision recorded privately.")).toBeVisible();
   await ready(page, page.goto("/private/decisions"));
   await expect(page.getByText(decision)).toBeVisible();
+  await expect(page.locator("article", { hasText: decision }).getByRole("link", { name: `Idea: ${firstTitle} refined` })).toBeVisible();
 
   await ready(page, page.goto("/private/ideas"));
   await page.getByRole("link", { name: secondTitle }).click();
@@ -168,10 +169,18 @@ test("an idea converts into a private project with an isolated decision log", as
   await ready(page, page.reload());
   await page.getByRole("link", { name: ideaTitle }).click();
   await ready(page, page.waitForURL(/\/private\/ideas\/[0-9a-f-]{36}$/));
+  const ideaUrl = page.url();
   await page.getByRole("button", { name: "Turn into project" }).click();
   await ready(page, page.waitForURL(/\/private\/projects\/[0-9a-f-]{36}$/));
   await expect(page.getByRole("heading", { name: ideaTitle })).toBeVisible();
   await expect(page.locator("dl").getByText("Planning", { exact: true })).toBeVisible();
+
+  // The converted idea now links to its project instead of offering a second conversion.
+  const convertedUrl = page.url();
+  await ready(page, page.goto(ideaUrl));
+  await expect(page.getByRole("button", { name: "Turn into project" })).toHaveCount(0);
+  await page.getByRole("link", { name: ideaTitle, exact: true }).click();
+  await ready(page, page.waitForURL(convertedUrl));
 
   await page.getByLabel("Name", { exact: true }).fill(`${ideaTitle} edited`);
   await page.getByLabel("Description", { exact: true }).fill("A project description that survives reload");
@@ -373,8 +382,9 @@ test("Finance records private income and expenses with project context", async (
   await expect(page.getByText("Transaction recorded privately.")).toBeVisible();
 
   await ready(page, page.reload());
-  await expect(page.getByText("12.3400 USD")).toBeVisible();
-  await expect(page.getByText("99.9900 USD")).toBeVisible();
+  await expect(page.locator("article", { hasText: "Cloud provider" })).toContainText("12.34 USD");
+  await expect(page.locator("article", { hasText: "Customer" })).toContainText("99.99 USD");
+  await expect(page.getByRole("region", { name: "Totals by currency" })).toContainText("USD");
   await expect(page.getByText(`Project: ${projectName}`)).toBeVisible();
   await expect(page.getByText("Cloud provider")).toBeVisible();
   await expect(page.getByText("Customer")).toBeVisible();

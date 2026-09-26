@@ -16,3 +16,12 @@ export async function getPrivateProject(id: string) {
   const [project] = await db.select().from(projects).where(and(eq(projects.id, id), eq(projects.ownerId, owner.id), eq(projects.visibility, "PRIVATE"))).limit(1);
   return project ?? null;
 }
+
+/** The owner's project converted from this idea, if any (conversion is idempotent, ADR-009). */
+export async function findPrivateProjectForIdea(ideaId: string) {
+  const owner = await requireAuth();
+  if (!owner || !db || !z.uuid().safeParse(ideaId).success) return null;
+  const [project] = await db.select({ id: projects.id, name: projects.name }).from(projects)
+    .where(and(eq(projects.originIdeaId, ideaId), eq(projects.ownerId, owner.id), eq(projects.visibility, "PRIVATE"))).limit(1);
+  return project ?? null;
+}

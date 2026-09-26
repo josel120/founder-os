@@ -3,12 +3,17 @@
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
+import { isUniqueViolation } from "@/db/errors";
 import { ideas, projects } from "@/db/schema";
 import { requireAuth } from "@/lib/require-auth";
 import { createProjectFromIdeaSchema, createProjectSchema, updateProjectContentSchema, updateProjectStatusSchema } from "../schemas/project.schema";
+import { slugify } from "../services/slug";
 
 type Result = { ok: true; projectId: string } | { ok: false; error: string };
 const failure = { ok: false as const, error: "Could not save the project. Please try again." };
+// Slugs are unique across the table, so a collision is reported plainly instead of as a generic failure.
+const slugTaken = { ok: false as const, error: "That slug is already in use. Choose another one." };
+const saveFailure = (error: unknown) => isUniqueViolation(error, "project_slug_unique") ? slugTaken : failure;
 
 function refresh(id: string) {
   revalidatePath("/private/projects");
@@ -26,7 +31,7 @@ export async function createProject(formData: FormData): Promise<Result> {
     const [created] = await db.insert(projects).values({ ...parsed.data, ownerId: owner.id, visibility: "PRIVATE", lifecycle: "PLANNING", operationalStatus: "NO_ACTION_REQUIRED" }).returning({ id: projects.id });
     if (!created) return failure;
     projectId = created.id;
-  } catch { return failure; }
+  } catch (error) { return saveFailure(error); }
   refresh(projectId);
   return { ok: true, projectId };
 }
@@ -50,7 +55,7 @@ export async function createProjectFromIdea(formData: FormData): Promise<Result>
       refresh(existing.id);
       return { ok: true, projectId: existing.id };
     }
-    const slugBase = idea.title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 70) || "project";
+    const slugBase = slugify(idea.title) || "project";
     const [created] = await db.insert(projects).values({
       ownerId: owner.id,
       originIdeaId: idea.id,
@@ -79,7 +84,7 @@ export async function updateProjectContent(formData: FormData): Promise<Result> 
   try {
     const changed = await db.update(projects).set({ ...content, updatedAt: new Date() }).where(and(eq(projects.id, projectId), eq(projects.ownerId, owner.id), eq(projects.visibility, "PRIVATE"))).returning({ id: projects.id });
     if (!changed.length) return { ok: false, error: "Project not found. Changes were not saved." };
-  } catch { return failure; }
+  } catch (error) { return saveFailure(error); }
   refresh(projectId);
   return { ok: true, projectId };
 }

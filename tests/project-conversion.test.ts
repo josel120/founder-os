@@ -66,3 +66,10 @@ it("hides conversion database failures", async () => {
   expect(result).toEqual({ ok: false, error: "Could not save the project. Please try again." });
   expect(JSON.stringify(result)).not.toContain("private database detail");
 });
+
+it("folds accents into a valid slug for the converted project", async () => {
+  m.limit.mockReset();
+  m.limit.mockResolvedValueOnce([{ id: ideaId, title: "Café para niños", description: "" }]).mockResolvedValueOnce([]);
+  await createProjectFromIdea(form());
+  expect(m.values).toHaveBeenCalledWith(expect.objectContaining({ slug: `cafe-para-ninos-${ideaId.slice(0, 8)}` }));
+});

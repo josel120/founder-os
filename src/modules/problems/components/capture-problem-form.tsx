@@ -2,6 +2,7 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import { createProblem } from "../actions/problem.actions";
+import { problemDescriptionMax } from "../schemas/problem.limits";
 
 export function CaptureProblemForm() {
   const inFlight = useRef(false);
@@ -31,14 +32,15 @@ export function CaptureProblemForm() {
   }
 
   return (
-    <form onSubmit={submit} aria-busy={pending} className="workspace-panel mb-10 max-w-2xl space-y-4 p-6">
+    <form id="capture-problem" onSubmit={submit} aria-busy={pending} className="workspace-panel space-y-4 p-6">
+      <div><p className="workspace-eyebrow">Start from the need</p><h2 className="mt-2 text-xl font-semibold tracking-tight">Capture a problem</h2></div>
       <label className="block text-sm font-medium">Problem
         <input name="title" required maxLength={160} readOnly={pending} placeholder="What problem exists?" className="mt-2 w-full rounded-md border p-3" />
       </label>
       <label className="block text-sm font-medium">Who experiences it and why does it matter?
-        <textarea name="description" required maxLength={3000} readOnly={pending} className="mt-2 min-h-28 w-full rounded-md border p-3" />
+        <textarea name="description" required maxLength={problemDescriptionMax} readOnly={pending} className="mt-2 min-h-28 w-full rounded-md border p-3" />
       </label>
-      <button disabled={pending} className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50" type="submit">{pending ? "Saving..." : "Capture problem"}</button>
+      <button disabled={pending} className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50" type="submit">{pending ? "Saving..." : "Capture problem"}</button>
       <p role="status" className="text-sm text-green-700">{message}</p>
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
     </form>
