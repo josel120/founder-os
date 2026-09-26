@@ -8,3 +8,5 @@ overrides:
   next>postcss: ^8.5.28
   # drizzle-kit's @esbuild-kit loader pins esbuild 0.18 (dev-server advisory GHSA-67mh-4wv8-2f99). T-044.
   '@esbuild-kit/core-utils>esbuild': ^0.25.12
+patchedDependencies:
+  next@15.5.26: patches/next@15.5.26.patch

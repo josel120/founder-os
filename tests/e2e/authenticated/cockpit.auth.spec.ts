@@ -3,8 +3,7 @@ import { e2eOwner } from "../e2e-env";
 import { captureServerAction, ready, replayAnonymously, retargetServerActions, unique, withE2eDb } from "./helpers";
 
 // Other specs run in parallel against the same owner, so assertions target this spec's unique titles, never totals.
-// After a mutation or to open a record, the spec loads the page (links are checked by href) instead of relying on an
-// in-place client update: those are intermittently lost after server actions today (T-061).
+// Links are followed and mutations are checked in place, without reloads (T-061 fixed the lost client updates).
 const letters = () => Array.from({ length: 2 }, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join("");
 const currencyCode = (prefix: "Q" | "Z") => `${prefix}${letters()}`; // fresh per attempt, so a retry never double-counts; A uses Q, B uses Z
 
@@ -125,12 +124,15 @@ test("the home lists the owner's attention items, links to them and never shows 
 
   await expectNoneOf(page, [other.project, other.inbox, other.research, other.decision, other.currency, "Owner B next action"]);
 
-  await ready(page, page.goto(`/private/projects/${own.blockedId}`));
+  await ready(page, action.getByRole("link", { name: own.blocked }).click());
+  await expect(page).toHaveURL(new RegExp(`/private/projects/${own.blockedId}$`));
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(own.blocked);
   // B's transaction points at A's project; the project chain must still only show A's own finance.
   await expect(page.getByRole("region", { name: "Finance" }).getByText(other.category)).toHaveCount(0);
 
-  await ready(page, page.goto(`/private/ideas/${own.contradictedId}#evidence-heading`));
+  await ready(page, page.goto("/private"));
+  await ready(page, page.getByRole("region", { name: /^Research gaps/ }).getByRole("link", { name: own.contradicted }).click());
+  await expect(page).toHaveURL(new RegExp(`/private/ideas/${own.contradictedId}#evidence-heading$`));
   await expect(page.getByRole("region", { name: "Evidence" }).getByText("1 contradicts")).toBeVisible();
 
   expect(await ownerSnapshot(other.ownerId)).toEqual(before);
@@ -143,16 +145,15 @@ test("a problem is edited on its page, gathers ideas and evidence, and a project
   await captureProblem(page, title);
   const problemId = await idOf("problem", title);
 
-  await ready(page, page.goto("/private/problems"));
   await expect(page.getByRole("link", { name: title })).toHaveAttribute("href", `/private/problems/${problemId}`);
-  await ready(page, page.goto(`/private/problems/${problemId}`));
+  await ready(page, page.getByRole("link", { name: title }).click());
+  await expect(page).toHaveURL(new RegExp(`/private/problems/${problemId}$`));
   await expect(page).toHaveTitle("Problem · Founder OS");
   const form = page.locator("form", { hasText: "Refine problem" });
   await form.getByLabel("Problem", { exact: true }).fill(edited);
   await form.getByLabel("Who experiences it and why does it matter?").fill(`Refined why ${id}`);
   await form.getByRole("button", { name: "Save problem" }).click();
   await expect(form.getByText("Problem updated.")).toBeVisible();
-  await ready(page, page.reload());
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(edited);
   expect(await withE2eDb((sql) => sql`SELECT title, description, visibility FROM problem WHERE id = ${problemId}`).then((rows) => [...rows]))
     .toEqual([{ title: edited, description: `Refined why ${id}`, visibility: "PRIVATE" }]);
@@ -166,14 +167,14 @@ test("a problem is edited on its page, gathers ideas and evidence, and a project
   await capture.getByLabel("Signal").selectOption("SUPPORTS");
   await capture.getByRole("button", { name: "Save evidence" }).click();
   await expect(page.getByText("Evidence saved privately.")).toBeVisible();
-  await ready(page, page.reload());
   await expect(page.getByRole("region", { name: "Evidence" }).getByText("1 supports")).toBeVisible();
   expect(await withE2eDb((sql) => sql`SELECT problem_id, idea_id FROM evidence WHERE title = ${evidenceTitle}`).then((rows) => [...rows]))
     .toEqual([{ problem_id: problemId, idea_id: null }]);
 
-  await page.getByRole("button", { name: "Turn into idea" }).click();
-  let ideaId = "";
-  await expect.poll(async () => (ideaId = await withE2eDb((sql) => sql<{ id: string }[]>`SELECT id FROM idea WHERE problem_id = ${problemId}`).then((rows) => rows[0]?.id ?? ""))).toMatch(/^[0-9a-f-]{36}$/);
+  await ready(page, page.getByRole("button", { name: "Turn into idea" }).click());
+  await ready(page, page.waitForURL(/\/private\/ideas\/[0-9a-f-]{36}$/));
+  const ideaId = new URL(page.url()).pathname.split("/").pop() ?? "";
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(edited);
   await ready(page, page.goto(`/private/problems/${problemId}`));
   await expect(page.getByRole("region", { name: "Ideas from this problem" }).getByRole("link", { name: edited })).toHaveAttribute("href", `/private/ideas/${ideaId}`);
 

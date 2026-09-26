@@ -178,3 +178,15 @@ Nothing is deployed yet. This phase takes the private app to a hardened deployme
 Open questions for the owner: 1) confirm Vercel + Neon, and the region; 2) the production domain; 3) logs only, or a third-party error monitor; 4) the sign-in rate limit, proposed 5 attempts per minute per IP.
 
 Cards: T-052 production env + DB client (claude) · T-053 auth rate limit storage, session and telemetry settings, migration 0007 (claude) · T-054 `reportError` (claude) · T-055 `docs/RUNBOOK.md` (claude) · T-056 provision Vercel + Neon and deploy a preview (human) · T-057 production migrations, owner setup and restore drill (human) · T-058 deployed smoke check and privacy sweep (claude).
+
+## ADR-017: Patch Next's vendored React DOM so render-phase pings are not dropped (T-061)
+
+Symptom: after a server action, `router.refresh()` or a link click, the page sometimes never showed the result (missing list item, stale title, navigation never committed) until a reload.
+
+Cause: Next 15.5.26 bundles its own React for the App Router (`19.2.0-canary-0bdb9206-20250818`), not the installed `react`/`react-dom` 19.3.0 (that copy only serves the unused Pages Router). In that React build, a transition that suspends on a lazy Flight chunk yields once; if the chunk's row arrives during that yield, it stays `resolved_model` (nobody is listening yet). On resume React unwinds and attaches a ping listener, and Flight's `then()` parses the chunk and calls the ping synchronously, inside the render. `pingSuspendedRoot` ignores a ping that arrives during the render once the render is "suspended with delay", so the lane is marked suspended with no listener left, and the update never commits. A busy main thread and large, multi-chunk RSC payloads widen the window. React fixed it upstream by recording the ping (`workInProgressRootPingedLanes |= pingedLanes`), and react-dom 19.3.0 ships that fix.
+
+Decision: a pnpm patch (`patches/next@15.5.26.patch`, `patchedDependencies` in `pnpm-workspace.yaml`) applies that one-line upstream change to the four stable-channel React DOM client builds vendored in `next` (production, development, profiling). The experimental channel is not patched, because the app enables no experimental React features. `tests/react-render-phase-ping.test.ts` reproduces the race against the vendored build (it fails without the patch) and guards it.
+
+Rejected: upgrading to Next 16 (a major migration outside this card; 15.5.26 is the last 15.5 backport and still ships the old React); aliasing the App Router to the installed react-dom 19.3.0 (mixes React versions with Next's vendored `react` and Flight client); product-code workarounds such as wrapping actions in transitions or paging lists (they only narrow the race, and plain link navigations hit it too).
+
+Removal: when Next is upgraded, pnpm refuses to install with an unused or failing patch. Drop the patch once the new Next's vendored `react-dom-client.production.js` records render-phase pings in `pingSuspendedRoot`, and keep the regression test.
