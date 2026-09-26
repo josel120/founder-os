@@ -101,11 +101,16 @@ describe("createEvidence", () => {
     expect(await createEvidence(data)).toMatchObject({ ok: false, reason: "invalid" });
   });
 
-  it("hides database errors", async () => {
-    m.returning.mockRejectedValue(new Error("private database detail"));
+  it("hides database errors from the result and the log", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    m.returning.mockRejectedValue(Object.assign(new Error("private database detail"), { code: "23503" }));
     const result = await createEvidence(createInput());
     expect(result).toEqual({ ok: false, reason: "failed", error: "Could not save the evidence. Please try again." });
     expect(JSON.stringify(result)).not.toContain("private database detail");
+    expect(log).toHaveBeenCalledOnce();
+    expect(JSON.stringify(log.mock.calls)).toContain("evidence.create");
+    expect(JSON.stringify(log.mock.calls)).not.toContain("private database detail");
+    log.mockRestore();
   });
 });
 

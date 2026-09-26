@@ -24,7 +24,7 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-051 | Verify the cockpit end to end and sweep privacy | todo | claude | M | T-048, T-049, T-050 |
 | T-052 | Fail fast on production env and tune the DB client for serverless | todo | claude | M | T-042 |
 | T-053 | Store auth rate limits in the database and pin session settings | todo | claude | M | T-042 |
-| T-054 | Report server errors without private data | todo | claude | S | T-042 |
+| T-054 | Report server errors without private data | review | claude | S | T-042 |
 | T-055 | Write the production runbook | todo | claude | S | T-042 |
 | T-056 | Provision Vercel and Neon and deploy a preview | todo | human | S | T-052, T-055 |
 | T-057 | Apply production migrations, create the owner and run a restore drill | todo | human | S | T-053, T-054, T-056 |

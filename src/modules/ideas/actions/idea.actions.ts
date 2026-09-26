@@ -6,6 +6,7 @@ import { createIdeaSchema } from "../schemas/idea.schema";
 import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { createIdeaFromProblemSchema, updateIdeaContentSchema, updateIdeaStatusSchema } from "../schemas/idea.schema";
+import { reportError } from "@/lib/report-error";
 import { requireAuth } from "@/lib/require-auth";
 
 export async function createIdea(formData: FormData): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -29,7 +30,8 @@ export async function createIdea(formData: FormData): Promise<{ ok: true } | { o
       status: "INBOX",
       visibility: "PRIVATE",
     });
-  } catch {
+  } catch (error) {
+    reportError("ideas.create", error);
     return { ok: false, error: "Could not save the idea. Please try again." };
   }
   revalidatePath("/private/ideas");
@@ -45,7 +47,8 @@ export async function updateIdeaStatus(formData: FormData): Promise<{ ok: true }
   try {
     const changed = await db.update(ideas).set({ status: parsed.data.status, updatedAt: new Date() }).where(and(eq(ideas.id, parsed.data.ideaId), eq(ideas.ownerId, owner.id), eq(ideas.visibility, "PRIVATE"))).returning({ id: ideas.id });
     if (changed.length === 0) return { ok: false, error: "Idea not found. Changes were not saved." };
-  } catch {
+  } catch (error) {
+    reportError("ideas.updateStatus", error);
     return { ok: false, error: "Could not save changes. Please try again." };
   }
   revalidatePath("/private/ideas");
@@ -74,7 +77,8 @@ export async function updateIdeaContent(formData: FormData): Promise<{ ok: true 
       eq(ideas.visibility, "PRIVATE"),
     )).returning({ id: ideas.id });
     if (changed.length === 0) return { ok: false, error: "Idea not found. Changes were not saved." };
-  } catch {
+  } catch (error) {
+    reportError("ideas.updateContent", error);
     return { ok: false, error: "Could not save changes. Please try again." };
   }
   revalidatePath("/private/ideas");
@@ -104,7 +108,8 @@ export async function createIdeaFromProblem(formData: FormData): Promise<{ ok: t
     if (!created) return { ok: false, error: "Could not create the idea. Please try again." };
     revalidatePath("/private/ideas");
     return { ok: true, ideaId: created.id };
-  } catch {
+  } catch (error) {
+    reportError("ideas.createFromProblem", error);
     return { ok: false, error: "Could not create the idea. Please try again." };
   }
 }

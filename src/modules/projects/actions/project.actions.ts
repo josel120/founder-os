@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { isUniqueViolation } from "@/db/errors";
 import { ideas, projects } from "@/db/schema";
+import { reportError } from "@/lib/report-error";
 import { requireAuth } from "@/lib/require-auth";
 import { createProjectFromIdeaSchema, createProjectSchema, updateProjectContentSchema, updateProjectStatusSchema } from "../schemas/project.schema";
 import { slugify } from "../services/slug";
@@ -13,7 +14,11 @@ type Result = { ok: true; projectId: string } | { ok: false; error: string };
 const failure = { ok: false as const, error: "Could not save the project. Please try again." };
 // Slugs are unique across the table, so a collision is reported plainly instead of as a generic failure.
 const slugTaken = { ok: false as const, error: "That slug is already in use. Choose another one." };
-const saveFailure = (error: unknown) => isUniqueViolation(error, "project_slug_unique") ? slugTaken : failure;
+function saveFailure(scope: string, error: unknown) {
+  if (isUniqueViolation(error, "project_slug_unique")) return slugTaken; // expected; not an error to report
+  reportError(scope, error);
+  return failure;
+}
 
 function refresh(id: string) {
   revalidatePath("/private/projects");
@@ -31,7 +36,7 @@ export async function createProject(formData: FormData): Promise<Result> {
     const [created] = await db.insert(projects).values({ ...parsed.data, ownerId: owner.id, visibility: "PRIVATE", lifecycle: "PLANNING", operationalStatus: "NO_ACTION_REQUIRED" }).returning({ id: projects.id });
     if (!created) return failure;
     projectId = created.id;
-  } catch (error) { return saveFailure(error); }
+  } catch (error) { return saveFailure("projects.create", error); }
   refresh(projectId);
   return { ok: true, projectId };
 }
@@ -69,7 +74,8 @@ export async function createProjectFromIdea(formData: FormData): Promise<Result>
     if (!created) return failure;
     refresh(created.id);
     return { ok: true, projectId: created.id };
-  } catch {
+  } catch (error) {
+    reportError("projects.createFromIdea", error);
     return failure;
   }
 }
@@ -84,7 +90,7 @@ export async function updateProjectContent(formData: FormData): Promise<Result> 
   try {
     const changed = await db.update(projects).set({ ...content, updatedAt: new Date() }).where(and(eq(projects.id, projectId), eq(projects.ownerId, owner.id), eq(projects.visibility, "PRIVATE"))).returning({ id: projects.id });
     if (!changed.length) return { ok: false, error: "Project not found. Changes were not saved." };
-  } catch (error) { return saveFailure(error); }
+  } catch (error) { return saveFailure("projects.updateContent", error); }
   refresh(projectId);
   return { ok: true, projectId };
 }
@@ -107,7 +113,7 @@ export async function updateProjectStatus(formData: FormData): Promise<Result> {
       updatedAt: new Date(),
     }).where(and(eq(projects.id, data.projectId), eq(projects.ownerId, owner.id), eq(projects.visibility, "PRIVATE"))).returning({ id: projects.id });
     if (!changed.length) return { ok: false, error: "Project not found. Changes were not saved." };
-  } catch { return failure; }
+  } catch (error) { reportError("projects.updateStatus", error); return failure; }
   refresh(data.projectId);
   return { ok: true, projectId: data.projectId };
 }
