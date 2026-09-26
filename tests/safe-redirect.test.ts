@@ -13,6 +13,6 @@ it.each([
 it.each([
   undefined, ["/private/ideas"], "", "https://evil.example/private", "//evil.example/private", "/\\evil.example",
   "/private\\@evil.example", "/privately", "/private/../login", "/login", "javascript:alert(1)", "/private/%2e%2e/api",
-])("falls back to the ideas inbox for %s", (value) => {
-  expect(safePrivatePath(value)).toBe("/private/ideas");
+])("falls back to the private home for %s", (value) => {
+  expect(safePrivatePath(value)).toBe("/private");
 });

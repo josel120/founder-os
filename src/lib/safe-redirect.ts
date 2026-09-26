@@ -1,4 +1,4 @@
-const fallback = "/private/ideas";
+const fallback = "/private";
 
 /** Accepts only same-origin paths inside the private workspace, so `?next=` can never become an open redirect. */
 export function safePrivatePath(value: unknown): string {

@@ -18,7 +18,7 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-045 | Add a nonce-based script-src Content Security Policy | done | claude | M | T-043 |
 | T-046 | Select explicit columns in the older domain queries | done | claude | S | none |
 | T-047 | Cockpit aggregation queries | review | claude | M | T-041 |
-| T-048 | `/private` home and login landing | todo | codex | M | T-047 |
+| T-048 | `/private` home and login landing | review | claude | M | T-047 |
 | T-049 | Problem detail page with content edit and evidence | done | claude | M | T-041 |
 | T-050 | Show the Project → Idea and Project → Finance chain | done | claude | S | T-041 |
 | T-051 | Verify the cockpit end to end and sweep privacy | todo | claude | M | T-048, T-049, T-050 |

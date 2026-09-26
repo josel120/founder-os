@@ -24,6 +24,6 @@ setup("reset the disposable database and sign in as the owner", async ({ page, r
   await page.getByLabel("Email", { exact: true }).fill(e2eOwner.email);
   await page.getByLabel("Password", { exact: true }).fill(e2eOwner.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await page.waitForURL("**/private/ideas");
+  await page.waitForURL((url) => url.pathname === "/private"); // owners land on the home (ADR-015)
   await page.context().storageState({ path: e2eStorageState });
 });

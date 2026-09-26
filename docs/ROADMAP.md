@@ -5,7 +5,7 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 
 ## Now
 
-**Phase 5: Workspace cockpit.** Phase 4 closes with PR #33 (T-035, T-036, merged) and PR #34 (T-037). Plans are written and in review: ADR-015 (cockpit, cards T-047..T-051) and ADR-016 (production readiness, cards T-052..T-058). Each lists open questions for the owner. T-047, T-049 and T-050 (codex) can start after approval; T-052..T-055 (claude) can run in parallel. T-045 (nonce CSP) and T-046 (explicit query columns) are side cards.
+**Phase 5: Workspace cockpit** (in progress). Phase 4 closed with PR #33 and PR #34, which also merged the plans ADR-015 (cockpit) and ADR-016 (production readiness). PR #35 merged T-046, T-049, T-050 and T-054; PR #36 carries T-047 and T-048 (the `/private` home, now the login landing). T-051 (cockpit E2E and privacy sweep) closes the phase. Phase 6 cards T-052, T-053 and T-055 can run in parallel; T-056/T-057 are human.
 
 ## Done
 
@@ -15,7 +15,7 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 | 1. Idea OS | Ideas and Problems capture/search, Problem → Idea, Decision Log, content editing, signed-in E2E | T-001..T-016 | merged |
 | 2. Project OS | Owned Projects, lifecycle/operational status, Idea → Project, project decisions, E2E (cross-owner gaps closed by T-038) | T-017..T-024, T-038 | merged |
 | 3. Finance OS | Owned transactions, exact decimals, optional project link, private UI, E2E | T-026..T-030 | merged (PR #25) |
-| 4. Research OS | Owned evidence on problems and ideas: domain, `/private/research`, idea evidence, cross-owner/anonymous E2E, privacy sweep | T-032..T-037, T-040 | merged (PR #32) / PR #33 |
+| 4. Research OS | Owned evidence on problems and ideas: domain, `/private/research`, idea evidence, cross-owner/anonymous E2E, privacy sweep | T-032..T-037, T-040 | merged (PR #32, #33, #34) |
 | Process | Agent coordination, branch/PR per card, phase roadmap, review subagents | T-012, T-025, T-031, T-039, T-043 | done |
 
 ## Next (ADR-013; the owner reorders by merging a roadmap change)
