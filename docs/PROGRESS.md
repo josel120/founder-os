@@ -10,17 +10,13 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - Migrations 0000..0010; production has all of them (0008–0010 applied 2026-09-27 by Claude with the owner's approval, after snapshot `pre-0008-20260927`). Historical rows were adopted per ADR-006.
 - Branch/PR per card (ADR-010). Merges, force pushes, pushes to `master`, real-data migrations and secrets stay human.
 
-## Phase 8: GitHub integration (merged; token pending)
+## Phase 10: AI execution (planned)
 
-- ADR-019: read-only token (T-074, owner), `project_github` snapshot (0009), refresh + daily cron (06:00 UTC), quiet repos on the home. PRs #50, #51, #53, #55, #58. Until `GITHUB_TOKEN` is set the panel says GitHub is not connected.
+- ADR-021 (T-083): Anthropic Messages API via fetch, owner-click only, input allowlist, Zod-validated tool output, `ai_run` (0011), 20 runs/day. Cards T-084..T-089; T-085 is the owner's key, spend limit and 0011 approval.
 
-## Phase 9: Finance imports (merged)
+## Phases 7–9 (merged and live 2026-09-27)
 
-- ADR-020: CSV mapping/preview/confirm/undo, `import_key` duplicate index (0010). PRs #52, #54, #56, #57, #59.
-
-## Phase 7: Distribution and portfolio (merged)
-
-- ADR-018: publish chosen projects only (`project_publication`, 0008), field allowlist, `/portfolio` and `/p/<slug>`, owner publish panel with preview, `noindex` kept. PRs #44–#49; full E2E and pre-public privacy audits clean.
+- 7 Portfolio, ADR-018 (0008, PRs #44–#49): allowlisted `/portfolio` and `/p/<slug>`, publish panel with preview, `noindex`. 8 GitHub, ADR-019 (0009, PRs #50–#58): private snapshot, refresh, daily cron, quiet repos; waits on the owner's token (T-074). 9 Imports, ADR-020 (0010, PRs #52–#59): CSV mapping, preview, confirm, duplicate keys, undo.
 
 ## Phase 6: Production readiness (done except the T-057 restore drill)
 

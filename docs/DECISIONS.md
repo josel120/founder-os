@@ -250,3 +250,25 @@ Open questions (defaults apply): 1) row limit, proposed 5,000; 2) keep the origi
 Cards: T-078 `finance_import`, `import_id`, `import_key` and migration 0010 (claude) · T-079 CSV parser, mapping and duplicate keys (claude) · T-080 preview, confirm and undo actions (claude) · T-081 import UI in `/private/finance` (claude) · T-082 import E2E and privacy audit (claude).
 
 Order: migrations 0009 and 0010 follow 0008. Schema-only PRs merge first (nothing reads the tables); code PRs wait until the owner applies 0008–0010 in production (T-067 covers all three).
+
+## ADR-021: AI execution (Phase 10, T-083)
+
+A real model backs the `AIService` interface (ADR-004) for one job: a second opinion on an idea, built from what the owner already recorded. It is the first feature that sends PRIVATE content to a third party, so every run is an explicit owner click and every run is recorded.
+
+Accepted:
+- **Provider**: Anthropic's Messages API (`https://api.anthropic.com/v1/messages`, `anthropic-version: 2023-06-01`) called with `fetch` from the server, with a 60-second timeout. No SDK: one endpoint and one request shape do not justify a dependency. The key is `ANTHROPIC_API_KEY` (server-only, set by the owner, human card); the model is `AI_MODEL`, default `claude-sonnet-5`. Without the key the feature is off and says so; an invalid optional value turns it off (as ADR-019). `AI_API_URL` is a test-only override, refused under the strict env check (as `GITHUB_API_URL`).
+- **Scope**: two owner-triggered runs on an idea's detail page. *Assessment*: a recommendation (`CONTINUE`, `INVESTIGATE_MORE`, `PAUSE`, `REJECT`, the existing `AIRecommendation`), a short rationale, risks and open questions. *Research summary*: what the evidence supports, contradicts and leaves open. `AIService` shrinks to `assessIdea` and `summarizeResearch`; the unused `researchIdea`, `analyzeEvidence` and `scoreIdea` go (no numeric score, no web research).
+- **Input allowlist**: the idea's title, description, status and source; its problem's title and description; its evidence titles, summaries, kinds and signals (most recent 50). Nothing else: no source URLs, decisions, projects, finance, GitHub data, names, emails or IDs. Input is capped at 40,000 characters, oldest evidence dropped first. The prompt marks this content as data from the owner's notes, not instructions.
+- **Output**: forced tool use with a JSON schema, parsed with Zod on the server; anything else stores an `invalid_output` error. Text is stored plain and rendered as React text (never HTML or Markdown), each field length-capped.
+- **Record**: a new owner-scoped table `ai_run` (migration 0011): `id`, `owner_id`, `idea_id` (FK, restrict), `kind` (`ASSESSMENT`, `SUMMARY`), `status` (`SUCCEEDED`, `FAILED`), `recommendation` (assessment only, CHECK), `output` (jsonb), `model`, `prompt_version`, `input_tokens`, `output_tokens`, `error` code (`not_configured`, `rate_limited`, `unavailable`, `invalid_output`, `too_large`), `created_at`, `visibility` PRIVATE. The prompt itself is not stored; it is rebuilt from `prompt_version` and the data.
+- **Human decides**: a run never changes an idea's status, never creates a decision and is never published. The panel links to the existing decision form; the owner writes the decision.
+- **Limits**: 20 runs per owner per UTC day (counted in `ai_run`), one run at a time per idea, `max_tokens` 2,000. The owner also sets a monthly spend limit in the Anthropic console (human card).
+- **Privacy**: the panel states before the first click what is sent and to whom. `ai_run` is PRIVATE and outside the ADR-018 allowlist. Errors go through `reportError` with the code only; prompts, outputs, the key and response bodies are never logged or sent to the client except the owner's own stored output.
+
+Rejected for this phase: automatic or scheduled runs, AI-set statuses or scores, web browsing or fetching evidence URLs, finance categorization (needs its own review of finance data leaving the app), streaming, other providers, a chat UI, storing prompts.
+
+Open questions (defaults apply): 1) model, proposed `claude-sonnet-5`; 2) daily cap, proposed 20 runs; 3) keep failed runs in history, proposed yes (errors only).
+
+Cards: T-084 `ai_run` schema and migration 0011 (claude) · T-085 API key, spend limit and applying 0011 in production (human) · T-086 Anthropic client, prompt builder and output schema (claude) · T-087 run actions, daily cap and run queries (claude) · T-088 idea AI panel with disclosure and history (claude) · T-089 AI E2E against a local stub and privacy audit (claude).
+
+Order: T-084 merges first (nothing reads the table). Code that reads `ai_run` waits until 0011 is applied in production (RUNBOOK section 6).
