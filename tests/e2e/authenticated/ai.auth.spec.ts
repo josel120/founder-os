@@ -161,7 +161,7 @@ test("public pages never carry AI output", async ({ page }) => {
   await withE2eDb((sql) => sql`INSERT INTO ai_run (owner_id, idea_id, kind, status, output, finished_at, model, prompt_version)
     VALUES (${owner}, ${idea.id}, 'SUMMARY', 'SUCCEEDED', ${sql.json({ overview: marker, supports: [], contradicts: [], openQuestions: [] })}, now(), 'm', 'v')`);
   try {
-    for (const path of ["/portfolio", "/", "/login"]) {
+    for (const path of ["/portfolio", "/", "/login", "/register", "/p/e2e-ai-public-check"]) {
       const text = await (await page.request.get(path)).text();
       expect(text).not.toContain(marker);
       expect(text).not.toContain(idea.title);
