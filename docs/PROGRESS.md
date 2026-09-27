@@ -15,7 +15,7 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 
 - PR #37: T-052 fail-fast env on Vercel, pooled DB options; T-053 DB-backed auth rate limit (migration 0007); T-055 `docs/RUNBOOK.md`.
 - PR #39: T-059 prunes `rate_limit` IPs after 24 h; T-060 `migrate` E2E project; T-061 fixes lost client updates (bundled React ping bug, `patches/next@15.5.26.patch`, ADR-017: 0/100 lost after); T-062 `pnpm setup:production` (Vercel login, Neon via Marketplace for production only, secrets generated locally, migrations, owner, deploy, smoke check).
-- Next: the owner runs `pnpm setup:production` on `master` (replaces most of T-056/T-057; the restore drill stays in T-057), then T-058 smoke-checks the live URL. PR #38 (master → `main`, another session) is not needed while `master` is the default branch.
+- **Deployed (2026-09-27):** the owner ran `pnpm setup:production`, reset the owner credentials (T-063) and signs in on production after the same-origin sign-in fix (T-064, PR #41). Remaining: T-057 restore drill (owner), T-058 smoke check.
 
 ## Phase 5: Workspace cockpit (done, PR #35–#37)
 

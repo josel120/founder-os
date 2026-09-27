@@ -26,7 +26,7 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-053 | Store auth rate limits in the database and pin session settings | done | claude | M | T-042 |
 | T-054 | Report server errors without private data | done | claude | S | T-042 |
 | T-055 | Write the production runbook | done | claude | S | T-042 |
-| T-056 | Provision Vercel and Neon and deploy a preview | todo | human | S | T-052, T-055 |
+| T-056 | Provision Vercel and Neon and deploy a preview | done | human | S | T-052, T-055 |
 | T-057 | Apply production migrations, create the owner and run a restore drill | todo | human | S | T-053, T-054, T-056 |
 | T-058 | Smoke-check the deployment and sweep privacy | todo | claude | S | T-057 |
 | T-059 | Prune stale rate-limit rows so client IPs are not kept indefinitely | done | claude | S | T-053 |
@@ -34,4 +34,4 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-061 | Fix lost client updates after server actions and navigations | done | claude | M | none |
 | T-062 | One-command production setup for Vercel and Neon | done | claude | M | T-052, T-053, T-055 |
 | T-063 | Let the owner reset a forgotten email or password with the setup command | done | claude | S | T-062 |
-| T-064 | Sign-in always calls the page's own origin | review | claude | S | T-062 |
+| T-064 | Sign-in always calls the page's own origin | done | claude | S | T-062 |
