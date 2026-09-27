@@ -5,7 +5,7 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 
 ## Now
 
-**Phase 7: Distribution and portfolio** (ADR-018, planned by T-065). The owner publishes chosen projects as a portfolio: `/portfolio` lists public ones, `/p/<slug>` shows one. Publication is a separate record with an explicit field allowlist; everything else stays PRIVATE. The code needs migration 0008 in production first, so the phase's PRs are stacked and merge after the owner applies it (T-067).
+**Phase 7: Distribution and portfolio** (ADR-018). Built and verified: the owner publishes a project from its page (summary, Public or Unlisted, a preview of exactly what becomes public, confirm steps); visitors see `/portfolio` and `/p/<slug>` with allowlisted fields only; making it private again is immediate. Full E2E suite green (41 tests), pre-public privacy audit done. **Waiting on the owner:** migration 0008 in production (T-067), then Claude merges the stacked PRs #46 → #47 → #48 → T-071. Nothing becomes public until the owner publishes a project.
 
 Still open from Phase 6: the restore drill (T-057, owner). Deployed smoke check and privacy sweep passed (T-058).
 

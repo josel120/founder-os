@@ -4,16 +4,17 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 
 ## Current state (2026-09-27)
 
-- Merged on `master` (1815201): Phase 0 foundation, Idea OS (T-001..T-016), Project OS (T-017..T-024, T-038), Finance OS (T-026..T-030), Research OS (T-032..T-037, T-040), audit T-043/T-044/T-045, plans T-041/T-042, Workspace cockpit T-046..T-051, Phase 6 code T-052..T-055 and T-059..T-062, process cards T-012/T-025/T-031/T-039.
+- Merged on `master`: Phase 0 foundation, Idea OS (T-001..T-016), Project OS (T-017..T-024, T-038), Finance OS (T-026..T-030), Research OS (T-032..T-037, T-040), audit T-043/T-044/T-045, plans T-041/T-042, Workspace cockpit T-046..T-051, Phase 6 T-052..T-056, T-058..T-064, Phase 7 T-065/T-066, process cards T-012/T-025/T-031/T-039.
 - Security model: owner-only access via `OWNER_EMAIL`, closed signup, every private query/mutation uses session owner + `id + owner_id + PRIVATE` (ADR-005/006/008/009/011).
 - Web layer (ADR-014, T-043): security headers, `noindex`, cookie-presence middleware for `/private` pages with a validated `?next=`, sign-out, closed `/register` page. `pnpm audit`: 21 advisories (1 critical) → 3 dev-only (T-043) → 0 (T-044).
-- Migrations 0000..0007 exist on `master`; 0000..0006 applied locally (T-034). The owner applies 0007 (`rate_limit`, T-053) with `pnpm db:migrate` on master; the T-053 code in production mode needs it. Historical rows were adopted per ADR-006.
-- Last CI verification (PR #39, run `36275054185`): lint, typecheck, 420 unit tests, build, 37/37 authenticated/anonymous E2E passed.
+- Migrations 0000..0008 exist on `master`; production has 0000..0007 (applied by `pnpm setup:production`). Historical rows were adopted per ADR-006.
 - Branch/PR per card (ADR-010). Merges, force pushes, pushes to `master`, real-data migrations and secrets stay human.
 
-## Phase 7: Distribution and portfolio (planned, 2026-09-27)
+## Phase 7: Distribution and portfolio (built; waits on migration 0008 in production)
 
-- T-065: ADR-018. Publish chosen projects only, as a separate `project_publication` record (migration 0008) with a field allowlist; `/portfolio` and `/p/<slug>`; `noindex` kept. Cards T-066..T-071; stacked PRs merge after the owner applies 0008 in production (T-067).
+- T-065 ADR-018 (PR #44) and T-066 `project_publication` + migration 0008 (PR #45) merged; 0008 is not yet applied in production (T-067, owner).
+- Stacked draft PRs: #46 T-068 publish actions + allowlisted public queries, #47 T-070 `/portfolio` and `/p/<slug>`, #48 T-069 owner publish panel, T-071 E2E. Merge in that order after T-067.
+- Verified: 482 unit tests; full E2E 41/41 on a production build (anonymous HTML/RSC has no private sentinels, forged owner-mismatched publication shows nothing, private and unknown slugs share one 404, cross-owner and anonymous publish/unpublish refused, unpublish immediate). Privacy audits (stronger model) on T-068, T-070 and the phase.
 
 ## Phase 6: Production readiness (code done; deploy is the owner's one command)
 

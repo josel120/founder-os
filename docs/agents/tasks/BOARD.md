@@ -12,4 +12,4 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-068 | Publication domain: publish actions and allowlisted public queries | review | claude | M | T-066 |
 | T-069 | Owner publish panel with a preview of what becomes public | review | claude | M | T-068 |
 | T-070 | Public portfolio and project pages | review | claude | M | T-068 |
-| T-071 | Verify the portfolio end to end and audit privacy before going public | todo | claude | M | T-069, T-070 |
+| T-071 | Verify the portfolio end to end and audit privacy before going public | doing | claude | M | T-069, T-070 |
