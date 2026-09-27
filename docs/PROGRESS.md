@@ -11,16 +11,17 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - Last CI verification (PR #39, run `36275054185`): lint, typecheck, 420 unit tests, build, 37/37 authenticated/anonymous E2E passed.
 - Branch/PR per card (ADR-010). Merges, force pushes, pushes to `master`, real-data migrations and secrets stay human.
 
+## Phases 8–9 (planned 2026-09-27, T-072)
+
+- ADR-019 GitHub: read-only token (T-074 owner), `project_github` snapshot (0009), refresh + daily cron, stale repos on home. ADR-020 imports: CSV mapping/preview/confirm/undo, `import_key` duplicate index (0010). Code PRs wait for 0008–0010 in production (T-067).
+
 ## Phase 7: Distribution and portfolio (planned, 2026-09-27)
 
 - T-065: ADR-018. Publish chosen projects only, as a separate `project_publication` record (migration 0008) with a field allowlist; `/portfolio` and `/p/<slug>`; `noindex` kept. Cards T-066..T-071; stacked PRs merge after the owner applies 0008 in production (T-067).
 
-## Phase 6: Production readiness (code done; deploy is the owner's one command)
+## Phase 6: Production readiness (done except the T-057 restore drill)
 
-- PR #37: T-052 fail-fast env on Vercel, pooled DB options; T-053 DB-backed auth rate limit (migration 0007); T-055 `docs/RUNBOOK.md`.
-- PR #39: T-059 prunes `rate_limit` IPs after 24 h; T-060 `migrate` E2E project; T-061 fixes lost client updates (bundled React ping bug, `patches/next@15.5.26.patch`, ADR-017: 0/100 lost after); T-062 `pnpm setup:production` (Vercel login, Neon via Marketplace for production only, secrets generated locally, migrations, owner, deploy, smoke check).
-- **Deployed (2026-09-27):** the owner ran `pnpm setup:production`, reset the owner credentials (T-063) and signs in on production after the same-origin sign-in fix (T-064, PR #41). Remaining: T-057 restore drill (owner).
-- T-058 (2026-09-27): production smoke check passes (CSP nonce, HSTS, frame/referrer/permissions, noindex, `/register` closed, anonymous session `null`); `pnpm smoke <url>` is now the single check (also used by `pnpm setup:production`, RUNBOOK section 10). Privacy-auditor sweep: clean.
+- PRs #37, #39, #41, #43: fail-fast env, DB rate limits (0007), runbook, `reportError`, lost-update fix (ADR-017), `pnpm setup:production` with owner reset, same-origin sign-in, `pnpm smoke`. Deployed 2026-09-27; the owner signs in; production smoke check and privacy sweep clean (T-058).
 
 ## Phase 5: Workspace cockpit (done, PR #35–#37)
 
