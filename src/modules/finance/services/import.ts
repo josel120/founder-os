@@ -147,7 +147,7 @@ export function buildImportRows(csv: Extract<ParseCsvResult, { ok: true }>, mapp
   if (mapping.externalId !== undefined && columnIndex(mapping.externalId) < 0) missing.push(mapping.externalId);
 
   if (missing.length > 0) {
-    return { rows: [], errors: [{ line: 0, message: `Mapped column not found: ${missing.join(", ")}` }] };
+    return { rows: [], errors: [{ line: 0, message: `${missing.length === 1 ? "A mapped column is" : "Some mapped columns are"} not in the file.` }] };
   }
 
   const dateIdx = columnIndex(mapping.date);

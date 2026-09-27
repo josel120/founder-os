@@ -11,9 +11,9 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - Last CI verification (PR #39, run `36275054185`): lint, typecheck, 420 unit tests, build, 37/37 authenticated/anonymous E2E passed.
 - Branch/PR per card (ADR-010). Merges, force pushes, pushes to `master`, real-data migrations and secrets stay human.
 
-## Phases 8–9 (planned 2026-09-27, T-072)
+## Phases 8–9 (built 2026-09-27; wait on migrations 0009–0010)
 
-- ADR-019 GitHub: read-only token (T-074 owner), `project_github` snapshot (0009), refresh + daily cron, stale repos on home. ADR-020 imports: CSV mapping/preview/confirm/undo, `import_key` duplicate index (0010). Code PRs wait for 0008–0010 in production (T-067).
+- ADR-019 GitHub: read-only token (T-074 owner), `project_github` snapshot (0009), refresh + daily cron, stale repos on home. ADR-020 imports: CSV mapping/preview/confirm/undo, `import_key` duplicate index (0010). Merged: #50 plan, #51 0009 schema. Draft PRs: #53 T-075, #55 T-076, #58 T-077 (GitHub); #52 T-078 (0010), #54 T-079, #56 T-080, #57 T-081, T-082 (imports). Unit 533; local E2E 40–44/44 per branch; reviews and privacy audits clean. Code PRs wait for 0008–0010 in production (T-067).
 
 ## Phase 7: Distribution and portfolio (planned, 2026-09-27)
 

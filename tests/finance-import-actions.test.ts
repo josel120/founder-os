@@ -97,7 +97,7 @@ it("undoes only the session owner's import: its rows, then the batch", async () 
   expect(await undoFinanceImport(form({ importId, ownerId: "attacker" }))).toEqual({ ok: true, removed: 2 });
   expect(dialect.sqlToQuery(m.selectWhere.mock.calls[0][0] as SQL).params).toEqual([importId, "owner-a"]);
   expect(m.deletes.map((clause) => dialect.sqlToQuery(clause as SQL))).toEqual([
-    expect.objectContaining({ sql: expect.stringContaining('"finance_transaction"."import_id"'), params: [importId, "owner-a"] }),
+    expect.objectContaining({ sql: expect.stringContaining('"finance_transaction"."import_id"'), params: [importId, "owner-a", "PRIVATE"] }),
     expect.objectContaining({ sql: expect.stringContaining('"finance_import"."id"'), params: [importId, "owner-a"] }),
   ]);
 });

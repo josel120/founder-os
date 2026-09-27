@@ -22,5 +22,5 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-078 | Finance import schema (migration 0010) | review | claude | S | T-073 |
 | T-079 | CSV parser, column mapping and duplicate keys | review | claude | M | T-078 |
 | T-080 | Import preview, confirm and undo actions | review | claude | M | T-079 |
-| T-081 | Import UI in /private/finance | todo | claude | M | T-080 |
-| T-082 | Verify finance imports end to end and audit privacy | todo | claude | M | T-081 |
+| T-081 | Import UI in /private/finance | review | claude | M | T-080 |
+| T-082 | Verify finance imports end to end and audit privacy | review | claude | M | T-081 |

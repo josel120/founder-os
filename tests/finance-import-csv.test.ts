@@ -130,7 +130,7 @@ describe("parseCsv", () => {
 
   it("rejects duplicate header names", () => {
     const result = parseCsv("date,date,amount\n2026-01-01,x,10.00\n");
-    expect(result).toEqual({ ok: false, error: "Duplicate header name: date" });
+    expect(result).toEqual({ ok: false, error: "Two columns have the same header name. Rename one and try again." });
   });
 
   it("rejects empty header names", () => {

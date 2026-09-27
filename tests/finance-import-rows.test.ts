@@ -236,7 +236,7 @@ describe("buildImportRows", () => {
     const mapping: ImportMapping = { ...baseMapping, date: "when" };
     const { rows, errors } = buildImportRows(csv, mapping);
     expect(rows).toEqual([]);
-    expect(errors).toEqual([{ line: 0, message: "Mapped column not found: when" }]);
+    expect(errors).toEqual([{ line: 0, message: "A mapped column is not in the file." }]);
   });
 
   it("never includes cell values in error messages", () => {

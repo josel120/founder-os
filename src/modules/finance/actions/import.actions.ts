@@ -37,7 +37,7 @@ async function existingKeys(ownerId: string, rows: ImportRow[]): Promise<Set<str
   if (!db) return found;
   for (const keys of chunks(rows.map((row) => row.importKey), KEY_CHUNK)) {
     const matches = await db.select({ key: financeTransactions.importKey }).from(financeTransactions)
-      .where(and(eq(financeTransactions.ownerId, ownerId), isNotNull(financeTransactions.importKey), inArray(financeTransactions.importKey, keys)));
+      .where(and(eq(financeTransactions.ownerId, ownerId), eq(financeTransactions.visibility, "PRIVATE"), isNotNull(financeTransactions.importKey), inArray(financeTransactions.importKey, keys)));
     for (const { key } of matches) if (key) found.add(key);
   }
   return found;
@@ -131,7 +131,7 @@ export async function undoFinanceImport(formData: FormData): Promise<{ ok: true;
     const removed = await db.transaction(async (tx) => {
       const [batch] = await tx.select({ id: financeImports.id }).from(financeImports).where(and(eq(financeImports.id, importId), eq(financeImports.ownerId, owner.id))).limit(1);
       if (!batch) return null;
-      const deleted = await tx.delete(financeTransactions).where(and(eq(financeTransactions.importId, importId), eq(financeTransactions.ownerId, owner.id))).returning({ id: financeTransactions.id });
+      const deleted = await tx.delete(financeTransactions).where(and(eq(financeTransactions.importId, importId), eq(financeTransactions.ownerId, owner.id), eq(financeTransactions.visibility, "PRIVATE"))).returning({ id: financeTransactions.id });
       await tx.delete(financeImports).where(and(eq(financeImports.id, importId), eq(financeImports.ownerId, owner.id)));
       return deleted.length;
     });

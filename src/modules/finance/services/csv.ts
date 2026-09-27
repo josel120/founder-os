@@ -165,7 +165,7 @@ export function parseCsv(text: string): ParseCsvResult {
   const seen = new Set<string>();
   for (const header of headers) {
     if (seen.has(header)) {
-      return { ok: false, error: `Duplicate header name: ${header}` };
+      return { ok: false, error: "Two columns have the same header name. Rename one and try again." };
     }
     seen.add(header);
   }
