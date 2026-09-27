@@ -18,7 +18,7 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 
 - 7 Portfolio, ADR-018 (0008, PRs #44–#49): allowlisted `/portfolio` and `/p/<slug>`, publish panel with preview, `noindex`. 8 GitHub, ADR-019 (0009, PRs #50–#58): private snapshot, refresh, daily cron, quiet repos; live since 2026-09-27 (token set, T-074). 9 Imports, ADR-020 (0010, PRs #52–#59): CSV mapping, preview, confirm, duplicate keys, undo.
 
-## Phase 6: Production readiness (done except the T-057 restore drill)
+## Phase 6: Production readiness (done; restore drill passed 2026-09-27, T-057)
 
 - PRs #37, #39, #41, #43: fail-fast env, DB rate limits (0007), runbook, `reportError`, lost-update fix (ADR-017), `pnpm setup:production` with owner reset, same-origin sign-in, `pnpm smoke`. Deployed 2026-09-27; the owner signs in; production smoke check and privacy sweep clean (T-058).
 
