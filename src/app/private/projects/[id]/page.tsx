@@ -12,6 +12,10 @@ import { isWaiting, operationalTone, projectLabel, toDateInput } from "@/modules
 import { ProjectFinance } from "@/modules/projects/components/project-finance";
 import { getPrivateIdea } from "@/modules/ideas/queries/idea.queries";
 import { listPrivateFinanceTransactions } from "@/modules/finance/queries/finance.queries";
+import { env } from "@/lib/env";
+import { GitHubPanel } from "@/modules/github/components/github-panel";
+import { getPrivateGitHubSnapshot } from "@/modules/github/queries/github.queries";
+import { parseGitHubRepository } from "@/modules/github/services/repository";
 
 // Generic on purpose: private names never go into metadata.
 export const metadata: Metadata = { title: "Project" };
@@ -19,7 +23,7 @@ export const metadata: Metadata = { title: "Project" };
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   if (!(await requireAuth())) redirect("/login");
   const { id } = await params;
-  const [project, decisions, transactions] = await Promise.all([getPrivateProject(id), listDecisionsForProject(id), listPrivateFinanceTransactions(id)]);
+  const [project, decisions, transactions, github] = await Promise.all([getPrivateProject(id), listDecisionsForProject(id), listPrivateFinanceTransactions(id), getPrivateGitHubSnapshot(id)]);
   if (!project) notFound();
   // getPrivateIdea is owner-scoped: an origin idea that is not the owner's own PRIVATE idea renders nothing.
   const originIdea = project.originIdeaId ? await getPrivateIdea(project.originIdeaId) : null;
@@ -41,6 +45,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     <ProjectStatusForm projectId={project.id} lifecycle={project.lifecycle} operationalStatus={project.operationalStatus} nextAction={project.nextAction ?? ""} waitingReason={project.waitingReason ?? ""} waitingSince={toDateInput(project.waitingSince)} reviewAt={toDateInput(project.reviewAt)} />
     <EditProjectForm project={{ id: project.id, name: project.name, slug: project.slug, description: project.description, repository: project.repository, website: project.website, playStoreUrl: project.playStoreUrl, appStoreUrl: project.appStoreUrl, currentVersion: project.currentVersion, productionVersion: project.productionVersion }} />
     <ProjectFinance transactions={transactions} />
+    <GitHubPanel projectId={project.id} repoFullName={parseGitHubRepository(project.repository)} configured={Boolean(env.GITHUB_TOKEN)} snapshot={github} />
     <div className="mt-12 space-y-5"><h2 className="text-xl font-semibold tracking-tight">Decisions</h2><DecisionList decisions={decisions} empty="No decisions about this project yet." /><CaptureDecisionForm projectId={project.id} /></div>
   </section>;
 }

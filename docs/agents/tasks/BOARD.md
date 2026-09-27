@@ -17,7 +17,7 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-073 | Add the project_github table (migration 0009) | review | claude | S | T-072 |
 | T-074 | Create a read-only GitHub token and set GITHUB_TOKEN and CRON_SECRET | todo | human | S | T-072 |
 | T-075 | GitHub client and sync service | review | claude | M | T-073 |
-| T-076 | Project GitHub panel, refresh, daily cron and stale-repo attention | todo | claude | M | T-075 |
+| T-076 | Project GitHub panel, refresh, daily cron and stale-repo attention | review | claude | M | T-075 |
 | T-077 | Verify GitHub integration end to end and audit privacy | todo | claude | M | T-076 |
 | T-078 | Finance import schema (migration 0010) | todo | claude | S | T-073 |
 | T-079 | CSV parser, column mapping and duplicate keys | todo | claude | M | T-078 |

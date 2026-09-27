@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { statusLabel } from "@/modules/ideas/services/inbox";
 import { operationalTone, projectLabel } from "@/modules/projects/components/project-labels";
 import type { Attention } from "../queries/attention.queries";
-import { FINANCE_WINDOW_DAYS, WAITING_THRESHOLD_DAYS } from "../services/attention";
+import { FINANCE_WINDOW_DAYS, STALE_REPOSITORY_DAYS, WAITING_THRESHOLD_DAYS } from "../services/attention";
 
 type AttentionProject = Attention["actionProjects"][number];
 const day = 24 * 60 * 60 * 1000;
@@ -52,7 +52,7 @@ function researchGap(signals: Attention["researchIdeas"][number]["signals"]) {
 
 /** Everything that needs the owner, counted from their own records. Read-only: it lists and links, the owner decides. */
 export function AttentionHome({ attention, now }: { attention: Attention; now: Date }) {
-  const { actionProjects, waitingProjects, reviewProjects, inbox, researchIdeas, decisions, finance } = attention;
+  const { actionProjects, waitingProjects, reviewProjects, inbox, researchIdeas, decisions, finance, staleRepositories } = attention;
   const projectIds = new Set([...actionProjects, ...waitingProjects, ...reviewProjects].map((project) => project.id));
   const needs = projectIds.size + researchIdeas.length + inbox.total;
   return <section>
@@ -77,6 +77,12 @@ export function AttentionHome({ attention, now }: { attention: Attention; now: D
               <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">{statusLabel(idea.status)}</span>
             </li>)}</List>}
         </Section>
+        {staleRepositories.length > 0 && <Section id="home-repositories" title="Quiet repositories" count={staleRepositories.length} hint={`Linked GitHub repositories with no push for ${STALE_REPOSITORY_DAYS} days or more.`}>
+          <List>{staleRepositories.map((repo) => <li key={repo.id} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
+            <div className="min-w-0"><Link href={`/private/projects/${repo.id}`} className="break-words font-medium hover:text-indigo-700">{repo.name}</Link><p className="mt-1 break-words text-sm text-slate-500">{repo.repoFullName}</p></div>
+            {repo.lastPushAt && <time className="shrink-0 text-xs tabular-nums text-slate-500" dateTime={repo.lastPushAt.toISOString()}>Last push {isoDate(repo.lastPushAt)}</time>}
+          </li>)}</List>
+        </Section>}
       </div>
       <div className="min-w-0 space-y-6">
         <Section id="home-inbox" title="Inbox" count={inbox.total} hint={inbox.total > inbox.ideas.length ? `The ${inbox.ideas.length} oldest of ${inbox.total}.` : "Oldest first."}
