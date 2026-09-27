@@ -25,7 +25,7 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-081 | Import UI in /private/finance | done | claude | M | T-080 |
 | T-082 | Verify finance imports end to end and audit privacy | done | claude | M | T-081 |
 | T-083 | Plan AI execution (Phase 10) and its boundaries | review | claude | M | T-072 |
-| T-084 | Add the ai_run table (migration 0011) | todo | claude | S | T-083 |
+| T-084 | Add the ai_run table (migration 0011) | review | claude | S | T-083 |
 | T-085 | Set ANTHROPIC_API_KEY, a spend limit, and apply migration 0011 in production | todo | human | S | T-084 |
 | T-086 | Anthropic client, prompt builder and output schema | todo | claude | M | T-084 |
 | T-087 | AI run actions, daily cap and run queries | todo | claude | M | T-086 |
