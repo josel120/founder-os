@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
+import type { PublishPanelPreview } from "@/modules/portfolio/components/publish-panel";
 import { PgDialect } from "drizzle-orm/pg-core";
 import type { SQL } from "drizzle-orm";
 const m = vi.hoisted(() => ({
@@ -155,4 +156,8 @@ describe("public queries", () => {
     expect(await getPrivatePublication(projectId)).toBeNull();
     expect(m.select).not.toHaveBeenCalled();
   });
+});
+
+it("lets the owner's publish panel receive only allowlisted project fields (checked by pnpm typecheck)", () => {
+  expectTypeOf<keyof PublishPanelPreview>().toEqualTypeOf<"name" | "slug" | "lifecycle" | "releasedAt" | "website" | "playStoreUrl" | "appStoreUrl">();
 });
