@@ -14,6 +14,7 @@ export type GitHubResult = { ok: true; snapshot: GitHubSnapshot } | { ok: false;
 export type Fetch = (url: string, init: RequestInit) => Promise<Response>;
 
 const TIMEOUT_MS = 10_000;
+const MAX_COUNT = 1_000_000; // far above any real repository, far below the integer column's limit
 const isoDate = z.iso.datetime({ offset: true }).nullable().transform((value) => (value ? new Date(value) : null));
 const repositorySchema = z.object({ default_branch: z.string().max(255).nullable(), pushed_at: isoDate, open_issues_count: z.number().int().min(0) });
 const releaseSchema = z.object({ tag_name: z.string().max(255), published_at: isoDate });
@@ -76,7 +77,7 @@ export async function fetchRepositorySnapshot(fullName: string, options: { token
     const pulls = (await get("/pulls?state=open&per_page=1"))!;
     const pullPage = await json(pulls);
     // With per_page=1 the last page number is the count; without a Link header there are 0 or 1 open PRs.
-    const openPullRequests = lastPageFromLink(pulls.headers.get("link")) ?? (Array.isArray(pullPage) ? pullPage.length : 0);
+    const openPullRequests = Math.min(MAX_COUNT, lastPageFromLink(pulls.headers.get("link")) ?? (Array.isArray(pullPage) ? pullPage.length : 0));
     const releaseResponse = await get("/releases/latest", true);
     const release = releaseResponse ? releaseSchema.safeParse(await json(releaseResponse)) : null;
     if (release && !release.success) return { ok: false, error: "unavailable" };
@@ -86,7 +87,7 @@ export async function fetchRepositorySnapshot(fullName: string, options: { token
         defaultBranch: repository.data.default_branch,
         lastPushAt: repository.data.pushed_at,
         // GitHub counts open pull requests as issues too.
-        openIssues: Math.max(0, repository.data.open_issues_count - openPullRequests),
+        openIssues: Math.min(MAX_COUNT, Math.max(0, repository.data.open_issues_count - openPullRequests)),
         openPullRequests,
         latestReleaseTag: release?.data.tag_name ?? null,
         latestReleaseAt: release?.data.published_at ?? null,

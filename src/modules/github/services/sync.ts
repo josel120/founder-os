@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, like } from "drizzle-orm";
+import { and, asc, eq, ilike, isNotNull, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { projectGithub, projects } from "@/db/schema";
 import { env } from "@/lib/env";
@@ -52,14 +52,24 @@ export async function syncProjectGitHub(ownerId: string, projectId: string, opti
   }
 }
 
-/** The daily cron: every owned project with a GitHub URL, one at a time, stopping early when rate limited. */
+/**
+ * The daily cron: owned projects with a GitHub URL, plus any with a snapshot (so a changed URL removes it), least
+ * recently synced first so every project gets its turn across runs. One at a time, stopping early when rate limited.
+ */
 export async function syncAllLinkedProjects(options: Options = {}) {
   const totals = { synced: 0, failed: 0, unlinked: 0, skipped: 0 };
   if (!db) return totals;
   if (!(options.token ?? env.GITHUB_TOKEN)) return { ...totals, skipped: -1 };
-  const linked = await db.select({ id: projects.id, ownerId: projects.ownerId, repository: projects.repository }).from(projects)
-    .where(and(isNotNull(projects.ownerId), eq(projects.visibility, "PRIVATE"), like(projects.repository, "https://github.com/%")))
-    .orderBy(projects.id).limit(CRON_BATCH_LIMIT);
+  let linked: { id: string; ownerId: string | null; repository: string | null }[];
+  try {
+    linked = await db.select({ id: projects.id, ownerId: projects.ownerId, repository: projects.repository }).from(projects)
+      .leftJoin(projectGithub, and(eq(projectGithub.projectId, projects.id), eq(projectGithub.ownerId, projects.ownerId)))
+      .where(and(isNotNull(projects.ownerId), eq(projects.visibility, "PRIVATE"), or(ilike(projects.repository, "https://github.com/%"), isNotNull(projectGithub.projectId))))
+      .orderBy(sql`${projectGithub.syncedAt} ASC NULLS FIRST`, asc(projects.id)).limit(CRON_BATCH_LIMIT);
+  } catch (error) {
+    reportError("github.cron", error);
+    return { ...totals, failed: -1 };
+  }
   for (const [index, project] of linked.entries()) {
     let outcome: SyncOutcome;
     try {

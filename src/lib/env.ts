@@ -10,7 +10,8 @@ const schema = z.object({
   OWNER_SETUP_TOKEN: z.string().min(32).optional(),
   // ADR-019: optional features. An invalid value turns the feature off instead of stopping the whole app.
   GITHUB_TOKEN: z.string().trim().min(20).optional().catch(undefined),
-  GITHUB_API_URL: z.string().url().default(GITHUB_API_DEFAULT),
+  // Tests may point at a local stub; anything that is not https (or http on localhost) falls back to GitHub itself.
+  GITHUB_API_URL: z.string().url().refine((value) => /^https:\/\//.test(value) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/.test(value)).default(GITHUB_API_DEFAULT).catch(GITHUB_API_DEFAULT),
   CRON_SECRET: z.string().min(32).optional().catch(undefined),
 });
 

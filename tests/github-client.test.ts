@@ -91,6 +91,8 @@ describe("GitHub environment", () => {
   it("refuses an API override in production but allows it in tests", () => {
     expect(() => parseEnv({ ...strict, GITHUB_API_URL: "http://localhost:4010" })).toThrow("GITHUB_API_URL (must not be overridden in production)");
     expect(parseEnv({ NODE_ENV: "test", GITHUB_API_URL: "http://localhost:4010" }).GITHUB_API_URL).toBe("http://localhost:4010");
+    // Never sends the token in cleartext to another host, and a bad value does not stop the app.
+    for (const value of ["http://stub.example", "not a url", "ftp://localhost"]) expect(parseEnv({ NODE_ENV: "test", GITHUB_API_URL: value }).GITHUB_API_URL).toBe(GITHUB_API_DEFAULT);
   });
 
   it("turns the feature off, without stopping the app, for a short cron secret or token", () => {
