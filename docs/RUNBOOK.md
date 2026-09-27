@@ -263,7 +263,7 @@ Record each drill below.
 
 | Date | Dump size | Restored to | Verified by | Result |
 |---|---|---|---|---|
-| | | | | |
+| 2026-09-27 | Neon snapshot `pre-0008-20260927`, 32.9 MB | branch `restore-drill-20260927` (snapshot restore, not finalized) | Claude (T-057): migrations 8/8, tables, owner fingerprint and `evidence`/`rate_limit` columns match production at that point | Pass |
 
 ## 8. Secret rotation (human)
 

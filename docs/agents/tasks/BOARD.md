@@ -5,7 +5,7 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 
 | ID | Title | Status | Owner | Size | Depends |
 |---|---|---|---|---|---|
-| T-057 | Apply production migrations, create the owner and run a restore drill | todo | human | S | T-053, T-054, T-056 |
+| T-057 | Apply production migrations, create the owner and run a restore drill | review | claude + human | S | T-053, T-054, T-056 |
 | T-065 | Plan Distribution and portfolio (Phase 7) and its boundaries | done | claude | M | T-058 |
 | T-066 | Add the project_publication table (migration 0008) | done | claude | S | T-065 |
 | T-067 | Apply migrations 0008–0010 in production, then merge the waiting PRs | done | human | S | T-066 |

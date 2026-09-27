@@ -10,7 +10,7 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 - GitHub: a private repository snapshot per project, refresh button, daily cron, quiet repositories on the home. Live since 2026-09-27: read-only token and cron secret set (T-074).
 - Finance imports: CSV mapping, preview, confirm, duplicates skipped on re-import, undo per import.
 
-**Phase 10, AI execution** (ADR-021) is merged and deployed (PRs #60, #66; 0011 applied in production): an owner-triggered second opinion on an idea (assessment and research summary) from Anthropic's API, recorded in `ai_run` (0011); it never changes a status. It turns on when the owner sets the API key and a spend limit (T-085). Still open: the restore drill (T-057) and T-074.
+**Phase 10, AI execution** (ADR-021) is merged and deployed (PRs #60, #66; 0011 applied in production): an owner-triggered second opinion on an idea (assessment and research summary) from Anthropic's API, recorded in `ai_run` (0011); it never changes a status. It turns on when the owner sets the API key and a spend limit (T-085). The restore drill passed on 2026-09-27 (T-057: Neon snapshot restored into a scratch branch and verified) and GitHub sync is live (T-074).
 
 ## Done
 
@@ -25,7 +25,7 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 | 7. Distribution / portfolio | Publish chosen projects (`project_publication`, 0008), allowlisted public pages, owner publish panel with preview, pre-public privacy audit | T-065..T-071 | merged (PR #44..#49) |
 | 8. GitHub integration | Read-only snapshot per project (0009), refresh + daily cron, quiet repositories; token pending (T-074) | T-072..T-077 | merged (PR #50, #51, #53, #55, #58) |
 | 9. Finance imports | CSV import with mapping, preview, duplicate keys (0010) and undo | T-078..T-082 | merged (PR #52, #54, #56, #57, #59) |
-| 6. Production readiness | Vercel + Neon deploy, one-command setup, fail-fast env, DB rate limits, runbook, `reportError`, lost-update fix, same-origin sign-in, deployed smoke check (`pnpm smoke`); restore drill T-057 still open | T-042, T-052..T-064 | merged (PR #37, #39..#43) |
+| 6. Production readiness | Vercel + Neon deploy, one-command setup, fail-fast env, DB rate limits, runbook, `reportError`, lost-update fix, same-origin sign-in, deployed smoke check (`pnpm smoke`); restore drill passed 2026-09-27 (T-057) | T-042, T-052..T-064 | merged (PR #37, #39..#43) |
 | Process | Agent coordination, branch/PR per card, phase roadmap, review subagents | T-012, T-025, T-031, T-039, T-043 | done |
 
 ## Next (ADR-013; the owner reorders by merging a roadmap change)
