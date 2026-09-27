@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { publishProject, unpublishProject } from "../actions/publication.actions";
 import type { PublicProject } from "../queries/publication.queries";
 import { PublicProjectArticle } from "./public-project";
-import { PUBLIC_SUMMARY_MAX } from "../schemas/publication.schema";
+import { PUBLIC_SUMMARY_MAX } from "../schemas/publication.limits";
 
 export type PublishPanelPublication = { visibility: "PUBLIC" | "UNLISTED"; summary: string; publishedAt: Date } | null;
 export type PublishPanelPreview = Omit<PublicProject, "summary" | "publishedAt">;
@@ -80,6 +80,7 @@ export function PublishPanel({ projectId, publication, preview }: { projectId: s
         Current state: <span className="font-medium">{stateLabel[currentState]}</span>
         {publication && <> · <a href={`/p/${preview.slug}`} className="text-indigo-700 underline-offset-4 hover:underline">/p/{preview.slug}</a></>}
       </p>
+      {publication && <p className="text-xs text-slate-500">While published, changes to the name, slug, lifecycle, release date and website or store links show on the public page right away.</p>}
 
       <label className="block text-sm font-medium">Public summary
         <textarea name="summary" value={summary} onChange={(event) => setSummary(event.target.value)} maxLength={PUBLIC_SUMMARY_MAX} readOnly={pending} className="mt-2 min-h-24 w-full rounded-md border p-3" />

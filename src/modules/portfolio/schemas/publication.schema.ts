@@ -1,8 +1,8 @@
 import { z } from "zod";
+import { PUBLIC_SUMMARY_MAX } from "./publication.limits";
 
 /** ADR-018: a publication is PUBLIC (listed) or UNLISTED (link only). PRIVATE means no publication row. */
 export const publicationVisibilitySchema = z.enum(["PUBLIC", "UNLISTED"]);
-export const PUBLIC_SUMMARY_MAX = 500;
 
 export const publishProjectSchema = z.object({
   projectId: z.uuid(),
