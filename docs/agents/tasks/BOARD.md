@@ -33,4 +33,5 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-060 | Make anonymous E2E wait for the migrated database | done | claude | S | T-053 |
 | T-061 | Fix lost client updates after server actions and navigations | done | claude | M | none |
 | T-062 | One-command production setup for Vercel and Neon | done | claude | M | T-052, T-053, T-055 |
-| T-063 | Let the owner reset a forgotten email or password with the setup command | review | claude | S | T-062 |
+| T-063 | Let the owner reset a forgotten email or password with the setup command | done | claude | S | T-062 |
+| T-064 | Sign-in always calls the page's own origin | review | claude | S | T-062 |

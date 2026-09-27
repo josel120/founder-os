@@ -1,5 +1,6 @@
 import { createAuthClient } from "better-auth/react";
 
-// T-062: unset on Vercel, so Better Auth uses the page's own origin (window.location.origin) and sign-in works on
-// every alias of a deployment. Local dev and E2E browse http://localhost:3000, which is that origin.
-export const authClient = createAuthClient({ baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || undefined });
+// The auth API always lives on the same deployment as the page, and the CSP allows only `connect-src 'self'`, so the
+// browser client always calls its own origin. NEXT_PUBLIC_BETTER_AUTH_URL is ignored: a stale value (another alias,
+// localhost) made every sign-in fail with "Unable to connect" (T-064). No request is sent during server rendering.
+export const authClient = createAuthClient({ baseURL: typeof window === "undefined" ? undefined : window.location.origin });
