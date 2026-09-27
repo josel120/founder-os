@@ -54,7 +54,7 @@ describe("project publication contract (ADR-018)", () => {
 describe("migration 0008", () => {
   it("follows 0007 in the journal", () => {
     expect(journal.entries.map((entry) => entry.idx)).toEqual(journal.entries.map((_, index) => index));
-    expect(journal.entries.slice(7).map((entry) => entry.tag)).toEqual(["0007_rate_limit", "0008_project_publication"]);
+    expect(journal.entries.slice(7, 9).map((entry) => entry.tag)).toEqual(["0007_rate_limit", "0008_project_publication"]);
   });
 
   it("only creates the table, its foreign keys and indexes", () => {
