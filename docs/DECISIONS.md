@@ -276,3 +276,15 @@ Diagnostics note (T-091): a provider refusal is classified from the HTTP status 
 Hosting note: as with `GITHUB_API_URL` (ADR-019), the `AI_API_URL` override is refused only where the strict env check runs (Vercel, or `FOUNDER_OS_STRICT_ENV=1`). Any other self-hosted production must set that flag, or the key and PRIVATE text could be sent to an overridden host.
 
 Order: T-084 merges first (nothing reads the table). Code that reads `ai_run` waits until 0011 is applied in production (RUNBOOK section 6).
+
+## ADR-022: Owner data export (T-092)
+
+The owner can download everything they have recorded as one JSON file: a backup they control and an exit path from the app, alongside the database restore drill (T-057).
+
+Accepted:
+- **Route**: `GET /private/export`, behind the `/private` middleware and `requireAuth()`; 401 without the owner's session. Response is `application/json` with `Content-Disposition: attachment; filename="founder-os-export-YYYY-MM-DD.json"`, `Cache-Control: no-store` and `X-Robots-Tag: noindex, nofollow`.
+- **Content**: `{ format: "founder-os-export", version: 1, exportedAt, counts, data }` with every column of the owner's rows in problems, ideas, evidence, decisions, projects, project publications, GitHub snapshots, finance imports, finance transactions and AI runs, each read with `owner_id = <session owner>`. Auth tables (user, session, account, verification) and rate limits are excluded: they hold credentials and IP data, not the owner's work.
+- **UI**: an "Export data" link in the private header.
+- **Privacy**: the file is the owner's own data, served only to the owner and never cached; nothing is logged beyond `reportError("export")` on failure.
+
+Rejected for now: import/restore from the file (the database restore drill covers disaster recovery), CSV per table, scheduled exports.
