@@ -474,46 +474,6 @@ export function productionUrlFromDeployOutput(output: string): { url: string; al
   return last ? { url: last, aliased: false } : undefined;
 }
 
-export type SmokeResponse = { status: number; headers: Readonly<Record<string, string>>; body: string };
-export type SmokeInput = { login?: SmokeResponse; private?: SmokeResponse; register?: SmokeResponse };
-export type SmokeRow = { check: string; pass: boolean };
-
-function header(response: SmokeResponse | undefined, name: string): string {
-  return response?.headers[name.toLowerCase()] ?? "";
-}
-
-function redirectsToLogin(response: SmokeResponse | undefined, baseUrl: string): boolean {
-  if (!response || response.status !== 307) return false;
-  try {
-    const location = new URL(header(response, "location"), baseUrl);
-    return location.origin === new URL(baseUrl).origin && location.pathname === "/login" && location.searchParams.has("next");
-  } catch {
-    return false;
-  }
-}
-
-/** RUNBOOK section 10 as data: an unreachable page (undefined) fails its checks. */
-export function evaluateSmoke(input: SmokeInput, baseUrl: string): SmokeRow[] {
-  const csp = header(input.login, "content-security-policy");
-  return [
-    { check: "HSTS header on /login", pass: /max-age=\d+/.test(header(input.login, "strict-transport-security")) },
-    { check: "Content-Security-Policy with a nonce on /login", pass: csp.includes("'nonce-") },
-    {
-      check: "Framing blocked on /login",
-      pass: header(input.login, "x-frame-options").toUpperCase() === "DENY" || csp.includes("frame-ancestors 'none'"),
-    },
-    { check: "X-Content-Type-Options: nosniff on /login", pass: header(input.login, "x-content-type-options") === "nosniff" },
-    { check: "noindex on /login", pass: header(input.login, "x-robots-tag").includes("noindex") },
-    { check: "noindex on /private", pass: header(input.private, "x-robots-tag").includes("noindex") },
-    { check: "/private sends visitors to /login?next=… (307)", pass: redirectsToLogin(input.private, baseUrl) },
-    { check: "/register says \"Registration is closed\"", pass: input.register?.status === 200 && input.register.body.includes("Registration is closed") },
-  ];
-}
-
-export function renderSmokeTable(rows: readonly SmokeRow[]): string[] {
-  return ["  Result  Check", ...rows.map((row) => `  ${row.pass ? "PASS" : "FAIL"}    ${row.check}`)];
-}
-
 // ---------------------------------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------------------------------

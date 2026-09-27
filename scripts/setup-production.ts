@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { StringDecoder } from "node:string_decoder";
 import * as lib from "./setup-production-lib";
+import * as smoke from "./smoke-lib";
 
 const root = process.cwd();
 const secrets = new Set<string>();
@@ -214,26 +215,10 @@ async function askDirectDatabaseUrl(): Promise<string> {
   throw new Stop("No direct database URL was entered. Run pnpm setup:production again when you have it.");
 }
 
-async function fetchPage(baseUrl: string, path: string): Promise<lib.SmokeResponse | undefined> {
-  try {
-    const response = await fetch(new URL(path, baseUrl), { redirect: "manual", signal: AbortSignal.timeout(20_000) });
-    const headers: Record<string, string> = {};
-    response.headers.forEach((value, key) => {
-      headers[key] = value;
-    });
-    const body = path === "/register" ? await response.text() : "";
-    if (path !== "/register") await response.body?.cancel();
-    return { status: response.status, headers, body };
-  } catch {
-    return undefined;
-  }
-}
-
-async function smokeCheck(baseUrl: string): Promise<lib.SmokeRow[]> {
-  let rows: lib.SmokeRow[] = [];
+async function smokeCheck(baseUrl: string): Promise<smoke.SmokeRow[]> {
+  let rows: smoke.SmokeRow[] = [];
   for (let attempt = 1; attempt <= 3; attempt++) {
-    const [login, privatePage, register] = await Promise.all(["/login", "/private", "/register"].map((path) => fetchPage(baseUrl, path)));
-    rows = lib.evaluateSmoke({ login, private: privatePage, register }, baseUrl);
+    rows = await smoke.runSmoke(baseUrl, (url, init) => fetch(url, { ...init, signal: AbortSignal.timeout(20_000) }));
     if (rows.every((row) => row.pass) || attempt === 3) break;
     say("Some checks failed; the new version may still be starting. Trying again in 10 seconds…");
     await new Promise((resolve) => setTimeout(resolve, 10_000));
@@ -420,7 +405,7 @@ async function setup(options: lib.SetupOptions, work: string): Promise<boolean> 
   say(lib.stepHeading(9));
   if (!production.aliased) say("Could not find the production domain in Vercel's output; checking the deployment's own address instead.");
   const rows = await smokeCheck(production.url);
-  for (const line of lib.renderSmokeTable(rows)) say(line);
+  for (const line of smoke.renderSmokeTable(rows)) say(line);
   const passed = rows.every((row) => row.pass);
 
   say();

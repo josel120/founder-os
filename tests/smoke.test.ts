@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { expect, it } from "vitest";
-import { normalizeBaseUrl, runSmoke } from "../scripts/smoke-lib";
+import { normalizeBaseUrl, renderSmokeTable, runSmoke } from "../scripts/smoke-lib";
 
 const base = "https://founder.example";
 // Headers as the production deploy sent them on 2026-09-27.
@@ -28,7 +28,7 @@ function deployment(overrides: Record<string, (path: string) => Response> = {}) 
   };
   return { calls, fetchImpl };
 }
-const failures = async (fetchImpl: ReturnType<typeof deployment>["fetchImpl"]) => (await runSmoke(base, fetchImpl)).filter((result) => !result.ok).map((result) => result.name);
+const failures = async (fetchImpl: ReturnType<typeof deployment>["fetchImpl"]) => (await runSmoke(base, fetchImpl)).filter((row) => !row.pass).map((row) => row.check);
 
 it("passes a deployment that matches production, without following redirects", async () => {
   const { calls, fetchImpl } = deployment();
@@ -41,16 +41,18 @@ it("fails when a private page renders instead of redirecting to login", async ()
   expect(await failures(fetchImpl)).toEqual(["anonymous /private/finance → /login?next="]);
 });
 
-it("fails when the redirect leaves the site or drops the next path", async () => {
+it("accepts a relative redirect but fails one that leaves the site or drops the next path", async () => {
   const { fetchImpl } = deployment({
-    "/private": () => new Response(null, { status: 307, headers: { location: "https://evil.example/login?next=/private" } }),
-    "/private/ideas": () => new Response(null, { status: 307, headers: { location: `${base}/login` } }),
+    "/private": () => new Response(null, { status: 307, headers: { ...pageHeaders, location: "https://evil.example/login?next=/private" } }),
+    "/private/ideas": () => new Response(null, { status: 307, headers: { ...pageHeaders, location: `${base}/login` } }),
+    "/private/finance": () => new Response(null, { status: 307, headers: { ...pageHeaders, location: "/login?next=%2Fprivate%2Ffinance" } }),
   });
   expect(await failures(fetchImpl)).toEqual(["anonymous /private → /login?next=", "anonymous /private/ideas → /login?next="]);
 });
 
 it("fails on missing security headers, a CSP without a nonce, indexable pages and open registration", async () => {
-  const { "x-frame-options": _frame, ...weaker } = pageHeaders;
+  const weaker: Record<string, string> = { ...pageHeaders };
+  delete weaker["x-frame-options"];
   const { fetchImpl } = deployment({
     "/login": () => new Response("", { headers: { ...weaker, "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline'", "x-robots-tag": "all" } }),
     "/register": () => new Response("<form>Create account</form>", { headers: pageHeaders }),
@@ -68,4 +70,10 @@ it("only accepts an https origin (or localhost) as the target", () => {
   expect(normalizeBaseUrl("http://localhost:3000")).toBe("http://localhost:3000");
   expect(() => normalizeBaseUrl("http://founder.example")).toThrow("https");
   expect(() => normalizeBaseUrl(undefined)).toThrow("pnpm smoke");
+});
+
+it("fails every check on a deployment it cannot reach, and prints why", async () => {
+  const rows = await runSmoke(base, async () => { throw new Error("offline"); });
+  expect(rows.every((row) => !row.pass)).toBe(true);
+  expect(renderSmokeTable(rows)[1]).toBe("  FAIL    /login answers 200 (status 599)");
 });

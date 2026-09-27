@@ -1,5 +1,5 @@
 /** Read-only post-deploy checks (ADR-014, ADR-016). Sends no credentials and reads no secret. */
-export type SmokeResult = { name: string; ok: boolean; detail: string };
+export type SmokeRow = { check: string; pass: boolean; detail: string };
 type Fetch = (url: string, init: { redirect: "manual"; headers: Record<string, string> }) => Promise<Response>;
 
 const SECURITY_HEADERS: Record<string, (value: string) => boolean> = {
@@ -20,10 +20,15 @@ export function normalizeBaseUrl(input: string | undefined) {
   return url.origin;
 }
 
-export async function runSmoke(baseUrl: string, fetchImpl: Fetch): Promise<SmokeResult[]> {
-  const get = (path: string) => fetchImpl(new URL(path, baseUrl).href, { redirect: "manual", headers: { "user-agent": "founder-os-smoke" } });
-  const results: SmokeResult[] = [];
-  const check = (name: string, ok: boolean, detail: string) => results.push({ name, ok, detail: ok ? "ok" : detail });
+export function renderSmokeTable(rows: readonly SmokeRow[]): string[] {
+  return ["  Result  Check", ...rows.map((row) => `  ${row.pass ? "PASS" : "FAIL"}    ${row.check}${row.pass ? "" : ` (${row.detail})`}`)];
+}
+
+export async function runSmoke(baseUrl: string, fetchImpl: Fetch): Promise<SmokeRow[]> {
+  // An unreachable page answers 599, so every check on it fails instead of throwing.
+  const get = (path: string) => fetchImpl(new URL(path, baseUrl).href, { redirect: "manual", headers: { "user-agent": "founder-os-smoke" } }).catch(() => new Response(null, { status: 599 }));
+  const results: SmokeRow[] = [];
+  const check = (name: string, pass: boolean, detail: string) => results.push({ check: name, pass, detail: pass ? "ok" : detail });
 
   const login = await get("/login");
   check("/login answers 200", login.status === 200, `status ${login.status}`);

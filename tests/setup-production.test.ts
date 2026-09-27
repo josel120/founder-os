@@ -11,7 +11,6 @@ import {
   databaseUrlSecrets,
   describeEnvWrite,
   envAddArgs,
-  evaluateSmoke,
   gitignoreCoversVercel,
   gitProblems,
   hasEnv,
@@ -30,7 +29,6 @@ import {
   productionUrlFromDeployOutput,
   redact,
   renderPlan,
-  renderSmokeTable,
   signUpFailureLabel,
   STEP_TITLES,
   vercelArgs,
@@ -38,7 +36,6 @@ import {
   type EnvRecord,
   type HiddenInput,
   type OwnerAuth,
-  type SmokeResponse,
 } from "../scripts/setup-production-lib";
 
 const root = join(__dirname, "..");
@@ -317,7 +314,7 @@ describe("git state", () => {
   });
 });
 
-describe("deploy output and smoke check", () => {
+describe("deploy output", () => {
   it("takes the production domain from the Aliased line, else the deployment URL", () => {
     const output = `Inspect: https://vercel.com/team/founder-os/abc\n${ESC}[36m▲${ESC}[39m Production  https://founder-os-abc123-team.vercel.app\n▲ Aliased     ${ESC}[36mhttps://founder-os.vercel.app${ESC}[39m\n`;
     expect(productionUrlFromDeployOutput(output)).toEqual({ url: "https://founder-os.vercel.app", aliased: true });
@@ -326,41 +323,6 @@ describe("deploy output and smoke check", () => {
       aliased: false,
     });
     expect(productionUrlFromDeployOutput("Error: build failed")).toBeUndefined();
-  });
-
-  const base = "https://founder-os.vercel.app";
-  const loginHeaders = {
-    "strict-transport-security": "max-age=63072000; includeSubDomains",
-    "content-security-policy": "default-src 'self'; script-src 'self' 'nonce-abc' 'strict-dynamic'; frame-ancestors 'none'",
-    "x-frame-options": "DENY",
-    "x-content-type-options": "nosniff",
-    "x-robots-tag": "noindex, nofollow",
-  };
-  const healthy: { login: SmokeResponse; private: SmokeResponse; register: SmokeResponse } = {
-    login: { status: 200, headers: loginHeaders, body: "" },
-    private: { status: 307, headers: { location: `${base}/login?next=%2Fprivate`, "x-robots-tag": "noindex, nofollow" }, body: "" },
-    register: { status: 200, headers: {}, body: "<h1>Registration is closed</h1>" },
-  };
-
-  it("passes RUNBOOK section 10 on a healthy deployment", () => {
-    const rows = evaluateSmoke(healthy, base);
-    expect(rows).toHaveLength(8);
-    expect(rows.filter((row) => !row.pass)).toEqual([]);
-    expect(renderSmokeTable(rows)[1]).toBe("  PASS    HSTS header on /login");
-  });
-
-  it("accepts a relative redirect and fails a redirect elsewhere, a 200 or missing headers", () => {
-    const relative = { ...healthy, private: { ...healthy.private, headers: { ...healthy.private.headers, location: "/login?next=%2Fprivate" } } };
-    expect(evaluateSmoke(relative, base).every((row) => row.pass)).toBe(true);
-    const elsewhere = { ...healthy, private: { ...healthy.private, headers: { location: "https://evil.example/login?next=x" } } };
-    expect(evaluateSmoke(elsewhere, base).find((row) => row.check.startsWith("/private"))?.pass).toBe(false);
-    const open = { ...healthy, private: { status: 200, headers: {}, body: "" }, login: { status: 200, headers: {}, body: "" } };
-    expect(evaluateSmoke(open, base).filter((row) => !row.pass)).toHaveLength(7);
-  });
-
-  it("fails every check for pages that could not be fetched", () => {
-    expect(evaluateSmoke({}, base).every((row) => !row.pass)).toBe(true);
-    expect(renderSmokeTable(evaluateSmoke({}, base))[1]).toMatch(/^ {2}FAIL/);
   });
 });
 
