@@ -7,6 +7,8 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 
 **Phase 7: Distribution and portfolio** (ADR-018, planned by T-065). The owner publishes chosen projects as a portfolio: `/portfolio` lists public ones, `/p/<slug>` shows one. Publication is a separate record with an explicit field allowlist; everything else stays PRIVATE. The code needs migration 0008 in production first, so the phase's PRs are stacked and merge after the owner applies it (T-067).
 
+**Phases 8 and 9 (ADR-019, ADR-020, planned by T-072)** are being built in parallel: read-only GitHub activity on projects (token and cron secret: T-074, owner) and CSV imports into the ledger with duplicate protection and undo.
+
 Still open from Phase 6: the restore drill (T-057, owner). Deployed smoke check and privacy sweep passed (T-058).
 
 ## Done
@@ -29,6 +31,6 @@ Each phase starts with a planning card, as T-017, T-026 and T-032 did. Planning 
 | # | Phase | Scope | Planning card | Why here |
 |---|---|---|---|---|
 | 7 | Distribution / portfolio (current) | Publish chosen projects: `/portfolio`, `/p/<slug>`, allowlisted fields, stacked PRs behind migration 0008 | T-065 → ADR-018, T-066..T-071 | First public surface |
-| 8 | GitHub integration | GitHub as source of truth for technical work, linked to Projects | later | Needs production for callbacks and webhooks |
-| 9 | Finance imports | File or bank imports, duplicate `external_id` policy (ADR-011) | later | Separate risk from GitHub |
+| 8 | GitHub integration (in progress) | Read-only repository snapshot per project (token, manual refresh, daily cron), stale-repo attention | T-072 → ADR-019, T-073..T-077 | Needs production for callbacks and webhooks |
+| 9 | Finance imports (in progress) | CSV import with mapping, preview, duplicate keys and undo | T-072 → ADR-020, T-078..T-082 | Separate risk from GitHub |
 | 10 | AI execution | A real provider behind `AIService` (ADR-004); humans still decide | later | Needs the data and the audits above |

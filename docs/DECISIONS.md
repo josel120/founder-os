@@ -208,3 +208,41 @@ Rejected for this phase: publishing ideas, problems, decisions, finance or evide
 Open questions for the owner (safe defaults apply until answered): 1) allow search engines to index `PUBLIC` pages, proposed no until the owner reviews the portfolio live; 2) show the repository link, proposed no (repositories may be private); 3) a portfolio intro on `/portfolio`, proposed a fixed line with no personal data; 4) a custom domain, proposed later.
 
 Cards: T-066 `project_publication` schema and migration 0008 (claude) · T-067 apply 0008 in production, then merge the stack (human) · T-068 publication domain: actions and allowlisted public queries (claude) · T-069 owner publish panel with preview (claude) · T-070 public `/portfolio` and `/p/[slug]` (claude) · T-071 portfolio E2E and pre-public privacy audit (claude).
+
+## ADR-019: GitHub integration (Phase 8, T-072)
+
+GitHub becomes the source of truth for a project's technical activity, read-only and private. The owner already stores a repository URL on each project; Phase 8 reads that repository's state from GitHub and shows it where decisions are made.
+
+Accepted:
+- **Access**: one fine-grained personal access token, read-only (Metadata, Contents, Issues, Pull requests), for the repositories the owner picks, stored as `GITHUB_TOKEN` in Vercel (human card). No OAuth app, no GitHub App and no webhooks in this phase: they add a public callback, a signing secret and more permissions for a single-owner app. Without the token the feature is off and says so; nothing breaks.
+- **Link**: a project is linked when its `repository` field is a `https://github.com/<owner>/<repo>` URL; the owner/repo pair is parsed and validated there, never taken from free text elsewhere.
+- **Snapshot**: a new owner-scoped table `project_github` (migration 0009: `project_id` PK/FK cascade, `owner_id`, `repo_full_name`, `default_branch`, `last_push_at`, `open_issues`, `open_pull_requests`, `latest_release_tag`, `latest_release_at`, `synced_at`, `sync_error` code). Only these fields are stored: no code, commit messages, issue titles or bodies.
+- **Sync**: an owner-scoped "Refresh from GitHub" action on the project page, and a daily Vercel Cron job (`/api/cron/github`, authorized by `CRON_SECRET`, human card) that refreshes every linked project. Requests go only to `https://api.github.com` with a timeout; failures store an error code (`not_found`, `unauthorized`, `rate_limited`, `unavailable`), never a response body. The token is never logged or sent to the client.
+- **Use**: the project page shows the snapshot; the `/private` home lists linked projects with no push for 30 days or more. Nothing changes a project's status automatically: the owner decides (ADR-004, ADR-015).
+- **Privacy**: GitHub data is PRIVATE. It is not in the ADR-018 allowlist, so the portfolio never shows it.
+
+Rejected for this phase: webhooks, OAuth or a GitHub App, writing to GitHub, storing code or text, per-repository tokens, private repository names on public pages.
+
+Open questions (defaults apply): 1) stale threshold, proposed 30 days; 2) cron hour, proposed 06:00 UTC daily (Vercel Hobby allows one daily cron).
+
+Cards: T-073 `project_github` schema and migration 0009 (claude) · T-074 create the token and set `GITHUB_TOKEN` and `CRON_SECRET` (human) · T-075 GitHub client and sync service (claude) · T-076 project GitHub panel, refresh action, daily cron route and the stale-repo attention list (claude) · T-077 GitHub E2E against a local stub API and privacy audit (claude).
+
+## ADR-020: Finance imports (Phase 9, T-072)
+
+The owner imports bank or payment-provider exports as CSV files into the private ledger. This closes ADR-011's open duplicate policy for imports.
+
+Accepted:
+- **Format**: CSV only (RFC 4180: quotes, escaped quotes, commas or semicolons, CRLF), at most 1 MB and 5,000 rows, parsed on the server with a small in-repo parser (no dependency). No bank APIs or aggregators: they need third-party credentials and an outbound data flow.
+- **Mapping**: the owner maps columns to date, amount, currency (a column or one fixed currency), description (becomes the category) and optionally an external ID; picks the date format (ISO, DD/MM/YYYY, MM/DD/YYYY) and the decimal separator. A negative amount (or a debit column) is an expense, positive is income. Amounts stay exact decimals (ADR-011).
+- **Preview then confirm**: the server parses and validates every row and returns a preview with per-row errors and duplicates; nothing is written until the owner confirms. The file itself is never stored.
+- **Duplicates**: each imported row gets an `import_key`: the external ID when mapped, else a SHA-256 of date, amount, currency, normalized description and the row's occurrence number among identical rows in the same file. A partial unique index on (`owner_id`, `import_key`) makes re-importing the same file a no-op; manual transactions (no key) are unaffected.
+- **Batches**: a new owner-scoped `finance_import` record (file name, row counts, created_at) and a nullable `finance_transaction.import_id`, so the owner sees past imports and can undo one (deletes only that import's transactions). Migration 0010, additive.
+- **Privacy**: all of it is PRIVATE; errors never echo row contents into logs (`reportError` only).
+
+Rejected: bank APIs, OFX/QIF/XLSX (later), automatic categorization (Phase 10), currency conversion, editing rows inside the importer.
+
+Open questions (defaults apply): 1) row limit, proposed 5,000; 2) keep the original file name, proposed yes (private).
+
+Cards: T-078 `finance_import`, `import_id`, `import_key` and migration 0010 (claude) · T-079 CSV parser, mapping and duplicate keys (claude) · T-080 preview, confirm and undo actions (claude) · T-081 import UI in `/private/finance` (claude) · T-082 import E2E and privacy audit (claude).
+
+Order: migrations 0009 and 0010 follow 0008. Schema-only PRs merge first (nothing reads the tables); code PRs wait until the owner applies 0008–0010 in production (T-067 covers all three).
