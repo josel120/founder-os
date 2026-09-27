@@ -77,3 +77,8 @@ it("fails every check on a deployment it cannot reach, and prints why", async ()
   expect(rows.every((row) => !row.pass)).toBe(true);
   expect(renderSmokeTable(rows)[1]).toBe("  FAIL    /login answers 200 (status 599)");
 });
+
+it("fails when the portfolio is behind a sign-in or indexable", async () => {
+  const { fetchImpl } = deployment({ "/portfolio": () => new Response(null, { status: 307, headers: { location: `${base}/login?next=/portfolio` } }) });
+  expect(await failures(fetchImpl)).toEqual(["/portfolio noindex", "/portfolio is public (200, no sign-in)"]);
+});

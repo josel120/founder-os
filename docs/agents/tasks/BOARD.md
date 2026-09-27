@@ -11,5 +11,5 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-067 | Apply migration 0008 in production, then merge the Phase 7 stack | todo | human | S | T-066 |
 | T-068 | Publication domain: publish actions and allowlisted public queries | review | claude | M | T-066 |
 | T-069 | Owner publish panel with a preview of what becomes public | todo | claude | M | T-068 |
-| T-070 | Public portfolio and project pages | todo | claude | M | T-068 |
+| T-070 | Public portfolio and project pages | review | claude | M | T-068 |
 | T-071 | Verify the portfolio end to end and audit privacy before going public | todo | claude | M | T-069, T-070 |
