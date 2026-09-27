@@ -14,12 +14,17 @@ const snapshotColumns = {
 export async function getPrivateGitHubSnapshot(projectId: string) {
   const owner = await requireAuth();
   if (!owner || !db || !z.uuid().safeParse(projectId).success) return null;
+  // Joined like the home list: the project itself must be the owner's PRIVATE project too.
   const [snapshot] = await db.select(snapshotColumns).from(projectGithub)
-    .where(and(eq(projectGithub.projectId, projectId), eq(projectGithub.ownerId, owner.id))).limit(1);
+    .innerJoin(projects, and(eq(projects.id, projectGithub.projectId), eq(projects.ownerId, projectGithub.ownerId)))
+    .where(and(eq(projectGithub.projectId, projectId), eq(projectGithub.ownerId, owner.id), eq(projects.visibility, "PRIVATE"))).limit(1);
   return snapshot ?? null;
 }
 
-/** The owner's projects whose repository has had no push since `before` (ADR-019). Owner is checked on both tables. */
+/**
+ * The owner's projects whose repository has had no push since `before` (ADR-019). Owner is checked on both tables.
+ * `ownerId` must come from `requireAuth()` (the cockpit calls it after its own check), never from request input.
+ */
 export async function listStaleRepositories(ownerId: string, before: Date) {
   if (!db) return [];
   return db.select({ id: projects.id, name: projects.name, repoFullName: projectGithub.repoFullName, lastPushAt: projectGithub.lastPushAt })

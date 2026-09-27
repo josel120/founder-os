@@ -60,6 +60,7 @@ describe("/api/cron/github", () => {
     m.env.CRON_SECRET = secret;
     const response = await call(header);
     expect(response.status).toBe(401);
+    expect(response.headers.get("cache-control")).toBe("no-store");
     expect(await response.json()).toEqual({ error: "Unauthorized" });
     expect(m.syncAll).not.toHaveBeenCalled();
   });

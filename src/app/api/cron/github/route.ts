@@ -15,7 +15,7 @@ function authorized(header: string | null): boolean {
 }
 
 export async function GET(request: Request) {
-  if (!authorized(request.headers.get("authorization"))) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!authorized(request.headers.get("authorization"))) return Response.json({ error: "Unauthorized" }, { status: 401, headers: { "cache-control": "no-store" } });
   const totals = await syncAllLinkedProjects();
   // Counts only: no project, repository or owner data leaves this route.
   return Response.json(totals, { headers: { "cache-control": "no-store" } });
