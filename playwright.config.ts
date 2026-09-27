@@ -1,5 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
-import { e2eAuthSecret, e2eBaseUrl, e2eCronSecret, e2eDatabaseUrl, e2eGithubStubPort, e2eGithubStubUrl, e2eGithubToken, e2eOwner, e2eSetupToken, e2eStorageState, requireDisposableDatabase } from "./tests/e2e/e2e-env";
+import { e2eAiKey, e2eAiStubPort, e2eAiStubUrl, e2eAuthSecret, e2eBaseUrl, e2eCronSecret, e2eDatabaseUrl, e2eGithubStubPort, e2eGithubStubUrl, e2eGithubToken, e2eOwner, e2eSetupToken, e2eStorageState, requireDisposableDatabase } from "./tests/e2e/e2e-env";
 
 // Authenticated tests run only with E2E_DATABASE_URL (a *_e2e database). The server is then pointed at it
 // explicitly, so a local run can never use the real database from .env.local.
@@ -9,6 +9,8 @@ const serverEnv: Record<string, string> = authenticated
       DATABASE_URL: requireDisposableDatabase(), OWNER_EMAIL: e2eOwner.email, OWNER_SETUP_TOKEN: e2eSetupToken, BETTER_AUTH_SECRET: e2eAuthSecret, BETTER_AUTH_URL: e2eBaseUrl,
       // ADR-019: the app talks only to the local stub GitHub API (tests/e2e/github-stub.mjs), never the real GitHub.
       GITHUB_TOKEN: e2eGithubToken, GITHUB_API_URL: e2eGithubStubUrl, CRON_SECRET: e2eCronSecret,
+      // ADR-021: AI runs go only to the local stub Messages API (tests/e2e/ai-stub.mjs), never to Anthropic.
+      ANTHROPIC_API_KEY: e2eAiKey, AI_API_URL: e2eAiStubUrl,
     }
   : {};
 
@@ -40,6 +42,13 @@ export default defineConfig({
           reuseExistingServer: false,
           timeout: 20_000,
           env: { GITHUB_STUB_PORT: String(e2eGithubStubPort), E2E_GITHUB_TOKEN: e2eGithubToken },
+        },
+        {
+          command: "node tests/e2e/ai-stub.mjs",
+          url: `${e2eAiStubUrl}/`,
+          reuseExistingServer: false,
+          timeout: 20_000,
+          env: { AI_STUB_PORT: String(e2eAiStubPort), E2E_AI_KEY: e2eAiKey },
         },
       ]
     : appServer,
