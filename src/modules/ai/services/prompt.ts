@@ -22,7 +22,9 @@ export type IdeaPromptInput = {
   evidence: PromptEvidence[];
 };
 
-export type PromptResult = { ok: true; text: string; promptVersion: string } | { ok: false; error: "too_large" };
+/** Text that came out of `buildIdeaInput`. `runTool` accepts nothing else, so only allowlisted fields can be sent. */
+export type IdeaPromptText = string & { readonly __brand: "IdeaPromptText" };
+export type PromptResult = { ok: true; text: IdeaPromptText; promptVersion: string } | { ok: false; error: "too_large" };
 
 export const MAX_INPUT_CHARS = 40_000;
 const MAX_EVIDENCE = 50;
@@ -91,5 +93,5 @@ export function buildIdeaInput(input: IdeaPromptInput): PromptResult {
     kept -= 1;
     text = render(base, evidence.slice(0, kept));
   }
-  return { ok: true, text, promptVersion: PROMPT_VERSION };
+  return { ok: true, text: text as IdeaPromptText, promptVersion: PROMPT_VERSION };
 }

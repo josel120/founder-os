@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { runTool, type Fetch } from "../src/modules/ai/services/anthropic-client";
 import { ASSESSMENT_TOOL_NAME, SUMMARY_TOOL_NAME } from "../src/modules/ai/services/output";
+import { ASSESSMENT_SYSTEM_PROMPT, SUMMARY_SYSTEM_PROMPT, type IdeaPromptText } from "../src/modules/ai/services/prompt";
 
 type Route = { status: number; body?: unknown; headers?: Record<string, string> } | Error;
 function stub(route: Route) {
@@ -13,7 +14,7 @@ function stub(route: Route) {
   return { calls, fetchImpl };
 }
 
-const base = { apiKey: "sk-ant-secret-key-1234567890", apiUrl: "https://api.test", model: "claude-sonnet-5", system: "system prompt", input: "<owner_notes>data</owner_notes>" } as const;
+const base = { apiKey: "sk-ant-secret-key-1234567890", apiUrl: "https://api.test", model: "claude-sonnet-5", input: "<owner_notes>data</owner_notes>" as IdeaPromptText } as const;
 const validAssessmentBody = {
   model: "claude-sonnet-5-20260101",
   content: [{ type: "tool_use", id: "toolu_1", name: ASSESSMENT_TOOL_NAME, input: { recommendation: "CONTINUE", rationale: "ok", risks: [], openQuestions: [] } }],
@@ -45,7 +46,7 @@ describe("runTool request shape", () => {
     const body = JSON.parse(init.body as string) as Record<string, unknown>;
     expect(body.model).toBe(base.model);
     expect(body.max_tokens).toBe(2_000);
-    expect(body.system).toBe(base.system);
+    expect(body.system).toBe(ASSESSMENT_SYSTEM_PROMPT);
     expect(body.messages).toEqual([{ role: "user", content: base.input }]);
     expect(body.tool_choice).toEqual({ type: "tool", name: ASSESSMENT_TOOL_NAME });
     expect((body.tools as { name: string }[])[0]!.name).toBe(ASSESSMENT_TOOL_NAME);
@@ -83,6 +84,21 @@ describe("runTool success", () => {
     expect("recommendation" in result).toBe(false);
     expect(result.output).toEqual({ supports: [], contradicts: [], openQuestions: [], overview: "ok" });
     expect(result.model).toBe("claude-sonnet-5-20260101");
+  });
+
+  it("picks the system prompt from the kind and accepts only buildIdeaInput text", async () => {
+    const { calls, fetchImpl } = stub({ status: 200, body: validSummaryBody });
+    await runTool({ ...base, kind: "SUMMARY", fetchImpl });
+    expect((JSON.parse(calls[0]!.init.body as string) as { system: string }).system).toBe(SUMMARY_SYSTEM_PROMPT);
+    // @ts-expect-error a plain string is not IdeaPromptText, so unfiltered text cannot be sent
+    await runTool({ ...base, input: "raw private text", kind: "SUMMARY", fetchImpl });
+  });
+
+  it("ignores a response model name longer than the stored column allows", async () => {
+    const { fetchImpl } = stub({ status: 200, body: { ...validAssessmentBody, model: "m".repeat(101) } });
+    const result = await runTool({ ...base, kind: "ASSESSMENT", fetchImpl });
+    if (!result.ok) throw new Error("expected ok");
+    expect(result.model).toBe(base.model);
   });
 
   it("falls back to the requested model when the response omits it", async () => {

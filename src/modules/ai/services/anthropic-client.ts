@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { AIRecommendation } from "../types";
+import { ASSESSMENT_SYSTEM_PROMPT, SUMMARY_SYSTEM_PROMPT, type IdeaPromptText } from "./prompt";
 import { assessmentOutputSchema, assessmentTool, summaryOutputSchema, summaryTool, type AssessmentOutput, type SummaryOutput } from "./output";
 
 /** ADR-021 error codes: the only thing stored or shown when a run fails. Never a response body. */
@@ -10,9 +11,8 @@ const ANTHROPIC_VERSION = "2023-06-01";
 const TIMEOUT_MS = 60_000;
 const MAX_TOKENS = 2_000;
 
-type RunToolArgs =
-  | { kind: "ASSESSMENT"; system: string; input: string; apiKey: string; apiUrl: string; model: string; fetchImpl?: Fetch }
-  | { kind: "SUMMARY"; system: string; input: string; apiKey: string; apiUrl: string; model: string; fetchImpl?: Fetch };
+// The system prompt follows from the kind, and the input must come from `buildIdeaInput` (ADR-021 allowlist).
+type RunToolArgs = { kind: "ASSESSMENT" | "SUMMARY"; input: IdeaPromptText; apiKey: string; apiUrl: string; model: string; fetchImpl?: Fetch };
 
 export type RunToolResult =
   | { ok: true; output: AssessmentOutput; recommendation: AIRecommendation; inputTokens: number | null; outputTokens: number | null; model: string }
@@ -24,7 +24,7 @@ const contentBlockSchema = z.union([
   z.object({ type: z.string() }).loose(),
 ]);
 const messageSchema = z.object({
-  model: z.string().optional(),
+  model: z.string().min(1).max(100).optional().catch(undefined),
   content: z.array(contentBlockSchema),
   usage: z.object({ input_tokens: z.number().int().min(0).optional(), output_tokens: z.number().int().min(0).optional() }).optional(),
 });
@@ -61,6 +61,7 @@ async function failureFor(response: Response): Promise<AIClientError> {
 export async function runTool(args: RunToolArgs): Promise<RunToolResult> {
   const fetchImpl = args.fetchImpl ?? ((url, init) => fetch(url, init));
   const tool = args.kind === "ASSESSMENT" ? assessmentTool : summaryTool;
+  const system = args.kind === "ASSESSMENT" ? ASSESSMENT_SYSTEM_PROMPT : SUMMARY_SYSTEM_PROMPT;
   const base = args.apiUrl.replace(/\/$/, "");
 
   let response: Response;
@@ -78,7 +79,7 @@ export async function runTool(args: RunToolArgs): Promise<RunToolResult> {
       body: JSON.stringify({
         model: args.model,
         max_tokens: MAX_TOKENS,
-        system: args.system,
+        system,
         messages: [{ role: "user", content: args.input }],
         tools: [tool],
         tool_choice: { type: "tool", name: tool.name },
