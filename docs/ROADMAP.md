@@ -10,7 +10,7 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 - GitHub: a private repository snapshot per project, refresh button, daily cron, quiet repositories on the home. Waits on the owner's read-only token and cron secret (T-074); until then the panel says GitHub is not connected.
 - Finance imports: CSV mapping, preview, confirm, duplicates skipped on re-import, undo per import.
 
-Next: Phase 10 planning (AI execution, ADR-013) when the owner asks. Still open: the restore drill (T-057) and T-074.
+Next: **Phase 10, AI execution** (ADR-021, planned in T-083): an owner-triggered second opinion on an idea (assessment and research summary) from Anthropic's API, recorded in `ai_run` (0011); it never changes a status. Cards T-084..T-089; the owner sets the key and spend limit (T-085). Still open: the restore drill (T-057) and T-074.
 
 ## Done
 
@@ -30,8 +30,8 @@ Next: Phase 10 planning (AI execution, ADR-013) when the owner asks. Still open:
 
 ## Next (ADR-013; the owner reorders by merging a roadmap change)
 
-Each phase starts with a planning card, as T-017, T-026 and T-032 did. The Phase 10 planning card is created when the owner asks.
+Each phase starts with a planning card, as T-017, T-026 and T-032 did.
 
 | # | Phase | Scope | Planning card | Why here |
 |---|---|---|---|---|
-| 10 | AI execution | A real provider behind `AIService` (ADR-004); humans still decide | later | Needs the data and the audits above |
+| 10 | AI execution | Owner-triggered idea assessment and research summary via Anthropic behind `AIService` (ADR-004, ADR-021); `ai_run` record (0011); humans still decide | T-083 (done) | Needs the data and the audits above |
