@@ -384,6 +384,8 @@ export const aiRuns = pgTable(
     check("ai_run_error", sql`${table.error} IS NULL OR ${table.error} IN ('unauthorized', 'rate_limited', 'unavailable', 'invalid_output', 'too_large', 'interrupted')`),
     check("ai_run_tokens", sql`coalesce(${table.inputTokens}, 0) >= 0 AND coalesce(${table.outputTokens}, 0) >= 0`),
     check("ai_run_labels", sql`char_length(${table.model}) BETWEEN 1 AND 100 AND char_length(${table.promptVersion}) BETWEEN 1 AND 40`),
+    // ADR-021: AI runs are never published; no other visibility can be stored.
+    check("ai_run_private", sql`${table.visibility} = 'PRIVATE'`),
     index("ai_run_owner_created_idx").on(table.ownerId, table.createdAt),
     index("ai_run_idea_created_idx").on(table.ideaId, table.createdAt),
     uniqueIndex("ai_run_one_running_per_idea_idx").on(table.ideaId).where(sql`${table.status} = 'RUNNING'`),
