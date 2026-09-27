@@ -74,8 +74,8 @@ export function PublishPanel({ projectId, publication, preview }: { projectId: s
   }
 
   return (
-    <section aria-busy={pending} className="workspace-panel mt-8 space-y-4 p-6">
-      <h2 className="text-lg font-semibold">Public portfolio</h2>
+    <section aria-labelledby="publish-heading" aria-busy={pending} className="workspace-panel mt-8 space-y-4 p-6">
+      <h2 id="publish-heading" className="text-lg font-semibold">Public portfolio</h2>
       <p className="text-sm text-slate-600">
         Current state: <span className="font-medium">{stateLabel[currentState]}</span>
         {publication && <> · <a href={`/p/${preview.slug}`} className="text-indigo-700 underline-offset-4 hover:underline">/p/{preview.slug}</a></>}
@@ -100,7 +100,7 @@ export function PublishPanel({ projectId, publication, preview }: { projectId: s
 
       <div>
         <p className="mb-2 text-sm font-medium">Preview</p>
-        <PublicProjectArticle project={previewProject} headingLevel={2} />
+        <PublicProjectArticle project={previewProject} headingLevel={3} />
       </div>
 
       {!confirmPublish && <button type="button" disabled={pending} onClick={() => setConfirmPublish(true)} className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{publication ? "Review and update" : "Review and publish"}</button>}

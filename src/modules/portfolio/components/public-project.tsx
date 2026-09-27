@@ -17,8 +17,8 @@ export function publicLinks(project: Pick<PublicProject, "website" | "playStoreU
  * The public view of one project. It renders only ADR-018 allowlist fields, so the owner's preview (T-069) and the
  * public page show exactly the same thing.
  */
-export function PublicProjectArticle({ project, headingLevel = 1 }: { project: PublicProject; headingLevel?: 1 | 2 }) {
-  const Heading = headingLevel === 1 ? "h1" : "h2";
+export function PublicProjectArticle({ project, headingLevel = 1 }: { project: PublicProject; headingLevel?: 1 | 2 | 3 }) {
+  const Heading = (["h1", "h2", "h3"] as const)[headingLevel - 1];
   const links = publicLinks(project);
   return <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
     <p className="text-xs font-semibold uppercase tracking-widest text-teal-700">{projectLabel(project.lifecycle)}</p>
