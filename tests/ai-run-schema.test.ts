@@ -34,7 +34,8 @@ describe("AI run contract (ADR-021)", () => {
   });
 
   it("ties the recommendation, output, error and finish time to the status", () => {
-    expect(config.checks.map((check) => check.name)).toEqual(["ai_run_recommendation", "ai_run_outcome", "ai_run_error", "ai_run_tokens", "ai_run_labels"]);
+    expect(config.checks.map((check) => check.name)).toEqual(["ai_run_recommendation", "ai_run_outcome", "ai_run_error", "ai_run_tokens", "ai_run_labels", "ai_run_private"]);
+    expect(migration).toContain(`CONSTRAINT "ai_run_private" CHECK ("ai_run"."visibility" = 'PRIVATE')`);
     expect(migration).toContain(`(("ai_run"."kind" = 'ASSESSMENT' AND "ai_run"."status" = 'SUCCEEDED') = ("ai_run"."recommendation" IS NOT NULL))`);
     expect(migration).toContain(`IN ('CONTINUE', 'INVESTIGATE_MORE', 'PAUSE', 'REJECT')`);
     expect(migration).toContain(`("ai_run"."status" = 'SUCCEEDED') = ("ai_run"."output" IS NOT NULL) AND ("ai_run"."status" = 'FAILED') = ("ai_run"."error" IS NOT NULL) AND ("ai_run"."status" = 'RUNNING') = ("ai_run"."finished_at" IS NULL)`);
