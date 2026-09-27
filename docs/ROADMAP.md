@@ -7,7 +7,7 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 
 **Phases 7, 8 and 9 are merged and live** (ADR-018, ADR-019, ADR-020). Production has migrations 0000–0010 (0008–0010 applied 2026-09-27 after snapshot `pre-0008-20260927`).
 - Portfolio: the owner publishes chosen projects; `/portfolio` and `/p/<slug>` show allowlisted fields only, `noindex`.
-- GitHub: a private repository snapshot per project, refresh button, daily cron, quiet repositories on the home. Waits on the owner's read-only token and cron secret (T-074); until then the panel says GitHub is not connected.
+- GitHub: a private repository snapshot per project, refresh button, daily cron, quiet repositories on the home. Live since 2026-09-27: read-only token and cron secret set (T-074).
 - Finance imports: CSV mapping, preview, confirm, duplicates skipped on re-import, undo per import.
 
 **Phase 10, AI execution** (ADR-021) is merged and deployed (PRs #60, #66; 0011 applied in production): an owner-triggered second opinion on an idea (assessment and research summary) from Anthropic's API, recorded in `ai_run` (0011); it never changes a status. It turns on when the owner sets the API key and a spend limit (T-085). Still open: the restore drill (T-057) and T-074.
