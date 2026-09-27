@@ -20,7 +20,8 @@ CREATE TABLE "ai_run" (
 	CONSTRAINT "ai_run_outcome" CHECK (("ai_run"."status" = 'SUCCEEDED') = ("ai_run"."output" IS NOT NULL) AND ("ai_run"."status" = 'FAILED') = ("ai_run"."error" IS NOT NULL) AND ("ai_run"."status" = 'RUNNING') = ("ai_run"."finished_at" IS NULL)),
 	CONSTRAINT "ai_run_error" CHECK ("ai_run"."error" IS NULL OR "ai_run"."error" IN ('unauthorized', 'rate_limited', 'unavailable', 'invalid_output', 'too_large', 'interrupted')),
 	CONSTRAINT "ai_run_tokens" CHECK (coalesce("ai_run"."input_tokens", 0) >= 0 AND coalesce("ai_run"."output_tokens", 0) >= 0),
-	CONSTRAINT "ai_run_labels" CHECK (char_length("ai_run"."model") BETWEEN 1 AND 100 AND char_length("ai_run"."prompt_version") BETWEEN 1 AND 40)
+	CONSTRAINT "ai_run_labels" CHECK (char_length("ai_run"."model") BETWEEN 1 AND 100 AND char_length("ai_run"."prompt_version") BETWEEN 1 AND 40),
+	CONSTRAINT "ai_run_private" CHECK ("ai_run"."visibility" = 'PRIVATE')
 );
 --> statement-breakpoint
 ALTER TABLE "ai_run" ADD CONSTRAINT "ai_run_owner_id_user_id_fk" FOREIGN KEY ("owner_id") REFERENCES "public"."user"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint

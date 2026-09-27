@@ -1,5 +1,5 @@
 {
-  "id": "502cf2bb-1a25-4718-83f4-10a4afb34310",
+  "id": "abad3491-dc38-4fe1-96fc-0de3f4514c0a",
   "prevId": "fe8a260a-1564-42c8-a49c-838deadf6772",
   "version": "7",
   "dialect": "postgresql",
@@ -324,6 +324,10 @@
         "ai_run_labels": {
           "name": "ai_run_labels",
           "value": "char_length(\"ai_run\".\"model\") BETWEEN 1 AND 100 AND char_length(\"ai_run\".\"prompt_version\") BETWEEN 1 AND 40"
+        },
+        "ai_run_private": {
+          "name": "ai_run_private",
+          "value": "\"ai_run\".\"visibility\" = 'PRIVATE'"
         }
       },
       "isRLSEnabled": false
