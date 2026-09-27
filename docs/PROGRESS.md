@@ -13,7 +13,7 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 
 ## Phases 8–9 (planned 2026-09-27, T-072)
 
-- ADR-019 GitHub: read-only token (T-074 owner), `project_github` snapshot (0009), refresh + daily cron, stale repos on home. ADR-020 imports: CSV mapping/preview/confirm/undo, `import_key` duplicate index (0010). Code PRs wait for 0008–0010 in production (T-067).
+- ADR-019 GitHub: read-only token (T-074 owner), `project_github` snapshot (0009), refresh + daily cron, stale repos on home. ADR-020 imports: CSV mapping/preview/confirm/undo, `import_key` duplicate index (0010). Code PRs wait for 0008–0010 in production (T-067). T-077 verified it E2E against a local stub API (`github.auth.spec.ts`, `github-stub.mjs`, no dependency): refresh, errors, cron auth, cross-owner/anonymous isolation, no leak into `/portfolio`; 44/44 green; `privacy-auditor` still to run.
 
 ## Phase 7: Distribution and portfolio (planned, 2026-09-27)
 

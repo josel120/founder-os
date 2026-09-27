@@ -7,7 +7,7 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 
 **Phase 7: Distribution and portfolio** (ADR-018, planned by T-065). The owner publishes chosen projects as a portfolio: `/portfolio` lists public ones, `/p/<slug>` shows one. Publication is a separate record with an explicit field allowlist; everything else stays PRIVATE. The code needs migration 0008 in production first, so the phase's PRs are stacked and merge after the owner applies it (T-067).
 
-**Phases 8 and 9 (ADR-019, ADR-020, planned by T-072)** are being built in parallel: read-only GitHub activity on projects (token and cron secret: T-074, owner) and CSV imports into the ledger with duplicate protection and undo.
+**Phases 8 and 9 (ADR-019, ADR-020, planned by T-072)** are being built in parallel: read-only GitHub activity on projects (token and cron secret: T-074, owner) and CSV imports into the ledger with duplicate protection and undo. T-077 verified the GitHub integration end to end against a local stub API (44/44 E2E, refresh, errors, cron auth, cross-owner and anonymous isolation, no leak into `/portfolio`); Phase 8 closes once `privacy-auditor` runs on the tree.
 
 Still open from Phase 6: the restore drill (T-057, owner). Deployed smoke check and privacy sweep passed (T-058).
 
