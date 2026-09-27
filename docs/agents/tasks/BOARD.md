@@ -19,7 +19,7 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-075 | GitHub client and sync service | todo | claude | M | T-073 |
 | T-076 | Project GitHub panel, refresh, daily cron and stale-repo attention | todo | claude | M | T-075 |
 | T-077 | Verify GitHub integration end to end and audit privacy | todo | claude | M | T-076 |
-| T-078 | Finance import schema (migration 0010) | todo | claude | S | T-073 |
+| T-078 | Finance import schema (migration 0010) | review | claude | S | T-073 |
 | T-079 | CSV parser, column mapping and duplicate keys | todo | claude | M | T-078 |
 | T-080 | Import preview, confirm and undo actions | todo | claude | M | T-079 |
 | T-081 | Import UI in /private/finance | todo | claude | M | T-080 |
