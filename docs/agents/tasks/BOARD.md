@@ -31,5 +31,6 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-087 | AI run actions, daily cap and run queries | done | claude | M | T-086 |
 | T-088 | Idea AI panel with disclosure and run history | done | claude | M | T-087 |
 | T-089 | Verify AI execution end to end and audit privacy | done | claude | M | T-088 |
-| T-090 | Audit Phases 7–10 for bugs, security and UX, and fix what is found | review | claude | M | T-089 |
-| T-091 | Say why the AI provider refused a run | review | claude | S | T-089 |
+| T-090 | Audit Phases 7–10 for bugs, security and UX, and fix what is found | done | claude | M | T-089 |
+| T-091 | Say why the AI provider refused a run | done | claude | S | T-089 |
+| T-092 | Owner data export as one JSON file | review | claude | M | T-089 |
