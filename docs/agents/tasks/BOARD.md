@@ -14,7 +14,7 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-070 | Public portfolio and project pages | todo | claude | M | T-068 |
 | T-071 | Verify the portfolio end to end and audit privacy before going public | todo | claude | M | T-069, T-070 |
 | T-072 | Plan GitHub integration (Phase 8) and Finance imports (Phase 9) | done | claude | M | T-065 |
-| T-073 | Add the project_github table (migration 0009) | todo | claude | S | T-072 |
+| T-073 | Add the project_github table (migration 0009) | review | claude | S | T-072 |
 | T-074 | Create a read-only GitHub token and set GITHUB_TOKEN and CRON_SECRET | todo | human | S | T-072 |
 | T-075 | GitHub client and sync service | todo | claude | M | T-073 |
 | T-076 | Project GitHub panel, refresh, daily cron and stale-repo attention | todo | claude | M | T-075 |
