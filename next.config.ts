@@ -21,7 +21,8 @@ const nextConfig: NextConfig = {
     return [
       { source: "/:path*", headers: securityHeaders },
       { source: "/api/:path*", headers: apiPolicy },
-      ...["/private/:path*", "/login", "/register", "/api/:path*"].map((source) => ({ source, headers: noIndex })),
+      // ADR-018: the portfolio stays out of search engines until the owner opts in.
+      ...["/private/:path*", "/login", "/register", "/api/:path*", "/portfolio", "/p/:path*"].map((source) => ({ source, headers: noIndex })),
     ];
   },
 };

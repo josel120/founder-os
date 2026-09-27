@@ -5,11 +5,12 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 
 ## Now
 
-**Phase 7: Distribution and portfolio** (ADR-018, planned by T-065). The owner publishes chosen projects as a portfolio: `/portfolio` lists public ones, `/p/<slug>` shows one. Publication is a separate record with an explicit field allowlist; everything else stays PRIVATE. The code needs migration 0008 in production first, so the phase's PRs are stacked and merge after the owner applies it (T-067).
+**Phases 7, 8 and 9 are merged and live** (ADR-018, ADR-019, ADR-020). Production has migrations 0000–0010 (0008–0010 applied 2026-09-27 after snapshot `pre-0008-20260927`).
+- Portfolio: the owner publishes chosen projects; `/portfolio` and `/p/<slug>` show allowlisted fields only, `noindex`.
+- GitHub: a private repository snapshot per project, refresh button, daily cron, quiet repositories on the home. Waits on the owner's read-only token and cron secret (T-074); until then the panel says GitHub is not connected.
+- Finance imports: CSV mapping, preview, confirm, duplicates skipped on re-import, undo per import.
 
-**Phases 8 and 9 (ADR-019, ADR-020)** are built and verified, and wait on the same migration step. Phase 8: a private GitHub snapshot per project (refresh button, daily cron, quiet repositories on the home); the owner creates a read-only token (T-074). Phase 9: CSV imports into the ledger (column mapping, preview, confirm, duplicates skipped on re-import, undo). Full E2E with a stub GitHub API and real imports passes locally; privacy audits clean.
-
-Still open from Phase 6: the restore drill (T-057, owner). Deployed smoke check and privacy sweep passed (T-058).
+Next: Phase 10 planning (AI execution, ADR-013) when the owner asks. Still open: the restore drill (T-057) and T-074.
 
 ## Done
 
@@ -21,16 +22,16 @@ Still open from Phase 6: the restore drill (T-057, owner). Deployed smoke check 
 | 3. Finance OS | Owned transactions, exact decimals, optional project link, private UI, E2E | T-026..T-030 | merged (PR #25) |
 | 4. Research OS | Owned evidence on problems and ideas: domain, `/private/research`, idea evidence, cross-owner/anonymous E2E, privacy sweep | T-032..T-037, T-040 | merged (PR #32, #33, #34) |
 | 5. Workspace cockpit | `/private` home (what needs attention, login landing), Problem detail + edit + evidence, Project → Idea/Finance chain, explicit query columns, cross-owner/anonymous E2E | T-041, T-046..T-051 | merged (PR #34, #35, #36, #37) |
+| 7. Distribution / portfolio | Publish chosen projects (`project_publication`, 0008), allowlisted public pages, owner publish panel with preview, pre-public privacy audit | T-065..T-071 | merged (PR #44..#49) |
+| 8. GitHub integration | Read-only snapshot per project (0009), refresh + daily cron, quiet repositories; token pending (T-074) | T-072..T-077 | merged (PR #50, #51, #53, #55, #58) |
+| 9. Finance imports | CSV import with mapping, preview, duplicate keys (0010) and undo | T-078..T-082 | merged (PR #52, #54, #56, #57, #59) |
 | 6. Production readiness | Vercel + Neon deploy, one-command setup, fail-fast env, DB rate limits, runbook, `reportError`, lost-update fix, same-origin sign-in, deployed smoke check (`pnpm smoke`); restore drill T-057 still open | T-042, T-052..T-064 | merged (PR #37, #39..#43) |
 | Process | Agent coordination, branch/PR per card, phase roadmap, review subagents | T-012, T-025, T-031, T-039, T-043 | done |
 
 ## Next (ADR-013; the owner reorders by merging a roadmap change)
 
-Each phase starts with a planning card, as T-017, T-026 and T-032 did. Planning cards for phases 7–10 are created when the phase before ends.
+Each phase starts with a planning card, as T-017, T-026 and T-032 did. The Phase 10 planning card is created when the owner asks.
 
 | # | Phase | Scope | Planning card | Why here |
 |---|---|---|---|---|
-| 7 | Distribution / portfolio (current) | Publish chosen projects: `/portfolio`, `/p/<slug>`, allowlisted fields, stacked PRs behind migration 0008 | T-065 → ADR-018, T-066..T-071 | First public surface |
-| 8 | GitHub integration (built; waits on 0009 and T-074) | Read-only repository snapshot per project (token, manual refresh, daily cron), stale-repo attention | T-072 → ADR-019, T-073..T-077 | Needs production for callbacks and webhooks |
-| 9 | Finance imports (built; waits on 0010) | CSV import with mapping, preview, duplicate keys and undo | T-072 → ADR-020, T-078..T-082 | Separate risk from GitHub |
 | 10 | AI execution | A real provider behind `AIService` (ADR-004); humans still decide | later | Needs the data and the audits above |

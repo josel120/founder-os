@@ -17,7 +17,7 @@ const ideaC = "00000000-0000-4000-8000-00000000000c";
 function chain() {
   const result = m.results.shift() ?? [];
   const link: Record<string, unknown> = {};
-  for (const name of ["from", "orderBy", "limit", "groupBy"]) link[name] = () => link;
+  for (const name of ["from", "orderBy", "limit", "groupBy", "innerJoin"]) link[name] = () => link;
   link.where = (clause: unknown) => { m.wheres.push(clause); return link; };
   link.then = (resolve: (value: unknown) => unknown, reject: (reason: unknown) => unknown) => Promise.resolve(result).then(resolve, reject);
   return link;
@@ -56,14 +56,16 @@ describe("getAttention", () => {
   });
 
   it("scopes every query to the session owner and PRIVATE on its own table", async () => {
-    m.results = [[], [], [], [], [{ total: 0 }], [{ id: ideaA, title: "A", status: "RESEARCHING", createdAt: now }], [], [], []];
+    m.results = [[], [], [], [], [{ total: 0 }], [{ id: ideaA, title: "A", status: "RESEARCHING", createdAt: now }], [], [], [], []];
     await getAttention(now);
-    expect(m.wheres).toHaveLength(9);
-    const tables = ["project", "project", "project", "idea", "idea", "idea", "decision_log", "finance_transaction", "evidence"];
+    expect(m.wheres).toHaveLength(10);
+    // The quiet-repository query filters its own owner column; its join (checked in github tests) repeats it on project.
+    const tables = ["project", "project", "project", "idea", "idea", "idea", "decision_log", "finance_transaction", "project_github", "evidence"];
+    const visibilityTables = [...tables.slice(0, 8), "project", "evidence"];
     m.wheres.forEach((clause, index) => {
       const query = sqlOf(clause);
       expect(query.sql).toContain(`"${tables[index]}"."owner_id"`);
-      expect(query.sql).toContain(`"${tables[index]}"."visibility"`);
+      expect(query.sql).toContain(`"${visibilityTables[index]}"."visibility"`);
       expect(query.params).toContain("owner-a");
       expect(query.params).toContain("PRIVATE");
     });
@@ -79,23 +81,26 @@ describe("getAttention", () => {
     expect(finance.sql).toContain('"finance_transaction"."occurred_at" >=');
     expect(finance.params).toContain(new Date("2026-08-27T12:00:00Z").toISOString());
     expect(sqlOf(m.wheres[2]).params).toContain(now.toISOString());
+    const quiet = sqlOf(m.wheres[8]);
+    expect(quiet.sql).toContain('"project_github"."last_push_at" <=');
+    expect(quiet.params).toContain(new Date("2026-08-27T12:00:00Z").toISOString());
   });
 
   it("keeps only research ideas without evidence or with contradicting evidence alone", async () => {
     const research = [ideaA, ideaB, ideaC].map((id) => ({ id, title: id, status: "VALIDATING", createdAt: now }));
-    m.results = [[], [], [], [], [{ total: 7 }], research, [], [{ type: "INCOME", amount: "10.0000", currency: "USD" }],
+    m.results = [[], [], [], [], [{ total: 7 }], research, [], [{ type: "INCOME", amount: "10.0000", currency: "USD" }], [],
       [{ ideaId: ideaB, signal: "CONTRADICTS", total: 2 }, { ideaId: ideaC, signal: "CONTRADICTS", total: 1 }, { ideaId: ideaC, signal: "SUPPORTS", total: 1 }]];
     const attention = await getAttention(now);
     expect(attention!.researchIdeas.map((idea) => idea.id)).toEqual([ideaA, ideaB]);
     expect(attention!.researchIdeas[1]!.signals).toEqual({ supports: 0, contradicts: 2, neutral: 0 });
     expect(attention!.inbox.total).toBe(7);
     expect(attention!.finance).toEqual([expect.objectContaining({ currency: "USD", net: "10.00" })]);
-    expect(sqlOf(m.wheres[8]).params).toEqual(expect.arrayContaining([ideaA, ideaB, ideaC]));
+    expect(sqlOf(m.wheres[9]).params).toEqual(expect.arrayContaining([ideaA, ideaB, ideaC]));
   });
 
   it("skips the evidence query when no idea is under research", async () => {
     await getAttention(now);
-    expect(m.select).toHaveBeenCalledTimes(8);
+    expect(m.select).toHaveBeenCalledTimes(9);
   });
 
   it("never selects owner or visibility columns", async () => {

@@ -1,11 +1,18 @@
 import { z } from "zod";
 
+export const GITHUB_API_DEFAULT = "https://api.github.com";
+
 const schema = z.object({
   DATABASE_URL: z.string().url().optional(),
   BETTER_AUTH_SECRET: z.string().min(32).optional(),
   BETTER_AUTH_URL: z.string().url().default("http://localhost:3000"),
   OWNER_EMAIL: z.string().trim().email().transform((value) => value.toLowerCase()).optional(),
   OWNER_SETUP_TOKEN: z.string().min(32).optional(),
+  // ADR-019: optional features. An invalid value turns the feature off instead of stopping the whole app.
+  GITHUB_TOKEN: z.string().trim().min(20).optional().catch(undefined),
+  // Tests may point at a local stub; anything that is not https (or http on localhost) falls back to GitHub itself.
+  GITHUB_API_URL: z.string().url().refine((value) => /^https:\/\//.test(value) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/.test(value)).default(GITHUB_API_DEFAULT).catch(GITHUB_API_DEFAULT),
+  CRON_SECRET: z.string().min(32).optional().catch(undefined),
 });
 
 export type Env = z.infer<typeof schema>;
@@ -68,6 +75,9 @@ export function parseEnv(source: NodeJS.ProcessEnv): Env {
     BETTER_AUTH_URL: source.BETTER_AUTH_URL ?? vercelAuthUrl(source),
     OWNER_EMAIL: source.OWNER_EMAIL,
     OWNER_SETUP_TOKEN: source.OWNER_SETUP_TOKEN,
+    GITHUB_TOKEN: source.GITHUB_TOKEN || undefined,
+    GITHUB_API_URL: source.GITHUB_API_URL || undefined,
+    CRON_SECRET: source.CRON_SECRET || undefined,
   });
 
   if (isStrict(source)) {
@@ -76,6 +86,8 @@ export function parseEnv(source: NodeJS.ProcessEnv): Env {
     if (!parsed.BETTER_AUTH_SECRET) offending.push("BETTER_AUTH_SECRET");
     if (!parsed.BETTER_AUTH_URL.startsWith("https://")) offending.push("BETTER_AUTH_URL (must be https)");
     if (!parsed.OWNER_EMAIL) offending.push("OWNER_EMAIL");
+    // The API URL override exists for local and CI tests only; production always talks to GitHub itself.
+    if (parsed.GITHUB_API_URL !== GITHUB_API_DEFAULT) offending.push("GITHUB_API_URL (must not be overridden in production)");
     if (offending.length > 0) {
       // Name the offending variables only; never interpolate a variable's value here.
       throw new Error(`Missing or invalid required production environment variables: ${offending.join(", ")}`);

@@ -1,6 +1,8 @@
 // Pure selection rules for the cockpit (ADR-015). They count and flag; the owner decides what to do.
 export const WAITING_THRESHOLD_DAYS = 14;
 export const FINANCE_WINDOW_DAYS = 30;
+/** ADR-019: a linked repository with no push for this long is listed on the home. */
+export const STALE_REPOSITORY_DAYS = 30;
 const day = 24 * 60 * 60 * 1000;
 
 export const daysAgo = (now: Date, days: number) => new Date(now.getTime() - days * day);
