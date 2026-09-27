@@ -200,13 +200,23 @@ describe("buildImportRows", () => {
   it("errors when the description is empty after trimming", () => {
     const csv = csvOf("date,amount,description\n2026-01-01,10.00,   \n");
     const { errors } = buildImportRows(csv, baseMapping);
-    expect(errors).toEqual([{ line: 2, message: "Description must be 1-200 characters" }]);
+    expect(errors).toEqual([{ line: 2, message: "Description is empty" }]);
   });
 
-  it("errors when the description exceeds 200 characters", () => {
-    const csv = csvOf(`date,amount,description\n2026-01-01,10.00,${"a".repeat(201)}\n`);
-    const { errors } = buildImportRows(csv, baseMapping);
-    expect(errors).toEqual([{ line: 2, message: "Description must be 1-200 characters" }]);
+  it("shortens a description longer than the ledger's 160-character category, keeping the key on the full text", () => {
+    const long = (tail: string) => csvOf(`date,amount,description\n2026-01-01,10.00,${"a".repeat(170)}${tail}\n`);
+    const first = buildImportRows(long("x"), baseMapping);
+    const second = buildImportRows(long("y"), baseMapping);
+    expect(first.errors).toEqual([]);
+    expect(first.rows[0]!.category).toHaveLength(160);
+    expect(first.rows[0]!.category.endsWith("…")).toBe(true);
+    expect(first.rows[0]!.category).toBe(second.rows[0]!.category);
+    expect(first.rows[0]!.importKey).not.toBe(second.rows[0]!.importKey);
+  });
+
+  it("keeps a 160-character description whole", () => {
+    const { rows } = buildImportRows(csvOf(`date,amount,description\n2026-01-01,10.00,${"b".repeat(160)}\n`), baseMapping);
+    expect(rows[0]!.category).toBe("b".repeat(160));
   });
 
   it("errors when the date is invalid", () => {

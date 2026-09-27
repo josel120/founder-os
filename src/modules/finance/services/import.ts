@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 import type { ImportDateFormat, ImportDecimalSeparator, ImportMapping } from "../schemas/import.schema";
 import type { ParseCsvResult } from "./csv";
+import { IMPORT_CATEGORY_MAX } from "../schemas/import.limits";
 
 // finance_transaction.amount is numeric(18, 4): at most 14 integer digits.
 const MAX_INTEGER_DIGITS = 14;
@@ -224,11 +225,14 @@ export function buildImportRows(csv: Extract<ParseCsvResult, { ok: true }>, mapp
       currency = currencyRaw;
     }
 
-    const category = row[descriptionIdx]!.trim().replace(/\s+/g, " ");
-    if (category.length < 1 || category.length > 200) {
-      errors.push({ line, message: "Description must be 1-200 characters" });
+    const description = row[descriptionIdx]!.trim().replace(/\s+/g, " ");
+    if (description.length < 1) {
+      errors.push({ line, message: "Description is empty" });
       return;
     }
+    // The ledger's category holds at most IMPORT_CATEGORY_MAX characters (finance.schema.ts); longer bank descriptions
+    // are shortened. The import key below still uses the full description, so re-imports stay stable.
+    const category = [...description].length > IMPORT_CATEGORY_MAX ? `${[...description].slice(0, IMPORT_CATEGORY_MAX - 1).join("")}…` : description;
 
     let externalId: string | undefined;
     if (mapping.externalId !== undefined) {
@@ -240,7 +244,7 @@ export function buildImportRows(csv: Extract<ParseCsvResult, { ok: true }>, mapp
     if (externalId !== undefined) {
       importKey = `ext:${sha256Hex(`${currency}|${externalId}`)}`;
     } else {
-      const normalizedDescription = category.toLowerCase();
+      const normalizedDescription = description.toLowerCase();
       const signedAmount = type === "EXPENSE" ? `-${amount}` : amount;
       const tupleKey = `${formatDateOnly(occurredAt)}|${signedAmount}|${currency}|${normalizedDescription}`;
       const occurrence = (occurrenceCounts.get(tupleKey) ?? 0) + 1;
