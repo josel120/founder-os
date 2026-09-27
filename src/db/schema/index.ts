@@ -291,3 +291,32 @@ export const projectPublications = pgTable(
     index("project_publication_owner_id_idx").on(table.ownerId),
   ],
 );
+// ADR-019: a private, read-only snapshot of a project's GitHub repository. Counts, dates and the release tag only;
+// never code, commit messages, issue titles or bodies. The error column holds a code, never a response body.
+// No visibility column on purpose: GitHub data is always PRIVATE and no publish path reads this table.
+export const projectGithub = pgTable(
+  "project_github",
+  {
+    projectId: uuid("project_id")
+      .primaryKey()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    repoFullName: text("repo_full_name").notNull(),
+    defaultBranch: text("default_branch"),
+    lastPushAt: timestamp("last_push_at", { withTimezone: true }),
+    openIssues: integer("open_issues"),
+    openPullRequests: integer("open_pull_requests"),
+    latestReleaseTag: text("latest_release_tag"),
+    latestReleaseAt: timestamp("latest_release_at", { withTimezone: true }),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).notNull().defaultNow(),
+    syncError: text("sync_error"),
+  },
+  (table) => [
+    check("project_github_repo_format", sql`${table.repoFullName} ~ '^[A-Za-z0-9-]{1,39}/[A-Za-z0-9._-]{1,100}$'`),
+    check("project_github_counts", sql`coalesce(${table.openIssues}, 0) >= 0 AND coalesce(${table.openPullRequests}, 0) >= 0`),
+    check("project_github_sync_error", sql`${table.syncError} IS NULL OR ${table.syncError} IN ('not_found', 'unauthorized', 'rate_limited', 'unavailable')`),
+    index("project_github_owner_id_idx").on(table.ownerId),
+  ],
+);

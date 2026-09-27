@@ -7,6 +7,8 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 
 **Phase 7: Distribution and portfolio** (ADR-018). Built and verified: the owner publishes a project from its page (summary, Public or Unlisted, a preview of exactly what becomes public, confirm steps); visitors see `/portfolio` and `/p/<slug>` with allowlisted fields only; making it private again is immediate. Full E2E suite green (41 tests), pre-public privacy audit done. **Waiting on the owner:** migration 0008 in production (T-067), then Claude merges the stacked PRs #46 → #47 → #48 → T-071. Nothing becomes public until the owner publishes a project.
 
+**Phases 8 and 9 (ADR-019, ADR-020, planned by T-072)** are being built in parallel: read-only GitHub activity on projects (token and cron secret: T-074, owner) and CSV imports into the ledger with duplicate protection and undo.
+
 Still open from Phase 6: the restore drill (T-057, owner). Deployed smoke check and privacy sweep passed (T-058).
 
 ## Done
@@ -29,6 +31,6 @@ Each phase starts with a planning card, as T-017, T-026 and T-032 did. Planning 
 | # | Phase | Scope | Planning card | Why here |
 |---|---|---|---|---|
 | 7 | Distribution / portfolio (current) | Publish chosen projects: `/portfolio`, `/p/<slug>`, allowlisted fields, stacked PRs behind migration 0008 | T-065 → ADR-018, T-066..T-071 | First public surface |
-| 8 | GitHub integration | GitHub as source of truth for technical work, linked to Projects | later | Needs production for callbacks and webhooks |
-| 9 | Finance imports | File or bank imports, duplicate `external_id` policy (ADR-011) | later | Separate risk from GitHub |
+| 8 | GitHub integration (in progress) | Read-only repository snapshot per project (token, manual refresh, daily cron), stale-repo attention | T-072 → ADR-019, T-073..T-077 | Needs production for callbacks and webhooks |
+| 9 | Finance imports (in progress) | CSV import with mapping, preview, duplicate keys and undo | T-072 → ADR-020, T-078..T-082 | Separate risk from GitHub |
 | 10 | AI execution | A real provider behind `AIService` (ADR-004); humans still decide | later | Needs the data and the audits above |

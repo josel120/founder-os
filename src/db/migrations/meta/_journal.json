@@ -64,6 +64,13 @@
       "when": 1790479111286,
       "tag": "0008_project_publication",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790499663081,
+      "tag": "0009_project_github",
+      "breakpoints": true
     }
   ]
 }
