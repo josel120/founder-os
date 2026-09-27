@@ -75,6 +75,6 @@ const server = http.createServer((req, res) => {
   return send(res, 404, { message: "Not Found" });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, "127.0.0.1", () => {
   console.log(`github-stub listening on ${PORT}`);
 });

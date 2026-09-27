@@ -16,7 +16,7 @@ export const e2eStorageState = "test-results/.auth/owner.json";
 export const e2eGithubToken = "e2e-github-token-not-a-secret-0123456789";
 export const e2eCronSecret = "e2e-only-cron-secret-not-a-secret-0123456789";
 export const e2eGithubStubPort = 4010;
-export const e2eGithubStubUrl = `http://localhost:${e2eGithubStubPort}`;
+export const e2eGithubStubUrl = `http://127.0.0.1:${e2eGithubStubPort}`;
 
 export function requireDisposableDatabase(): string {
   if (!e2eDatabaseUrl) throw new Error("E2E_DATABASE_URL is not set.");

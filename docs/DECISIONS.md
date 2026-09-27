@@ -221,6 +221,8 @@ Accepted:
 - **Use**: the project page shows the snapshot; the `/private` home lists linked projects with no push for 30 days or more. Nothing changes a project's status automatically: the owner decides (ADR-004, ADR-015).
 - **Privacy**: GitHub data is PRIVATE. It is not in the ADR-018 allowlist, so the portfolio never shows it.
 
+Hosting note: the `GITHUB_API_URL` override (tests only) is refused wherever the strict env check runs: on Vercel, or with `FOUNDER_OS_STRICT_ENV=1`. Any other self-hosted production must set that flag, or the token could be sent to an overridden host.
+
 Rejected for this phase: webhooks, OAuth or a GitHub App, writing to GitHub, storing code or text, per-repository tokens, private repository names on public pages.
 
 Open questions (defaults apply): 1) stale threshold, proposed 30 days; 2) cron hour, proposed 06:00 UTC daily (Vercel Hobby allows one daily cron).
