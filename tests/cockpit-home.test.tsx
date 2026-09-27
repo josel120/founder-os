@@ -13,7 +13,7 @@ import { WorkspaceNav, WorkspaceSection } from "../src/components/workspace-nav"
 const now = new Date("2026-09-26T12:00:00Z");
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const project = (n: number, extra: Partial<Attention["actionProjects"][number]> = {}): Attention["actionProjects"][number] => ({ id: id(n), name: `Project ${n}`, lifecycle: "BUILDING", operationalStatus: "READY", nextAction: null, waitingReason: null, waitingSince: null, reviewAt: null, ...extra });
-const empty: Attention = { actionProjects: [], waitingProjects: [], reviewProjects: [], inbox: { ideas: [], total: 0 }, researchIdeas: [], decisions: [], finance: [] };
+const empty: Attention = { actionProjects: [], waitingProjects: [], reviewProjects: [], inbox: { ideas: [], total: 0 }, researchIdeas: [], decisions: [], finance: [], staleRepositories: [] };
 const filled: Attention = {
   actionProjects: [project(1, { operationalStatus: "BLOCKED", nextAction: "Renew the signing key" }), project(2, { operationalStatus: "ACTION_REQUIRED" })],
   waitingProjects: [project(3, { operationalStatus: "WAITING_REVIEW", waitingReason: "App Store review", waitingSince: new Date("2026-09-06T12:00:00Z") })],
@@ -28,6 +28,7 @@ const filled: Attention = {
     { id: id(31), title: "Drop the paid tier", ideaId: id(20), projectId: null, createdAt: new Date("2026-09-24T00:00:00Z") },
     { id: id(32), title: "Loose decision", ideaId: null, projectId: null, createdAt: new Date("2026-09-23T00:00:00Z") },
   ],
+  staleRepositories: [{ id: id(40), name: "Quiet project", repoFullName: "o/quiet", lastPushAt: new Date("2026-07-01T00:00:00Z") }],
   finance: [{ currency: "EUR", count: 2, income: "0.00", expense: "12.50", net: "−12.50", netNegative: true }, { currency: "USD", count: 1, income: "1,000.00", expense: "0.00", net: "1,000.00", netNegative: false }],
 };
 
@@ -68,6 +69,15 @@ it("shows an empty state for every section when nothing needs attention", async 
   for (const text of ["No project needs an action, has waited more than 14 days or is due for review", "Every idea under research has supporting evidence", "The inbox is empty", "No decisions logged yet", "No transactions in the last 30 days"]) expect(container.textContent).toContain(text);
   expect(hrefs(section("home-inbox"))).toEqual(["/private/ideas"]);
   expect(container.querySelector('[role="group"]')).toBeNull();
+  expect(container.querySelector('[aria-labelledby="home-repositories"]')).toBeNull();
+});
+
+it("lists quiet GitHub repositories with their last push, linking to the project", async () => {
+  await renderHome(filled);
+  const repos = section("home-repositories");
+  expect(hrefs(repos)).toEqual([`/private/projects/${id(40)}`]);
+  expect(repos.textContent).toContain("o/quiet");
+  expect(repos.textContent).toContain("Last push 2026-07-01");
 });
 
 it("lists projects that need action, wait too long or are due for review, each linking to its page", async () => {

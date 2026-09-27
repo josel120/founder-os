@@ -3,7 +3,8 @@ import { db } from "@/db";
 import { decisionLogs, evidence, financeTransactions, ideas, projects } from "@/db/schema";
 import { requireAuth } from "@/lib/require-auth";
 import { totalsByCurrency } from "@/modules/finance/services/totals";
-import { FINANCE_WINDOW_DAYS, WAITING_THRESHOLD_DAYS, daysAgo, needsResearch, type SignalCounts } from "../services/attention";
+import { listStaleRepositories } from "@/modules/github/queries/github.queries";
+import { FINANCE_WINDOW_DAYS, STALE_REPOSITORY_DAYS, WAITING_THRESHOLD_DAYS, daysAgo, needsResearch, type SignalCounts } from "../services/attention";
 
 const projectColumns = { id: projects.id, name: projects.name, lifecycle: projects.lifecycle, operationalStatus: projects.operationalStatus, nextAction: projects.nextAction, waitingReason: projects.waitingReason, waitingSince: projects.waitingSince, reviewAt: projects.reviewAt };
 // Postgres enums have no LIKE operator, so the waiting statuses are listed explicitly (ADR-009).
@@ -19,7 +20,7 @@ export async function getAttention(now: Date = new Date()) {
   if (!owner || !db) return null;
   const ownProjects = and(eq(projects.ownerId, owner.id), eq(projects.visibility, "PRIVATE"));
   const ownIdeas = and(eq(ideas.ownerId, owner.id), eq(ideas.visibility, "PRIVATE"));
-  const [actionProjects, waitingProjects, reviewProjects, inboxIdeas, [inboxTotal], researchIdeas, decisions, transactions] = await Promise.all([
+  const [actionProjects, waitingProjects, reviewProjects, inboxIdeas, [inboxTotal], researchIdeas, decisions, transactions, staleRepositories] = await Promise.all([
     db.select(projectColumns).from(projects).where(and(ownProjects, inArray(projects.operationalStatus, ["ACTION_REQUIRED", "BLOCKED"]))).orderBy(asc(projects.updatedAt)),
     db.select(projectColumns).from(projects).where(and(ownProjects, inArray(projects.operationalStatus, waitingStatuses), lte(projects.waitingSince, daysAgo(now, WAITING_THRESHOLD_DAYS)))).orderBy(asc(projects.waitingSince)),
     db.select(projectColumns).from(projects).where(and(ownProjects, lte(projects.reviewAt, now))).orderBy(asc(projects.reviewAt)),
@@ -30,6 +31,7 @@ export async function getAttention(now: Date = new Date()) {
       .where(and(eq(decisionLogs.ownerId, owner.id), eq(decisionLogs.visibility, "PRIVATE"))).orderBy(desc(decisionLogs.createdAt)).limit(5),
     db.select({ type: financeTransactions.type, amount: financeTransactions.amount, currency: financeTransactions.currency }).from(financeTransactions)
       .where(and(eq(financeTransactions.ownerId, owner.id), eq(financeTransactions.visibility, "PRIVATE"), gte(financeTransactions.occurredAt, daysAgo(now, FINANCE_WINDOW_DAYS)))),
+    listStaleRepositories(owner.id, daysAgo(now, STALE_REPOSITORY_DAYS)),
   ]);
   const counts = new Map<string, SignalCounts>();
   if (researchIdeas.length > 0) {
@@ -51,6 +53,7 @@ export async function getAttention(now: Date = new Date()) {
     researchIdeas: researchIdeas.filter((idea) => needsResearch(counts.get(idea.id))).map((idea) => ({ ...idea, signals: counts.get(idea.id) ?? { supports: 0, contradicts: 0, neutral: 0 } })),
     decisions,
     finance: totalsByCurrency(transactions),
+    staleRepositories,
   };
 }
 

@@ -11,6 +11,13 @@ export const e2eAuthSecret = process.env.E2E_AUTH_SECRET ?? "";
 export const e2eBaseUrl = "http://localhost:3000";
 export const e2eStorageState = "test-results/.auth/owner.json";
 
+// ADR-019: a fixed, e2e-only GitHub token and cron secret, and the local stub GitHub API they authenticate
+// against (tests/e2e/github-stub.mjs). Never real credentials; only used against http://localhost.
+export const e2eGithubToken = "e2e-github-token-not-a-secret-0123456789";
+export const e2eCronSecret = "e2e-only-cron-secret-not-a-secret-0123456789";
+export const e2eGithubStubPort = 4010;
+export const e2eGithubStubUrl = `http://127.0.0.1:${e2eGithubStubPort}`;
+
 export function requireDisposableDatabase(): string {
   if (!e2eDatabaseUrl) throw new Error("E2E_DATABASE_URL is not set.");
   const name = decodeURIComponent(new URL(e2eDatabaseUrl).pathname.slice(1));

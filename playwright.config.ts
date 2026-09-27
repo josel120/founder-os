@@ -1,12 +1,26 @@
 import { defineConfig, devices } from "@playwright/test";
-import { e2eAuthSecret, e2eBaseUrl, e2eDatabaseUrl, e2eOwner, e2eSetupToken, e2eStorageState, requireDisposableDatabase } from "./tests/e2e/e2e-env";
+import { e2eAuthSecret, e2eBaseUrl, e2eCronSecret, e2eDatabaseUrl, e2eGithubStubPort, e2eGithubStubUrl, e2eGithubToken, e2eOwner, e2eSetupToken, e2eStorageState, requireDisposableDatabase } from "./tests/e2e/e2e-env";
 
 // Authenticated tests run only with E2E_DATABASE_URL (a *_e2e database). The server is then pointed at it
 // explicitly, so a local run can never use the real database from .env.local.
 const authenticated = Boolean(e2eDatabaseUrl);
 const serverEnv: Record<string, string> = authenticated
-  ? { DATABASE_URL: requireDisposableDatabase(), OWNER_EMAIL: e2eOwner.email, OWNER_SETUP_TOKEN: e2eSetupToken, BETTER_AUTH_SECRET: e2eAuthSecret, BETTER_AUTH_URL: e2eBaseUrl }
+  ? {
+      DATABASE_URL: requireDisposableDatabase(), OWNER_EMAIL: e2eOwner.email, OWNER_SETUP_TOKEN: e2eSetupToken, BETTER_AUTH_SECRET: e2eAuthSecret, BETTER_AUTH_URL: e2eBaseUrl,
+      // ADR-019: the app talks only to the local stub GitHub API (tests/e2e/github-stub.mjs), never the real GitHub.
+      GITHUB_TOKEN: e2eGithubToken, GITHUB_API_URL: e2eGithubStubUrl, CRON_SECRET: e2eCronSecret,
+    }
   : {};
+
+const appServer = {
+  // Run next directly (on PATH via `pnpm test:e2e`): a pnpm wrapper may not forward SIGTERM, leaving the server alive and teardown hung.
+  command: process.env.CI ? "next start" : "next dev",
+  url: e2eBaseUrl,
+  reuseExistingServer: !process.env.CI && !authenticated,
+  timeout: 120_000,
+  gracefulShutdown: { signal: "SIGTERM" as const, timeout: 5_000 },
+  env: serverEnv,
+};
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -17,15 +31,18 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 2 : undefined,
   use: { baseURL: e2eBaseUrl, trace: "retain-on-failure" },
-  webServer: {
-    // Run next directly (on PATH via `pnpm test:e2e`): a pnpm wrapper may not forward SIGTERM, leaving the server alive and teardown hung.
-    command: process.env.CI ? "next start" : "next dev",
-    url: e2eBaseUrl,
-    reuseExistingServer: !process.env.CI && !authenticated,
-    timeout: 120_000,
-    gracefulShutdown: { signal: "SIGTERM", timeout: 5_000 },
-    env: serverEnv,
-  },
+  webServer: authenticated
+    ? [
+        appServer,
+        {
+          command: "node tests/e2e/github-stub.mjs",
+          url: `${e2eGithubStubUrl}/`,
+          reuseExistingServer: false,
+          timeout: 20_000,
+          env: { GITHUB_STUB_PORT: String(e2eGithubStubPort), E2E_GITHUB_TOKEN: e2eGithubToken },
+        },
+      ]
+    : appServer,
   projects: [
     {
       name: "chromium",
