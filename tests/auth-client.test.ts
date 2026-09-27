@@ -34,7 +34,12 @@ it("keeps local dev and E2E on http://localhost:3000", async () => {
   expect(await firstRequestUrl()).toBe("http://localhost:3000/api/auth/get-session");
 });
 
-it("uses NEXT_PUBLIC_BETTER_AUTH_URL when it is set", async () => {
-  vi.stubEnv("NEXT_PUBLIC_BETTER_AUTH_URL", "https://founder-os.example.com");
-  expect(await firstRequestUrl()).toBe("https://founder-os.example.com/api/auth/get-session");
+it("ignores a stale NEXT_PUBLIC_BETTER_AUTH_URL and stays on the page's origin (T-064)", async () => {
+  if (!dom) throw new Error("This test needs Vitest's jsdom environment.");
+  for (const stale of ["https://founder-os.example.com", "http://localhost:3000"]) {
+    vi.resetModules();
+    vi.stubEnv("NEXT_PUBLIC_BETTER_AUTH_URL", stale);
+    dom.reconfigure({ url: "https://founder-fnkb0pxq8-team.vercel.app/login" });
+    expect(await firstRequestUrl()).toBe("https://founder-fnkb0pxq8-team.vercel.app/api/auth/get-session");
+  }
 });

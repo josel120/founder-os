@@ -108,7 +108,7 @@ npx vercel env add ENABLE_EXPERIMENTAL_COREPACK preview      # value: 1
 npx vercel env add DATABASE_URL production            # paste the Neon POOLED production string
 npx vercel env add BETTER_AUTH_SECRET production       # paste output of: openssl rand -base64 32
 npx vercel env add OWNER_EMAIL production               # the one account allowed to sign in
-# BETTER_AUTH_URL and NEXT_PUBLIC_BETTER_AUTH_URL are optional on Vercel (derived, Section 4); set them
+# BETTER_AUTH_URL is optional on Vercel (derived, Section 4) and NEXT_PUBLIC_BETTER_AUTH_URL is not used; set BETTER_AUTH_URL
 # only for a custom origin the Vercel system variables do not name.
 
 # Previews have no database by design (see "One command" above); they only get their own secret.
@@ -136,7 +136,7 @@ Do not set `OWNER_SETUP_TOKEN` yet — see Section 5.
 | `DATABASE_POOLED` | Forces pooled-client tuning (`prepare: false`, small `max`) when the URL host doesn't contain `-pooler.` | Vercel project env, only if not using a Neon pooled hostname | No |
 | `BETTER_AUTH_SECRET` | Signs and encrypts session tokens | Vercel project env | Yes |
 | `BETTER_AUTH_URL` | Public origin Better Auth issues cookies/callbacks for; must be `https://` in production | Optional on Vercel: when unset it is derived from `VERCEL_PROJECT_PRODUCTION_URL` (production) or `VERCEL_BRANCH_URL`, else `VERCEL_URL` (previews). Set it only for another origin | Yes, but derived on Vercel |
-| `NEXT_PUBLIC_BETTER_AUTH_URL` | Origin the browser client calls | Optional: when unset, the client uses the page's own origin | No |
+| `NEXT_PUBLIC_BETTER_AUTH_URL` | Not used since T-064: the browser always calls the page's own origin. Delete it from Vercel if it is set | — | No |
 | `OWNER_EMAIL` | The one account allowed to hold private data (ADR-005) | Vercel project env | Yes |
 | `OWNER_SETUP_TOKEN` | One-time privileged header value that unlocks the sign-up endpoint for the owner only | Vercel project env, set temporarily (Section 5) then removed | No — must be absent outside first-owner setup |
 | `ENABLE_EXPERIMENTAL_COREPACK` | Makes Vercel install the pnpm version pinned in `package.json` (value `1`) | Vercel project env (Production + Preview) | Yes (build) |
