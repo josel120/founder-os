@@ -7,7 +7,7 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 |---|---|---|---|---|---|
 | T-057 | Apply production migrations, create the owner and run a restore drill | todo | human | S | T-053, T-054, T-056 |
 | T-065 | Plan Distribution and portfolio (Phase 7) and its boundaries | done | claude | M | T-058 |
-| T-066 | Add the project_publication table (migration 0008) | todo | claude | S | T-065 |
+| T-066 | Add the project_publication table (migration 0008) | review | claude | S | T-065 |
 | T-067 | Apply migration 0008 in production, then merge the Phase 7 stack | todo | human | S | T-066 |
 | T-068 | Publication domain: publish actions and allowlisted public queries | todo | claude | M | T-066 |
 | T-069 | Owner publish panel with a preview of what becomes public | todo | claude | M | T-068 |

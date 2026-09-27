@@ -263,3 +263,31 @@ export const evidence = pgTable(
     index("evidence_idea_id_idx").on(table.ideaId),
   ],
 );
+// ADR-018: a published project. The project row stays PRIVATE; this record holds the public choice and the
+// owner-written summary. Unpublishing deletes the row. PRIVATE is not a valid value here.
+export const projectPublications = pgTable(
+  "project_publication",
+  {
+    projectId: uuid("project_id")
+      .primaryKey()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    visibility: visibility("visibility").notNull(),
+    summary: text("summary").notNull(),
+    publishedAt: timestamp("published_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    check("project_publication_not_private", sql`${table.visibility} <> 'PRIVATE'`),
+    check("project_publication_summary_length", sql`char_length(btrim(${table.summary})) BETWEEN 1 AND 500`),
+    index("project_publication_list_idx").on(table.visibility, table.publishedAt),
+    index("project_publication_owner_id_idx").on(table.ownerId),
+  ],
+);
