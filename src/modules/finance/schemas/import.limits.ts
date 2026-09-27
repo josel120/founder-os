@@ -5,3 +5,6 @@ export const IMPORT_FILE_NAME_MAX = 200;
 
 /** Same limit as a manually entered category (finance.schema.ts). */
 export const IMPORT_CATEGORY_MAX = 160;
+
+/** `finance_transaction.source` for imported rows. */
+export const IMPORT_SOURCE = "CSV import";
