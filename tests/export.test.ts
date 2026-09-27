@@ -3,17 +3,18 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { PgDialect, getTableConfig, type PgTable } from "drizzle-orm/pg-core";
 import type { SQL } from "drizzle-orm";
 
-const m = vi.hoisted(() => ({ from: vi.fn(), where: vi.fn(), auth: vi.fn(), report: vi.fn(), rows: new Map<string, unknown[]>() }));
-vi.mock("@/db", () => ({
-  db: {
+const m = vi.hoisted(() => ({ tx: vi.fn(), from: vi.fn(), where: vi.fn(), auth: vi.fn(), report: vi.fn(), rows: new Map<string, unknown[]>() }));
+vi.mock("@/db", () => {
+  const tx = {
     select: () => ({
       from: (table: unknown) => {
         m.from(table);
         return { where: (where: unknown) => { m.where(table, where); return Promise.resolve(m.rows.get(getTableConfig(table as PgTable).name) ?? []); } };
       },
     }),
-  },
-}));
+  };
+  return { db: { transaction: async <T>(run: (t: typeof tx) => Promise<T>, config: unknown) => { m.tx(config); return run(tx); } } };
+});
 vi.mock("@/lib/require-auth", () => ({ requireAuth: m.auth }));
 vi.mock("@/lib/report-error", () => ({ reportError: m.report }));
 import { EXPORT_FORMAT, EXPORT_TABLES, buildOwnerExport } from "@/modules/export/services/export";
@@ -30,6 +31,7 @@ it("reads every owned table with the session owner's id and no auth or rate-limi
     expect(query.sql).toBe(`"${getTableConfig(table as PgTable).name}"."owner_id" = $1`);
     expect(query.params).toEqual(["owner-a"]);
   }
+  expect(m.tx).toHaveBeenCalledWith({ isolationLevel: "repeatable read", accessMode: "read only" });
   expect(exported?.format).toBe(EXPORT_FORMAT);
   expect(exported?.exportedAt).toBe("2026-09-27T16:00:00.000Z");
   expect(Object.keys(exported!.data).sort()).toEqual(Object.keys(EXPORT_TABLES).sort());

@@ -283,7 +283,7 @@ The owner can download everything they have recorded as one JSON file: a backup 
 
 Accepted:
 - **Route**: `GET /private/export`, behind the `/private` middleware and `requireAuth()`; 401 without the owner's session. Response is `application/json` with `Content-Disposition: attachment; filename="founder-os-export-YYYY-MM-DD.json"`, `Cache-Control: no-store` and `X-Robots-Tag: noindex, nofollow`.
-- **Content**: `{ format: "founder-os-export", version: 1, exportedAt, counts, data }` with every column of the owner's rows in problems, ideas, evidence, decisions, projects, project publications, GitHub snapshots, finance imports, finance transactions and AI runs, each read with `owner_id = <session owner>`. Auth tables (user, session, account, verification) and rate limits are excluded: they hold credentials and IP data, not the owner's work.
+- **Content**: `{ format: "founder-os-export", version: 1, exportedAt, counts, data }` with every column of the owner's rows in problems, ideas, evidence, decisions, projects, project publications, GitHub snapshots, finance imports, finance transactions and AI runs, each read with `owner_id = <session owner>` inside one read-only, repeatable-read transaction (a consistent snapshot). Rows without an owner (pre-ADR-006 legacy rows not yet adopted) are not included. Auth tables (user, session, account, verification) and rate limits are excluded: they hold credentials and IP data, not the owner's work.
 - **UI**: an "Export data" link in the private header.
 - **Privacy**: the file is the owner's own data, served only to the owner and never cached; nothing is logged beyond `reportError("export")` on failure.
 
