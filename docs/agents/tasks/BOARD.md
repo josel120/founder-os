@@ -30,4 +30,4 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-086 | Anthropic client, prompt builder and output schema | review | claude | M | T-084 |
 | T-087 | AI run actions, daily cap and run queries | review | claude | M | T-086 |
 | T-088 | Idea AI panel with disclosure and run history | review | claude | M | T-087 |
-| T-089 | Verify AI execution end to end and audit privacy | todo | claude | M | T-088 |
+| T-089 | Verify AI execution end to end and audit privacy | review | claude | M | T-088 |

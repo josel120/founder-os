@@ -10,7 +10,7 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 - GitHub: a private repository snapshot per project, refresh button, daily cron, quiet repositories on the home. Waits on the owner's read-only token and cron secret (T-074); until then the panel says GitHub is not connected.
 - Finance imports: CSV mapping, preview, confirm, duplicates skipped on re-import, undo per import.
 
-Next: **Phase 10, AI execution** (ADR-021, planned in T-083): an owner-triggered second opinion on an idea (assessment and research summary) from Anthropic's API, recorded in `ai_run` (0011); it never changes a status. Cards T-084..T-089; the owner sets the key and spend limit (T-085). Still open: the restore drill (T-057) and T-074.
+**Phase 10, AI execution** (ADR-021) is built and verified in stacked PRs #60–#65: an owner-triggered second opinion on an idea (assessment and research summary) from Anthropic's API, recorded in `ai_run` (0011); it never changes a status. It waits on the owner: API key, spend limit and approval to apply 0011 (T-085), then the merges. Still open: the restore drill (T-057) and T-074.
 
 ## Done
 

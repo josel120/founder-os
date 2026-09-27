@@ -271,4 +271,6 @@ Open questions (defaults apply): 1) model, proposed `claude-sonnet-5`; 2) daily 
 
 Cards: T-084 `ai_run` schema and migration 0011 (claude) · T-085 API key, spend limit and applying 0011 in production (human) · T-086 Anthropic client, prompt builder and output schema (claude) · T-087 run actions, daily cap and run queries (claude) · T-088 idea AI panel with disclosure and history (claude) · T-089 AI E2E against a local stub and privacy audit (claude).
 
+Hosting note: as with `GITHUB_API_URL` (ADR-019), the `AI_API_URL` override is refused only where the strict env check runs (Vercel, or `FOUNDER_OS_STRICT_ENV=1`). Any other self-hosted production must set that flag, or the key and PRIVATE text could be sent to an overridden host.
+
 Order: T-084 merges first (nothing reads the table). Code that reads `ai_run` waits until 0011 is applied in production (RUNBOOK section 6).
