@@ -4,20 +4,19 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 
 ## Current state (2026-09-27)
 
-- Merged on `master` (1815201): Phase 0 foundation, Idea OS (T-001..T-016), Project OS (T-017..T-024, T-038), Finance OS (T-026..T-030), Research OS (T-032..T-037, T-040), audit T-043/T-044/T-045, plans T-041/T-042, Workspace cockpit T-046..T-051, Phase 6 code T-052..T-055 and T-059..T-062, process cards T-012/T-025/T-031/T-039.
+- Merged on `master`: Phase 0 foundation, Idea OS (T-001..T-016), Project OS (T-017..T-024, T-038), Finance OS (T-026..T-030), Research OS (T-032..T-037, T-040), audit T-043/T-044/T-045, plans T-041/T-042, Workspace cockpit T-046..T-051, Phase 6 T-052..T-056, T-058..T-064, Phase 7 T-065..T-071, Phase 8 T-072/T-073/T-075, process cards T-012/T-025/T-031/T-039.
 - Security model: owner-only access via `OWNER_EMAIL`, closed signup, every private query/mutation uses session owner + `id + owner_id + PRIVATE` (ADR-005/006/008/009/011).
-- Web layer (ADR-014, T-043): security headers, `noindex`, cookie-presence middleware for `/private` pages with a validated `?next=`, sign-out, closed `/register` page. `pnpm audit`: 21 advisories (1 critical) → 3 dev-only (T-043) → 0 (T-044).
-- Migrations 0000..0007 exist on `master`; 0000..0006 applied locally (T-034). The owner applies 0007 (`rate_limit`, T-053) with `pnpm db:migrate` on master; the T-053 code in production mode needs it. Historical rows were adopted per ADR-006.
-- Last CI verification (PR #39, run `36275054185`): lint, typecheck, 420 unit tests, build, 37/37 authenticated/anonymous E2E passed.
+- Web layer (ADR-014, T-043): security headers, `noindex`, cookie-presence middleware for `/private` pages with a validated `?next=`, sign-out, closed `/register` page. `pnpm audit`: 0 advisories (T-044).
+- Migrations 0000..0010; production has all of them (0008–0010 applied 2026-09-27 by Claude with the owner's approval, after snapshot `pre-0008-20260927`). Historical rows were adopted per ADR-006.
 - Branch/PR per card (ADR-010). Merges, force pushes, pushes to `master`, real-data migrations and secrets stay human.
 
-## Phases 8–9 (planned 2026-09-27, T-072)
+## Phases 8–9 (built 2026-09-27)
 
-- ADR-019 GitHub: read-only token (T-074 owner), `project_github` snapshot (0009), refresh + daily cron, stale repos on home. ADR-020 imports: CSV mapping/preview/confirm/undo, `import_key` duplicate index (0010). Code PRs wait for 0008–0010 in production (T-067).
+- ADR-019 GitHub: read-only token (T-074 owner), `project_github` snapshot (0009), refresh + daily cron, quiet repos on home. ADR-020 imports: CSV mapping/preview/confirm/undo, `import_key` duplicate index (0010). PRs merge after Phase 7.
 
-## Phase 7: Distribution and portfolio (planned, 2026-09-27)
+## Phase 7: Distribution and portfolio (merged)
 
-- T-065: ADR-018. Publish chosen projects only, as a separate `project_publication` record (migration 0008) with a field allowlist; `/portfolio` and `/p/<slug>`; `noindex` kept. Cards T-066..T-071; stacked PRs merge after the owner applies 0008 in production (T-067).
+- ADR-018: publish chosen projects only (`project_publication`, 0008), field allowlist, `/portfolio` and `/p/<slug>`, owner publish panel with preview, `noindex` kept. PRs #44–#49; full E2E and pre-public privacy audits clean.
 
 ## Phase 6: Production readiness (done except the T-057 restore drill)
 

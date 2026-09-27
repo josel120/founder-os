@@ -12,6 +12,8 @@ import { isWaiting, operationalTone, projectLabel, toDateInput } from "@/modules
 import { ProjectFinance } from "@/modules/projects/components/project-finance";
 import { getPrivateIdea } from "@/modules/ideas/queries/idea.queries";
 import { listPrivateFinanceTransactions } from "@/modules/finance/queries/finance.queries";
+import { getPrivatePublication } from "@/modules/portfolio/queries/publication.queries";
+import { PublishPanel } from "@/modules/portfolio/components/publish-panel";
 
 // Generic on purpose: private names never go into metadata.
 export const metadata: Metadata = { title: "Project" };
@@ -19,8 +21,10 @@ export const metadata: Metadata = { title: "Project" };
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   if (!(await requireAuth())) redirect("/login");
   const { id } = await params;
-  const [project, decisions, transactions] = await Promise.all([getPrivateProject(id), listDecisionsForProject(id), listPrivateFinanceTransactions(id)]);
+  const [project, decisions, transactions, publication] = await Promise.all([getPrivateProject(id), listDecisionsForProject(id), listPrivateFinanceTransactions(id), getPrivatePublication(id)]);
   if (!project) notFound();
+  // The publication row is only ever PUBLIC or UNLISTED (DB CHECK, ADR-018); the shared enum type is broader.
+  const publicationForPanel = publication && publication.visibility !== "PRIVATE" ? { visibility: publication.visibility, summary: publication.summary, publishedAt: publication.publishedAt } : null;
   // getPrivateIdea is owner-scoped: an origin idea that is not the owner's own PRIVATE idea renders nothing.
   const originIdea = project.originIdeaId ? await getPrivateIdea(project.originIdeaId) : null;
   const links = [["Repository", project.repository], ["Website", project.website], ["Play Store", project.playStoreUrl], ["App Store", project.appStoreUrl]].filter((link): link is [string, string] => Boolean(link[1]));
@@ -41,6 +45,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     <ProjectStatusForm projectId={project.id} lifecycle={project.lifecycle} operationalStatus={project.operationalStatus} nextAction={project.nextAction ?? ""} waitingReason={project.waitingReason ?? ""} waitingSince={toDateInput(project.waitingSince)} reviewAt={toDateInput(project.reviewAt)} />
     <EditProjectForm project={{ id: project.id, name: project.name, slug: project.slug, description: project.description, repository: project.repository, website: project.website, playStoreUrl: project.playStoreUrl, appStoreUrl: project.appStoreUrl, currentVersion: project.currentVersion, productionVersion: project.productionVersion }} />
     <ProjectFinance transactions={transactions} />
+    <PublishPanel projectId={project.id} publication={publicationForPanel} preview={{ name: project.name, slug: project.slug, lifecycle: project.lifecycle, releasedAt: project.releasedAt, website: project.website, playStoreUrl: project.playStoreUrl, appStoreUrl: project.appStoreUrl }} />
     <div className="mt-12 space-y-5"><h2 className="text-xl font-semibold tracking-tight">Decisions</h2><DecisionList decisions={decisions} empty="No decisions about this project yet." /><CaptureDecisionForm projectId={project.id} /></div>
   </section>;
 }

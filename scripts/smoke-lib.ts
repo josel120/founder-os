@@ -10,7 +10,7 @@ const SECURITY_HEADERS: Record<string, (value: string) => boolean> = {
   "permissions-policy": (value) => value.includes("camera=()"),
 };
 const PAGE_CSP = ["script-src 'self' 'nonce-", "'strict-dynamic'", "connect-src 'self'", "frame-ancestors 'none'", "object-src 'none'", "form-action 'self'"];
-const NOINDEX_PATHS = ["/login", "/register", "/private", "/api/auth/get-session"];
+const NOINDEX_PATHS = ["/login", "/register", "/private", "/api/auth/get-session", "/portfolio", "/p/smoke-check"];
 const PRIVATE_PATHS = ["/private", "/private/ideas", "/private/finance"];
 
 export function normalizeBaseUrl(input: string | undefined) {
@@ -53,6 +53,9 @@ export async function runSmoke(baseUrl: string, fetchImpl: Fetch): Promise<Smoke
     const ok = response.status === 307 && target?.origin === baseUrl && target.pathname === "/login" && target.searchParams.get("next") === path;
     check(`anonymous ${path} → /login?next=`, ok, `status ${response.status}, location ${location ?? "none"}`);
   }
+
+  const portfolio = await get("/portfolio");
+  check("/portfolio is public (200, no sign-in)", portfolio.status === 200, `status ${portfolio.status}`);
 
   const register = await get("/register");
   check("/register is closed", register.status === 200 && (await register.text()).includes("Registration is closed"), `status ${register.status} without the closed notice`);
