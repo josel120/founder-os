@@ -25,3 +25,9 @@ export function requireDisposableDatabase(): string {
   if (e2eSetupToken.length < 32 || e2eAuthSecret.length < 32) throw new Error("E2E_SETUP_TOKEN and E2E_AUTH_SECRET must be at least 32 characters.");
   return e2eDatabaseUrl;
 }
+
+// ADR-021: a fixed, e2e-only Anthropic key and the local stub Messages API it authenticates against
+// (tests/e2e/ai-stub.mjs). Never a real key; only used against http://127.0.0.1.
+export const e2eAiKey = "e2e-anthropic-key-not-a-secret-0123456789";
+export const e2eAiStubPort = 4011;
+export const e2eAiStubUrl = `http://127.0.0.1:${e2eAiStubPort}`;

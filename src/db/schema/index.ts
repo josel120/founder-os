@@ -5,6 +5,7 @@ import {
   check,
   index,
   integer,
+  jsonb,
   numeric,
   pgEnum,
   pgTable,
@@ -67,6 +68,9 @@ export const evidenceSignal = pgEnum("evidence_signal", [
   "CONTRADICTS",
   "NEUTRAL",
 ]);
+
+export const aiRunKind = pgEnum("ai_run_kind", ["ASSESSMENT", "SUMMARY"]);
+export const aiRunStatus = pgEnum("ai_run_status", ["RUNNING", "SUCCEEDED", "FAILED"]);
 
 export const users = pgTable("user", {
   id: text("id").primaryKey(),
@@ -346,5 +350,44 @@ export const projectGithub = pgTable(
     check("project_github_counts", sql`coalesce(${table.openIssues}, 0) >= 0 AND coalesce(${table.openPullRequests}, 0) >= 0`),
     check("project_github_sync_error", sql`${table.syncError} IS NULL OR ${table.syncError} IN ('not_found', 'unauthorized', 'rate_limited', 'unavailable')`),
     index("project_github_owner_id_idx").on(table.ownerId),
+  ],
+);
+
+// ADR-021: one row per AI run on an idea. Inserted as RUNNING before the provider call, finished after it.
+// The prompt is never stored; output holds only the validated tool result.
+export const aiRuns = pgTable(
+  "ai_run",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    ideaId: uuid("idea_id")
+      .notNull()
+      .references(() => ideas.id, { onDelete: "restrict" }),
+    kind: aiRunKind("kind").notNull(),
+    status: aiRunStatus("status").notNull().default("RUNNING"),
+    recommendation: text("recommendation"),
+    output: jsonb("output"),
+    model: text("model").notNull(),
+    promptVersion: text("prompt_version").notNull(),
+    inputTokens: integer("input_tokens"),
+    outputTokens: integer("output_tokens"),
+    error: text("error"),
+    visibility: visibility("visibility").notNull().default("PRIVATE"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+  },
+  (table) => [
+    check("ai_run_recommendation", sql`((${table.kind} = 'ASSESSMENT' AND ${table.status} = 'SUCCEEDED') = (${table.recommendation} IS NOT NULL)) AND (${table.recommendation} IS NULL OR ${table.recommendation} IN ('CONTINUE', 'INVESTIGATE_MORE', 'PAUSE', 'REJECT'))`),
+    check("ai_run_outcome", sql`(${table.status} = 'SUCCEEDED') = (${table.output} IS NOT NULL) AND (${table.status} = 'FAILED') = (${table.error} IS NOT NULL) AND (${table.status} = 'RUNNING') = (${table.finishedAt} IS NULL)`),
+    check("ai_run_error", sql`${table.error} IS NULL OR ${table.error} IN ('unauthorized', 'rate_limited', 'unavailable', 'invalid_output', 'too_large', 'interrupted')`),
+    check("ai_run_tokens", sql`coalesce(${table.inputTokens}, 0) >= 0 AND coalesce(${table.outputTokens}, 0) >= 0`),
+    check("ai_run_labels", sql`char_length(${table.model}) BETWEEN 1 AND 100 AND char_length(${table.promptVersion}) BETWEEN 1 AND 40`),
+    // ADR-021: AI runs are never published; no other visibility can be stored.
+    check("ai_run_private", sql`${table.visibility} = 'PRIVATE'`),
+    index("ai_run_owner_created_idx").on(table.ownerId, table.createdAt),
+    index("ai_run_idea_created_idx").on(table.ideaId, table.createdAt),
+    uniqueIndex("ai_run_one_running_per_idea_idx").on(table.ideaId).where(sql`${table.status} = 'RUNNING'`),
   ],
 );

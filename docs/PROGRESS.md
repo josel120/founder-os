@@ -10,9 +10,9 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - Migrations 0000..0010; production has all of them (0008–0010 applied 2026-09-27 by Claude with the owner's approval, after snapshot `pre-0008-20260927`). Historical rows were adopted per ADR-006.
 - Branch/PR per card (ADR-010). Merges, force pushes, pushes to `master`, real-data migrations and secrets stay human.
 
-## Phase 10: AI execution (planned)
+## Phase 10: AI execution (built; waits on T-085)
 
-- ADR-021 (T-083): Anthropic Messages API via fetch, owner-click only, input allowlist, Zod-validated tool output, `ai_run` (0011), 20 runs/day. Cards T-084..T-089; T-085 is the owner's key, spend limit and 0011 approval.
+- ADR-021: owner-click assessment and research summary via Anthropic (fetch, allowlisted input, forced tool output + Zod), `ai_run` (0011, one RUNNING per idea, 20 runs/day). PRs #60–#65 stacked; unit 720, E2E 57/57, privacy audits clean. Waits on the owner's key, spend limit and 0011 approval (T-085).
 
 ## Phases 7–9 (merged and live 2026-09-27)
 

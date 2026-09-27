@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 export const GITHUB_API_DEFAULT = "https://api.github.com";
+export const AI_API_DEFAULT = "https://api.anthropic.com";
+const httpsOrLocalhost = (value: string) => /^https:\/\//.test(value) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/.test(value);
 
 const schema = z.object({
   DATABASE_URL: z.string().url().optional(),
@@ -11,8 +13,13 @@ const schema = z.object({
   // ADR-019: optional features. An invalid value turns the feature off instead of stopping the whole app.
   GITHUB_TOKEN: z.string().trim().min(20).optional().catch(undefined),
   // Tests may point at a local stub; anything that is not https (or http on localhost) falls back to GitHub itself.
-  GITHUB_API_URL: z.string().url().refine((value) => /^https:\/\//.test(value) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/.test(value)).default(GITHUB_API_DEFAULT).catch(GITHUB_API_DEFAULT),
+  GITHUB_API_URL: z.string().url().refine(httpsOrLocalhost).default(GITHUB_API_DEFAULT).catch(GITHUB_API_DEFAULT),
   CRON_SECRET: z.string().min(32).optional().catch(undefined),
+  // ADR-021: optional feature. Without a key the feature is off; an invalid optional value turns it off (ADR-019).
+  ANTHROPIC_API_KEY: z.string().trim().min(20).optional().catch(undefined),
+  AI_MODEL: z.string().regex(/^[a-z0-9][a-z0-9.-]{0,99}$/).default("claude-sonnet-5").catch("claude-sonnet-5"),
+  // Tests may point at a local stub; anything that is not https (or http on localhost) falls back to Anthropic itself.
+  AI_API_URL: z.string().url().refine(httpsOrLocalhost).default(AI_API_DEFAULT).catch(AI_API_DEFAULT),
 });
 
 export type Env = z.infer<typeof schema>;
@@ -78,6 +85,9 @@ export function parseEnv(source: NodeJS.ProcessEnv): Env {
     GITHUB_TOKEN: source.GITHUB_TOKEN || undefined,
     GITHUB_API_URL: source.GITHUB_API_URL || undefined,
     CRON_SECRET: source.CRON_SECRET || undefined,
+    ANTHROPIC_API_KEY: source.ANTHROPIC_API_KEY || undefined,
+    AI_MODEL: source.AI_MODEL || undefined,
+    AI_API_URL: source.AI_API_URL || undefined,
   });
 
   if (isStrict(source)) {
@@ -88,6 +98,8 @@ export function parseEnv(source: NodeJS.ProcessEnv): Env {
     if (!parsed.OWNER_EMAIL) offending.push("OWNER_EMAIL");
     // The API URL override exists for local and CI tests only; production always talks to GitHub itself.
     if (parsed.GITHUB_API_URL !== GITHUB_API_DEFAULT) offending.push("GITHUB_API_URL (must not be overridden in production)");
+    // Same as above: AI_API_URL is a test-only override (ADR-021).
+    if (parsed.AI_API_URL !== AI_API_DEFAULT) offending.push("AI_API_URL (must not be overridden in production)");
     if (offending.length > 0) {
       // Name the offending variables only; never interpolate a variable's value here.
       throw new Error(`Missing or invalid required production environment variables: ${offending.join(", ")}`);
