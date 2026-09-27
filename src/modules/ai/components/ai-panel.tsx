@@ -5,7 +5,7 @@ const recommendationLabel: Record<string, string> = { CONTINUE: "Continue", INVE
 const errorText: Record<string, string> = {
   unauthorized: "Anthropic refused the API key.",
   rate_limited: "Anthropic's rate limit was reached.",
-  unavailable: "The provider did not answer.",
+  unavailable: "The provider did not answer or returned an error.",
   invalid_output: "The answer did not have the expected shape, so it was not kept.",
   too_large: "The notes were too long to send.",
   interrupted: "The run was interrupted before it finished.",

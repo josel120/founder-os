@@ -11,6 +11,12 @@ const failures: Record<string, string> = {
   unauthorized: "Anthropic refused the API key. Check ANTHROPIC_API_KEY.",
   rate_limited: "Anthropic's rate limit was reached. Try again later.",
   unavailable: "The AI provider did not answer. Try again later.",
+  billing: "Anthropic says this account has no credit. Add credit under Billing in the Anthropic console, then try again.",
+  model_unavailable: "The configured model (AI_MODEL) is not available to this Anthropic account.",
+  bad_request: "Anthropic rejected the request. The error type is in the server logs (ai.provider).",
+  overloaded: "Anthropic is overloaded right now. Try again in a minute.",
+  server_error: "Anthropic returned a server error. Try again later.",
+  network: "Could not reach Anthropic. Try again later.",
   invalid_output: "The answer did not have the expected shape, so it was not kept. Try again.",
   too_large: "This idea's notes are too long to send.",
   interrupted: "The run took too long and was stopped. Try again.",
@@ -19,7 +25,7 @@ const failures: Record<string, string> = {
 function resultFor(outcome: RunOutcome, done: string): Result {
   switch (outcome.status) {
     case "succeeded": return { ok: true, message: done };
-    case "failed": return { ok: false, error: failures[outcome.error] ?? failures.unavailable! };
+    case "failed": return { ok: false, error: failures[outcome.reason ?? outcome.error] ?? failures.unavailable! };
     case "not_configured": return { ok: false, error: "AI is not connected yet: ANTHROPIC_API_KEY is not set." };
     case "not_found": return { ok: false, error: "Idea not found." };
     case "too_large": return { ok: false, error: failures.too_large! };

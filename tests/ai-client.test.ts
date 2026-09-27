@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { runTool, type Fetch } from "../src/modules/ai/services/anthropic-client";
 import { ASSESSMENT_TOOL_NAME, SUMMARY_TOOL_NAME } from "../src/modules/ai/services/output";
 import { ASSESSMENT_SYSTEM_PROMPT, SUMMARY_SYSTEM_PROMPT, type IdeaPromptText } from "../src/modules/ai/services/prompt";
@@ -116,12 +116,40 @@ describe("runTool error mapping", () => {
     [403, "unauthorized"],
     [429, "rate_limited"],
     [413, "too_large"],
-    [500, "unavailable"],
-    [502, "unavailable"],
   ])("maps HTTP %i to %s", async (status, expected) => {
     const { fetchImpl } = stub({ status, body: { error: { type: "some_error" } } });
     const result = await runTool({ ...base, kind: "ASSESSMENT", fetchImpl });
     expect(result).toEqual({ ok: false, error: expected });
+  });
+
+  it.each([
+    [500, { type: "api_error" }, "server_error"],
+    [502, {}, "server_error"],
+    [529, { type: "overloaded_error" }, "overloaded"],
+    [404, { type: "not_found_error", message: "model: claude-x" }, "model_unavailable"],
+    [402, { type: "billing_error" }, "billing"],
+    [400, { type: "invalid_request_error", message: "Your credit balance is too low to access the Anthropic API." }, "billing"],
+    [400, { type: "invalid_request_error", message: "tools.0.input_schema: bad" }, "bad_request"],
+  ])("maps HTTP %i %o to unavailable with reason %s", async (status, error, reason) => {
+    const { fetchImpl } = stub({ status, body: { type: "error", error } });
+    const result = await runTool({ ...base, kind: "ASSESSMENT", fetchImpl });
+    expect(result).toEqual({ ok: false, error: "unavailable", reason });
+  });
+
+  it("logs only the status and a well-formed error type, never the message or the key", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { fetchImpl } = stub({ status: 400, body: { error: { type: "invalid_request_error", message: "secret prompt text sk-ant-leak" } } });
+    await runTool({ ...base, kind: "ASSESSMENT", fetchImpl });
+    const { fetchImpl: odd } = stub({ status: 500, body: { error: { type: "Weird Type <script>" } } });
+    await runTool({ ...base, kind: "ASSESSMENT", fetchImpl: odd });
+    const lines = warn.mock.calls.map((call) => call.join(" "));
+    warn.mockRestore();
+    expect(lines).toEqual([
+      '[founder-os] ai provider error {"scope":"ai.provider","status":400,"type":"invalid_request_error"}',
+      '[founder-os] ai provider error {"scope":"ai.provider","status":500,"type":"unknown"}',
+    ]);
+    expect(lines.join("")).not.toContain(base.apiKey);
+    expect(lines.join("")).not.toContain("secret prompt");
   });
 
   it("maps a 400 whose error type mentions request_too_large to too_large", async () => {
@@ -136,16 +164,16 @@ describe("runTool error mapping", () => {
     expect(result).toEqual({ ok: false, error: "too_large" });
   });
 
-  it("maps any other 400 to unavailable", async () => {
+  it("maps any other 400 to unavailable with reason bad_request", async () => {
     const { fetchImpl } = stub({ status: 400, body: { error: { type: "invalid_request_error" } } });
     const result = await runTool({ ...base, kind: "ASSESSMENT", fetchImpl });
-    expect(result).toEqual({ ok: false, error: "unavailable" });
+    expect(result).toEqual({ ok: false, error: "unavailable", reason: "bad_request" });
   });
 
   it("maps a network failure to unavailable", async () => {
     const { fetchImpl } = stub(new TypeError("network down"));
     const result = await runTool({ ...base, kind: "ASSESSMENT", fetchImpl });
-    expect(result).toEqual({ ok: false, error: "unavailable" });
+    expect(result).toEqual({ ok: false, error: "unavailable", reason: "network" });
   });
 
   it("maps a timeout (abort) to unavailable", async () => {
@@ -154,7 +182,7 @@ describe("runTool error mapping", () => {
       return Promise.reject(error);
     };
     const result = await runTool({ ...base, kind: "ASSESSMENT", fetchImpl: timeoutFetch });
-    expect(result).toEqual({ ok: false, error: "unavailable" });
+    expect(result).toEqual({ ok: false, error: "unavailable", reason: "network" });
   });
 });
 
