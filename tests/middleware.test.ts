@@ -75,3 +75,9 @@ describe("content security policy (T-045)", () => {
     expect(middleware(request("/privately")).headers.get("location")).toBeNull();
   });
 });
+
+it.each(["/portfolio", "/p/habit-garden", "/"])("leaves the public page %s open to anonymous visitors, with the CSP", (path) => {
+  const response = middleware(request(path));
+  expect(response.headers.get("location")).toBeNull();
+  expect(response.headers.get("content-security-policy")).toContain("'nonce-");
+});

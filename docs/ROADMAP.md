@@ -5,7 +5,7 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 
 ## Now
 
-**Phase 7: Distribution and portfolio** (ADR-018, planned by T-065). The owner publishes chosen projects as a portfolio: `/portfolio` lists public ones, `/p/<slug>` shows one. Publication is a separate record with an explicit field allowlist; everything else stays PRIVATE. The code needs migration 0008 in production first, so the phase's PRs are stacked and merge after the owner applies it (T-067).
+**Phase 7: Distribution and portfolio** (ADR-018). Built and verified: the owner publishes a project from its page (summary, Public or Unlisted, a preview of exactly what becomes public, confirm steps); visitors see `/portfolio` and `/p/<slug>` with allowlisted fields only; making it private again is immediate. Full E2E suite green (41 tests), pre-public privacy audit done. **Waiting on the owner:** migration 0008 in production (T-067), then Claude merges the stacked PRs #46 → #47 → #48 → T-071. Nothing becomes public until the owner publishes a project.
 
 **Phases 8 and 9 (ADR-019, ADR-020, planned by T-072)** are being built in parallel: read-only GitHub activity on projects (token and cron secret: T-074, owner) and CSV imports into the ledger with duplicate protection and undo. T-077 verified the GitHub integration end to end against a local stub API (44/44 E2E, refresh, errors, cron auth, cross-owner and anonymous isolation, no leak into `/portfolio`); Phase 8 closes once `privacy-auditor` runs on the tree.
 

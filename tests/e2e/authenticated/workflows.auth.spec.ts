@@ -100,7 +100,7 @@ test("an idea converts into a private project with an isolated decision log", as
   const ideaUrl = page.url();
   await page.getByRole("button", { name: "Turn into project" }).click();
   await ready(page, page.waitForURL(/\/private\/projects\/[0-9a-f-]{36}$/));
-  await expect(page.getByRole("heading", { name: ideaTitle })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: ideaTitle })).toBeVisible();
   await expect(page.locator("dl").getByText("Planning", { exact: true })).toBeVisible();
 
   // The converted idea now links to its project instead of offering a second conversion.
@@ -114,7 +114,7 @@ test("an idea converts into a private project with an isolated decision log", as
   await page.getByLabel("Description", { exact: true }).fill("A project description that survives reload");
   await page.getByRole("button", { name: "Save project" }).click();
   await expect(page.getByText("Project updated.")).toBeVisible();
-  await expect(page.getByRole("heading", { name: `${ideaTitle} edited` })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: `${ideaTitle} edited` })).toBeVisible();
 
   await page.locator('select[name="lifecycle"]').selectOption("BETA");
   await page.locator('select[name="operationalStatus"]').selectOption("WAITING_REVIEW");
@@ -125,7 +125,7 @@ test("an idea converts into a private project with an isolated decision log", as
 
   const projectUrl = page.url();
   await ready(page, page.reload());
-  await expect(page.getByRole("heading", { name: `${ideaTitle} edited` })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: `${ideaTitle} edited` })).toBeVisible();
   await expect(page.locator("section > p.whitespace-pre-wrap")).toHaveText("A project description that survives reload");
   // The label's accessible name includes the textarea's content, so select the textbox by field name.
   await expect(page.locator('textarea[name="description"]')).toHaveValue("A project description that survives reload");

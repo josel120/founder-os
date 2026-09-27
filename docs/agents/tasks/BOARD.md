@@ -8,17 +8,17 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-057 | Apply production migrations, create the owner and run a restore drill | todo | human | S | T-053, T-054, T-056 |
 | T-065 | Plan Distribution and portfolio (Phase 7) and its boundaries | done | claude | M | T-058 |
 | T-066 | Add the project_publication table (migration 0008) | done | claude | S | T-065 |
-| T-067 | Apply migrations 0008–0010 in production, then merge the waiting PRs | todo | human | S | T-066 |
-| T-068 | Publication domain: publish actions and allowlisted public queries | todo | claude | M | T-066 |
-| T-069 | Owner publish panel with a preview of what becomes public | todo | claude | M | T-068 |
-| T-070 | Public portfolio and project pages | todo | claude | M | T-068 |
-| T-071 | Verify the portfolio end to end and audit privacy before going public | todo | claude | M | T-069, T-070 |
+| T-067 | Apply migrations 0008–0010 in production, then merge the waiting PRs | doing | human | S | T-066 |
+| T-068 | Publication domain: publish actions and allowlisted public queries | done | claude | M | T-066 |
+| T-069 | Owner publish panel with a preview of what becomes public | done | claude | M | T-068 |
+| T-070 | Public portfolio and project pages | done | claude | M | T-068 |
+| T-071 | Verify the portfolio end to end and audit privacy before going public | done | claude | M | T-069, T-070 |
 | T-072 | Plan GitHub integration (Phase 8) and Finance imports (Phase 9) | done | claude | M | T-065 |
-| T-073 | Add the project_github table (migration 0009) | review | claude | S | T-072 |
+| T-073 | Add the project_github table (migration 0009) | done | claude | S | T-072 |
 | T-074 | Create a read-only GitHub token and set GITHUB_TOKEN and CRON_SECRET | todo | human | S | T-072 |
-| T-075 | GitHub client and sync service | review | claude | M | T-073 |
-| T-076 | Project GitHub panel, refresh, daily cron and stale-repo attention | review | claude | M | T-075 |
-| T-077 | Verify GitHub integration end to end and audit privacy | todo | claude | M | T-076 |
+| T-075 | GitHub client and sync service | done | claude | M | T-073 |
+| T-076 | Project GitHub panel, refresh, daily cron and stale-repo attention | done | claude | M | T-075 |
+| T-077 | Verify GitHub integration end to end and audit privacy | done | claude | M | T-076 |
 | T-078 | Finance import schema (migration 0010) | todo | claude | S | T-073 |
 | T-079 | CSV parser, column mapping and duplicate keys | todo | claude | M | T-078 |
 | T-080 | Import preview, confirm and undo actions | todo | claude | M | T-079 |
