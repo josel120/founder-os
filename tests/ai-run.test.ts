@@ -126,6 +126,15 @@ describe("runIdeaAI (ADR-021)", () => {
     expect(m.state.sets.at(-1)).toEqual({ status: "FAILED", error: "rate_limited", finishedAt: now });
   });
 
+  it("passes the provider reason to the caller but stores only the allowed code", async () => {
+    rows();
+    fetchImpl.mockResolvedValue(new Response(JSON.stringify({ type: "error", error: { type: "billing_error" } }), { status: 402 }));
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    expect(await runIdeaAI("owner-a", ideaId, "ASSESSMENT", options)).toEqual({ status: "failed", runId: "run-1", error: "unavailable", reason: "billing" });
+    warn.mockRestore();
+    expect(m.state.sets.at(-1)).toEqual({ status: "FAILED", error: "unavailable", finishedAt: now });
+  });
+
   it("refuses notes that are too large before storing anything", async () => {
     m.state.selects.push([{ ...idea, description: "x".repeat(41_000) }], [], []);
     expect(await runIdeaAI("owner-a", ideaId, "ASSESSMENT", options)).toEqual({ status: "too_large" });

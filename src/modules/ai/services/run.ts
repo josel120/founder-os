@@ -4,7 +4,7 @@ import { isUniqueViolation } from "@/db/errors";
 import { aiRuns, evidence, ideas, problems } from "@/db/schema";
 import { env } from "@/lib/env";
 import { reportError } from "@/lib/report-error";
-import { runTool, type AIClientError, type Fetch } from "./anthropic-client";
+import { runTool, type AIClientError, type AIFailureReason, type Fetch } from "./anthropic-client";
 import { buildIdeaInput } from "./prompt";
 
 /** ADR-021 limits. */
@@ -15,7 +15,7 @@ const EVIDENCE_LIMIT = 50;
 export type RunKind = "ASSESSMENT" | "SUMMARY";
 export type RunOutcome =
   | { status: "succeeded"; runId: string }
-  | { status: "failed"; runId: string; error: AIClientError | "interrupted" }
+  | { status: "failed"; runId: string; error: AIClientError | "interrupted"; reason?: AIFailureReason }
   // Refusals: nothing is stored and nothing is sent.
   | { status: "not_configured" }
   | { status: "not_found" }
@@ -107,7 +107,7 @@ export async function runIdeaAI(ownerId: string, ideaId: string, kind: RunKind, 
       return finished.length > 0 ? { status: "succeeded", runId } : { status: "failed", runId, error: "interrupted" };
     }
     await database.update(aiRuns).set({ status: "FAILED", error: result.error, finishedAt: now() }).where(own);
-    return { status: "failed", runId, error: result.error };
+    return result.reason ? { status: "failed", runId, error: result.error, reason: result.reason } : { status: "failed", runId, error: result.error };
   } catch (error) {
     reportError("ai.run.finish", error);
     return { status: "unavailable" };

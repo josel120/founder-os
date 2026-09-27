@@ -43,12 +43,14 @@ it("explains refusals and failures with fixed messages only", async () => {
     [{ status: "in_progress" }, "A run on this idea is already in progress."],
     [{ status: "not_found" }, "Idea not found."],
     [{ status: "failed", runId: "r", error: "invalid_output" }, "The answer did not have the expected shape, so it was not kept. Try again."],
+    [{ status: "failed", runId: "r", error: "unavailable", reason: "billing" }, "Anthropic says this account has no credit. Add credit under Billing in the Anthropic console, then try again."],
+    [{ status: "failed", runId: "r", error: "unavailable", reason: "model_unavailable" }, "The configured model (AI_MODEL) is not available to this Anthropic account."],
   ];
   for (const [outcome, error] of cases) {
     m.run.mockResolvedValueOnce(outcome);
     expect(await runIdeaAssessment(form(ideaId))).toEqual({ ok: false, error });
   }
-  expect(m.revalidate).toHaveBeenCalledTimes(1); // only the failed run was stored
+  expect(m.revalidate).toHaveBeenCalledTimes(3); // only the failed runs were stored
 });
 
 it("lists only the owner's runs on their PRIVATE idea and drops stored output that no longer validates", async () => {
