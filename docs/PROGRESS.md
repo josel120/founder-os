@@ -2,7 +2,7 @@
 
 Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task cards' Handoff blocks (`docs/agents/tasks/`). Phase view: `docs/ROADMAP.md`. Full history until 2026-09-24: `docs/agents/archive/progress-2026-09.md`.
 
-## Current state (2026-09-26)
+## Current state (2026-09-27)
 
 - Merged on `master` (1815201): Phase 0 foundation, Idea OS (T-001..T-016), Project OS (T-017..T-024, T-038), Finance OS (T-026..T-030), Research OS (T-032..T-037, T-040), audit T-043/T-044/T-045, plans T-041/T-042, Workspace cockpit T-046..T-051, Phase 6 code T-052..T-055 and T-059..T-062, process cards T-012/T-025/T-031/T-039.
 - Security model: owner-only access via `OWNER_EMAIL`, closed signup, every private query/mutation uses session owner + `id + owner_id + PRIVATE` (ADR-005/006/008/009/011).
@@ -10,6 +10,10 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - Migrations 0000..0007 exist on `master`; 0000..0006 applied locally (T-034). The owner applies 0007 (`rate_limit`, T-053) with `pnpm db:migrate` on master; the T-053 code in production mode needs it. Historical rows were adopted per ADR-006.
 - Last CI verification (PR #39, run `36275054185`): lint, typecheck, 420 unit tests, build, 37/37 authenticated/anonymous E2E passed.
 - Branch/PR per card (ADR-010). Merges, force pushes, pushes to `master`, real-data migrations and secrets stay human.
+
+## Phase 7: Distribution and portfolio (planned, 2026-09-27)
+
+- T-065: ADR-018. Publish chosen projects only, as a separate `project_publication` record (migration 0008) with a field allowlist; `/portfolio` and `/p/<slug>`; `noindex` kept. Cards T-066..T-071; stacked PRs merge after the owner applies 0008 in production (T-067).
 
 ## Phase 6: Production readiness (code done; deploy is the owner's one command)
 
@@ -28,11 +32,6 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 
 - ADR-013 extends the phase plan after Research: 5 Workspace cockpit (T-041, codex) → 6 Production readiness (T-042, claude) → 7 Distribution → 8 GitHub integration → 9 Finance imports → 10 AI execution. Merging T-039 approves it.
 - New Claude subagents: `schema-reviewer` (schema/migration cards), `privacy-auditor` (phase-close and public-surface cards) and `ci-triager` (failed CI runs). `/next-task` now marks merged `review` cards `done`.
-
-## Audit (T-043, done, PR #31 merged)
-
-- Owner-requested security/bug/UX sweep on `claude/vibrant-sagan-e95o5p`. Fixes: idea description limit < problem limit (converted ideas could not be saved), server-time-zone shift of Finance dates, lowercase currency rejected, numeric overflow, truncated slugs ending in `-` (project became uneditable), generic slug-collision error, base CSS overriding Tailwind utilities. Adds Finance totals per currency (exact BigInt), cross-links between decisions/problems/ideas/projects, mobile nav, private error/loading/404. Local gate: 208 unit, build, 20/20 E2E.
-- Follow-ups: T-044 done in PR #33; T-045 nonce-based `script-src` CSP (claude; overlaps Production readiness, T-042).
 
 ## Deployment prerequisites
 

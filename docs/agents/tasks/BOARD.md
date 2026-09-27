@@ -5,33 +5,11 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 
 | ID | Title | Status | Owner | Size | Depends |
 |---|---|---|---|---|---|
-| T-040 | Harden the evidence schema before migration 0005 is applied | done | claude | S | T-033 |
-| T-034 | Apply migrations 0005 and 0006 to the local database | done | human | S | T-033, T-040 |
-| T-035 | Build the owner-scoped Research evidence domain | done | claude | M | T-033, T-040 |
-| T-036 | Build the private Research UI | done | claude | M | T-034, T-035 |
-| T-037 | Verify Research workflows and privacy end to end | done | claude | M | T-036 |
-| T-039 | Extend the phase plan and add specialized review subagents | done | claude | M | T-033 |
-| T-041 | Plan the Workspace cockpit (Phase 5) and its boundaries | done | claude | M | T-037 |
-| T-042 | Plan Production readiness (Phase 6) and its boundaries | done | claude | M | T-041 |
-| T-043 | Project-wide audit: security hardening, bug fixes and UX polish | done | claude | M | none |
-| T-044 | Upgrade Vitest to 4.x to clear the remaining dev-only advisories | done | claude | S | T-043 |
-| T-045 | Add a nonce-based script-src Content Security Policy | done | claude | M | T-043 |
-| T-046 | Select explicit columns in the older domain queries | done | claude | S | none |
-| T-047 | Cockpit aggregation queries | done | claude | M | T-041 |
-| T-048 | `/private` home and login landing | done | claude | M | T-047 |
-| T-049 | Problem detail page with content edit and evidence | done | claude | M | T-041 |
-| T-050 | Show the Project → Idea and Project → Finance chain | done | claude | S | T-041 |
-| T-051 | Verify the cockpit end to end and sweep privacy | done | claude | M | T-048, T-049, T-050 |
-| T-052 | Fail fast on production env and tune the DB client for serverless | done | claude | M | T-042 |
-| T-053 | Store auth rate limits in the database and pin session settings | done | claude | M | T-042 |
-| T-054 | Report server errors without private data | done | claude | S | T-042 |
-| T-055 | Write the production runbook | done | claude | S | T-042 |
-| T-056 | Provision Vercel and Neon and deploy a preview | done | human | S | T-052, T-055 |
 | T-057 | Apply production migrations, create the owner and run a restore drill | todo | human | S | T-053, T-054, T-056 |
-| T-058 | Smoke-check the deployment and sweep privacy | done | claude | S | T-057 |
-| T-059 | Prune stale rate-limit rows so client IPs are not kept indefinitely | done | claude | S | T-053 |
-| T-060 | Make anonymous E2E wait for the migrated database | done | claude | S | T-053 |
-| T-061 | Fix lost client updates after server actions and navigations | done | claude | M | none |
-| T-062 | One-command production setup for Vercel and Neon | done | claude | M | T-052, T-053, T-055 |
-| T-063 | Let the owner reset a forgotten email or password with the setup command | done | claude | S | T-062 |
-| T-064 | Sign-in always calls the page's own origin | done | claude | S | T-062 |
+| T-065 | Plan Distribution and portfolio (Phase 7) and its boundaries | done | claude | M | T-058 |
+| T-066 | Add the project_publication table (migration 0008) | todo | claude | S | T-065 |
+| T-067 | Apply migration 0008 in production, then merge the Phase 7 stack | todo | human | S | T-066 |
+| T-068 | Publication domain: publish actions and allowlisted public queries | todo | claude | M | T-066 |
+| T-069 | Owner publish panel with a preview of what becomes public | todo | claude | M | T-068 |
+| T-070 | Public portfolio and project pages | todo | claude | M | T-068 |
+| T-071 | Verify the portfolio end to end and audit privacy before going public | todo | claude | M | T-069, T-070 |
