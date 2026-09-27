@@ -15,7 +15,7 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-071 | Verify the portfolio end to end and audit privacy before going public | done | claude | M | T-069, T-070 |
 | T-072 | Plan GitHub integration (Phase 8) and Finance imports (Phase 9) | done | claude | M | T-065 |
 | T-073 | Add the project_github table (migration 0009) | done | claude | S | T-072 |
-| T-074 | Create a read-only GitHub token and set GITHUB_TOKEN and CRON_SECRET | todo | human | S | T-072 |
+| T-074 | Create a read-only GitHub token and set GITHUB_TOKEN and CRON_SECRET | done | human | S | T-072 |
 | T-075 | GitHub client and sync service | done | claude | M | T-073 |
 | T-076 | Project GitHub panel, refresh, daily cron and stale-repo attention | done | claude | M | T-075 |
 | T-077 | Verify GitHub integration end to end and audit privacy | done | claude | M | T-076 |
@@ -33,4 +33,4 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-089 | Verify AI execution end to end and audit privacy | done | claude | M | T-088 |
 | T-090 | Audit Phases 7–10 for bugs, security and UX, and fix what is found | done | claude | M | T-089 |
 | T-091 | Say why the AI provider refused a run | done | claude | S | T-089 |
-| T-092 | Owner data export as one JSON file | review | claude | M | T-089 |
+| T-092 | Owner data export as one JSON file | done | claude | M | T-089 |
