@@ -5,7 +5,7 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 
 ## Now
 
-**Phase 6: Production readiness** (in progress, ADR-016). All Phase 6 code is merged (PR #37, #39): fail-fast env, database rate limit (migration 0007) with 24 h IP retention, private-safe error reports, the runbook, the lost-update fix (ADR-017) and `pnpm setup:production`. What remains is the owner's: run `pnpm setup:production` on `master` to create the Neon database, configure Vercel, migrate, create the owner account and deploy (T-056/T-057), then the restore drill (T-057) and T-058 smoke check. Phase 7 planning starts when Phase 6 ends.
+**Phase 6: Production readiness** (closing, ADR-016). Founder OS is deployed on Vercel with a Neon production database, and the owner signs in (T-056 via `pnpm setup:production`, T-063 owner reset, T-064 same-origin sign-in). Left: the restore drill (T-057, owner) and the deployed smoke check and privacy sweep (T-058). Phase 7 planning starts after those.
 
 ## Done
 
