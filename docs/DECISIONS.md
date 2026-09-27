@@ -190,3 +190,21 @@ Decision: a pnpm patch (`patches/next@15.5.26.patch`, `patchedDependencies` in `
 Rejected: upgrading to Next 16 (a major migration outside this card; 15.5.26 is the last 15.5 backport and still ships the old React); aliasing the App Router to the installed react-dom 19.3.0 (mixes React versions with Next's vendored `react` and Flight client); product-code workarounds such as wrapping actions in transitions or paging lists (they only narrow the race, and plain link navigations hit it too).
 
 Removal: when Next is upgraded, pnpm refuses to install with an unused or failing patch. Drop the patch once the new Next's vendored `react-dom-client.production.js` records render-phase pings in `pingSuspendedRoot`, and keep the regression test.
+
+## ADR-018: Distribution and portfolio (Phase 7, T-065)
+
+Phase 7 is the first public surface. The owner publishes chosen **projects** as a portfolio; nothing else becomes public. Publishing is opt-in, per project, reversible at once, and it exposes only an explicit allowlist of fields.
+
+Accepted:
+- **Publication is a separate record.** A new owner-scoped table `project_publication` (one row per published project: `project_id` primary key and FK with cascade delete, `owner_id` FK, `visibility` limited to `PUBLIC` or `UNLISTED` by a CHECK, `summary` 1–500 characters, `published_at`, `updated_at`; migration 0008, additive). The `project` row keeps `visibility = PRIVATE`, so every private query and ADR-005/006/009 invariant stays unchanged. Unpublishing deletes the row. The unused `project.visibility`/`published_at` columns stay as they are.
+- **Allowlist.** Public pages show only: the project name, slug, lifecycle, `released_at`, the website and store URLs, and the publication's `summary`, written for the public by the owner. Never: the private `description`, `repository`, versions, next action, waiting reason or dates, review dates, origin idea, decisions, finance, evidence, owner id or email. The public query selects those columns only, joins `project_publication` on `project_id` **and** `owner_id`, and returns nothing for a private project.
+- **Visibility.** `PUBLIC`: listed on `/portfolio` and shown at `/p/<slug>`. `UNLISTED`: shown at `/p/<slug>` only. Private and unknown slugs get the same 404 (no existence oracle), including in `generateMetadata`.
+- **Owner flow.** The project detail page gets a "Publish" panel: summary, visibility, and a preview of exactly what becomes public, then an explicit confirm. Owner-scoped server actions `publishProject`/`unpublishProject` (Zod, `id + owner_id` on the project, `INSERT … ON CONFLICT … RETURNING`/`DELETE … RETURNING`).
+- **Rendering.** Public routes are dynamic and uncached, so unpublishing takes effect on the next request. They keep the ADR-014 headers and nonce CSP. Search engines stay blocked (`noindex`) for now.
+- **Order.** The code reads `project_publication`, so migration 0008 must be applied in production before the code reaches `master` (RUNBOOK section 6: migrate first). The phase's cards are stacked PRs; they merge after the owner applies 0008 (T-067).
+
+Rejected for this phase: publishing ideas, problems, decisions, finance or evidence; a public API or RSS; comments, analytics or tracking; custom domains (Vercel settings, human); per-field toggles beyond the allowlist.
+
+Open questions for the owner (safe defaults apply until answered): 1) allow search engines to index `PUBLIC` pages, proposed no until the owner reviews the portfolio live; 2) show the repository link, proposed no (repositories may be private); 3) a portfolio intro on `/portfolio`, proposed a fixed line with no personal data; 4) a custom domain, proposed later.
+
+Cards: T-066 `project_publication` schema and migration 0008 (claude) · T-067 apply 0008 in production, then merge the stack (human) · T-068 publication domain: actions and allowlisted public queries (claude) · T-069 owner publish panel with preview (claude) · T-070 public `/portfolio` and `/p/[slug]` (claude) · T-071 portfolio E2E and pre-public privacy audit (claude).
