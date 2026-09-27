@@ -4,7 +4,7 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 
 ## Current state (2026-09-27)
 
-- Merged on `master`: Phase 0 foundation, Idea OS (T-001..T-016), Project OS (T-017..T-024, T-038), Finance OS (T-026..T-030), Research OS (T-032..T-037, T-040), audit T-043/T-044/T-045, plans T-041/T-042, Workspace cockpit T-046..T-051, Phase 6 T-052..T-056, T-058..T-064, Phase 7 T-065..T-071, Phase 8 T-072..T-073, T-075..T-077, process cards T-012/T-025/T-031/T-039.
+- Merged on `master`: Phase 0 foundation, Idea OS (T-001..T-016), Project OS (T-017..T-024, T-038), Finance OS (T-026..T-030), Research OS (T-032..T-037, T-040), audit T-043/T-044/T-045, plans T-041/T-042, Workspace cockpit T-046..T-051, Phase 6 T-052..T-056, T-058..T-064, Phase 7 T-065..T-071, Phase 8 T-072..T-073, T-075..T-077, Phase 9 T-078..T-082, process cards T-012/T-025/T-031/T-039.
 - Security model: owner-only access via `OWNER_EMAIL`, closed signup, every private query/mutation uses session owner + `id + owner_id + PRIVATE` (ADR-005/006/008/009/011).
 - Web layer (ADR-014, T-043): security headers, `noindex`, cookie-presence middleware for `/private` pages with a validated `?next=`, sign-out, closed `/register` page. `pnpm audit`: 0 advisories (T-044).
 - Migrations 0000..0010; production has all of them (0008–0010 applied 2026-09-27 by Claude with the owner's approval, after snapshot `pre-0008-20260927`). Historical rows were adopted per ADR-006.
@@ -14,7 +14,7 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 
 - ADR-019: read-only token (T-074, owner), `project_github` snapshot (0009), refresh + daily cron (06:00 UTC), quiet repos on the home. PRs #50, #51, #53, #55, #58. Until `GITHUB_TOKEN` is set the panel says GitHub is not connected.
 
-## Phase 9: Finance imports (built)
+## Phase 9: Finance imports (merged)
 
 - ADR-020: CSV mapping/preview/confirm/undo, `import_key` duplicate index (0010). PRs #52, #54, #56, #57, #59.
 

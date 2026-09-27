@@ -241,6 +241,8 @@ Accepted:
 - **Batches**: a new owner-scoped `finance_import` record (file name, row counts, created_at) and a nullable `finance_transaction.import_id`, so the owner sees past imports and can undo one (deletes only that import's transactions). Migration 0010, additive.
 - **Privacy**: all of it is PRIVATE; errors never echo row contents into logs (`reportError` only).
 
+Limits: the server-action body limit is 2 MB for the whole app (Next.js has one setting), so a 1 MB file fits; the import itself still refuses more than 1 MB.
+
 Rejected: bank APIs, OFX/QIF/XLSX (later), automatic categorization (Phase 10), currency conversion, editing rows inside the importer.
 
 Open questions (defaults apply): 1) row limit, proposed 5,000; 2) keep the original file name, proposed yes (private).

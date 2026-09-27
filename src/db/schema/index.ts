@@ -10,6 +10,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -210,6 +211,26 @@ export const decisionLogs = pgTable("decision_log", {
     .notNull()
     .defaultNow(),
 });
+// ADR-020: one CSV import batch. Undoing it deletes its transactions. The file itself is never stored.
+export const financeImports = pgTable(
+  "finance_import",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    fileName: text("file_name").notNull(),
+    rowCount: integer("row_count").notNull(),
+    importedCount: integer("imported_count").notNull(),
+    skippedCount: integer("skipped_count").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    check("finance_import_file_name_length", sql`char_length(${table.fileName}) BETWEEN 1 AND 200`),
+    check("finance_import_counts", sql`${table.rowCount} >= 0 AND ${table.importedCount} >= 0 AND ${table.skippedCount} >= 0 AND ${table.importedCount} + ${table.skippedCount} <= ${table.rowCount}`),
+    index("finance_import_owner_id_idx").on(table.ownerId, table.createdAt),
+  ],
+);
 export const financeTransactions = pgTable("finance_transaction", {
   id: uuid("id").defaultRandom().primaryKey(),
   ownerId: text("owner_id").references(() => users.id, { onDelete: "restrict" }),
@@ -225,7 +246,14 @@ export const financeTransactions = pgTable("finance_transaction", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+  // ADR-020: set only on imported rows. Manual transactions keep both null, so the unique index ignores them.
+  importId: uuid("import_id").references(() => financeImports.id, { onDelete: "restrict" }),
+  importKey: text("import_key"),
+}, (table) => [
+  uniqueIndex("finance_transaction_owner_import_key_idx").on(table.ownerId, table.importKey).where(sql`${table.importKey} IS NOT NULL`),
+  index("finance_transaction_import_id_idx").on(table.importId),
+  check("finance_transaction_import_pair", sql`(${table.importId} IS NULL) = (${table.importKey} IS NULL)`),
+]);
 export const evidence = pgTable(
   "evidence",
   {

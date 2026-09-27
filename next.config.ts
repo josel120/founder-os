@@ -15,6 +15,8 @@ const apiPolicy = [{ key: "Content-Security-Policy", value: "default-src 'none';
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // ADR-020: an import sends the CSV text (at most 1 MB, checked again on the server) to a server action.
+  experimental: { serverActions: { bodySizeLimit: "2mb" } },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
