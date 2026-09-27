@@ -15,7 +15,7 @@ const EVIDENCE_LIMIT = 50;
 export type RunKind = "ASSESSMENT" | "SUMMARY";
 export type RunOutcome =
   | { status: "succeeded"; runId: string }
-  | { status: "failed"; runId: string; error: AIClientError }
+  | { status: "failed"; runId: string; error: AIClientError | "interrupted" }
   // Refusals: nothing is stored and nothing is sent.
   | { status: "not_configured" }
   | { status: "not_found" }
@@ -99,11 +99,12 @@ export async function runIdeaAI(ownerId: string, ideaId: string, kind: RunKind, 
   const own = and(eq(aiRuns.id, runId), eq(aiRuns.ownerId, ownerId), eq(aiRuns.status, "RUNNING"));
   try {
     if (result.ok) {
-      await database.update(aiRuns).set({
+      const finished = await database.update(aiRuns).set({
         status: "SUCCEEDED", output: result.output, recommendation: "recommendation" in result ? result.recommendation : null,
         model: result.model, inputTokens: result.inputTokens, outputTokens: result.outputTokens, finishedAt: now(),
-      }).where(own);
-      return { status: "succeeded", runId };
+      }).where(own).returning({ id: aiRuns.id });
+      // No row: the stale sweep already finished this run as interrupted, so the answer is not kept.
+      return finished.length > 0 ? { status: "succeeded", runId } : { status: "failed", runId, error: "interrupted" };
     }
     await database.update(aiRuns).set({ status: "FAILED", error: result.error, finishedAt: now() }).where(own);
     return { status: "failed", runId, error: result.error };

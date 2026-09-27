@@ -12,6 +12,7 @@ const m = vi.hoisted(() => {
     inserts: [] as Record<string, unknown>[],
     executes: [] as unknown[],
     insertError: null as unknown,
+    finished: [{ id: "run-1" }] as { id: string }[],
     order: [] as string[],
     report: vi.fn(),
   };
@@ -25,7 +26,7 @@ const m = vi.hoisted(() => {
     };
     return chain;
   };
-  const update = () => ({ set: (values: Record<string, unknown>) => { state.sets.push(values); state.order.push(`update:${String(values.status)}`); return { where: (where: unknown) => { state.wheres.push(where); return Promise.resolve(); } }; } });
+  const update = () => ({ set: (values: Record<string, unknown>) => { state.sets.push(values); state.order.push(`update:${String(values.status)}`); return { where: (where: unknown) => { state.wheres.push(where); return Object.assign(Promise.resolve(), { returning: () => Promise.resolve(state.finished) }); } }; } });
   const insert = () => ({ values: (values: Record<string, unknown>) => { state.inserts.push(values); state.order.push("insert"); return { returning: () => (state.insertError ? Promise.reject(state.insertError) : Promise.resolve([{ id: "run-1" }])) }; } });
   const tx = { select: selectChain, update, insert, execute: (query: unknown) => { state.executes.push(query); state.order.push("lock"); return Promise.resolve(); } };
   const db = { ...tx, transaction: async <T>(callback: (t: typeof tx) => Promise<T>) => callback(tx) };
@@ -47,7 +48,7 @@ const params = (where: unknown) => new PgDialect().sqlToQuery(where as SQL);
 
 beforeEach(() => {
   vi.resetAllMocks();
-  Object.assign(m.state, { selects: [], wheres: [], sets: [], inserts: [], executes: [], insertError: null, order: [] });
+  Object.assign(m.state, { selects: [], wheres: [], sets: [], inserts: [], executes: [], insertError: null, finished: [{ id: "run-1" }], order: [] });
   fetchImpl.mockResolvedValue(new Response(JSON.stringify(answer), { status: 200 }));
 });
 // Queue: idea, problem, evidence, today's count.
@@ -110,6 +111,12 @@ describe("runIdeaAI (ADR-021)", () => {
     const finish = m.state.sets.at(-1)!;
     expect(finish).toMatchObject({ status: "SUCCEEDED", recommendation: "PAUSE", inputTokens: 10, outputTokens: 5, finishedAt: now });
     expect(params(m.state.wheres.at(-1)).params).toEqual(["run-1", "owner-a", "RUNNING"]);
+  });
+
+  it("reports interrupted, not succeeded, when the stale sweep already finished the run", async () => {
+    rows();
+    m.state.finished = [];
+    expect(await runIdeaAI("owner-a", ideaId, "ASSESSMENT", options)).toEqual({ status: "failed", runId: "run-1", error: "interrupted" });
   });
 
   it("stores the error code when the provider fails", async () => {

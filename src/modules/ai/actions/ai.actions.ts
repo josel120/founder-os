@@ -13,6 +13,7 @@ const failures: Record<string, string> = {
   unavailable: "The AI provider did not answer. Try again later.",
   invalid_output: "The answer did not have the expected shape, so it was not kept. Try again.",
   too_large: "This idea's notes are too long to send.",
+  interrupted: "The run took too long and was stopped. Try again.",
 };
 
 function resultFor(outcome: RunOutcome, done: string): Result {
