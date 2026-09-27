@@ -332,26 +332,25 @@ npx vercel --prod`).
 
 ## 10. Post-deploy smoke check
 
-Read-only HTTP checks; no secret is needed to run this.
+Read-only HTTP checks; no secret or sign-in is needed. `pnpm setup:production` runs the same checks after a deploy.
 
 ```bash
-BASE_URL="https://<PRODUCTION_DOMAIN>"
-
-echo "-- security headers (HSTS, frame, nosniff, referrer, permissions, CSP with a nonce) --"
-curl -sSI "$BASE_URL/login" | grep -Ei "^(strict-transport-security|x-frame-options|x-content-type-options|referrer-policy|permissions-policy|content-security-policy):"
-
-echo "-- noindex on auth/private/api routes --"
-curl -sSI "$BASE_URL/login"            | grep -i "^x-robots-tag:"
-curl -sSI "$BASE_URL/private"          | grep -i "^x-robots-tag:"
-curl -sSI "$BASE_URL/api/auth/session" | grep -i "^x-robots-tag:"
-
-echo "-- anonymous /private redirects to /login?next=... (expect 307 + a matching location) --"
-curl -sSI "$BASE_URL/private" | grep -iE "^(HTTP/|location:)"
-
-echo "-- registration stays closed --"
-curl -sS "$BASE_URL/register" | grep -o "Registration is closed"
+pnpm smoke https://<PRODUCTION_DOMAIN>
 ```
 
-All five checks should print a match. No match on the headers or noindex checks means the deploy
-didn't pick up `next.config.ts`/`src/middleware.ts`; no redirect on `/private` is a stop-ship issue
-(ADR-014).
+It checks:
+
+- `/login`: status 200, HSTS, `X-Frame-Options: DENY`, nosniff, the referrer and permissions policies, a CSP with a nonce and `strict-dynamic`, and `no-store`.
+- `X-Robots-Tag: noindex` on `/login`, `/register`, `/private` and the auth API.
+- Anonymous `/private`, `/private/ideas` and `/private/finance` answer 307 to `/login?next=<same path>` on the same origin.
+- `/register` says "Registration is closed".
+- An anonymous `/api/auth/get-session` returns `null` with the API CSP.
+
+Every line should say PASS; the exit code is 0 only then.
+
+If something fails:
+
+- A header or noindex failure means the deploy didn't pick up `next.config.ts`/`src/middleware.ts`.
+- A failed `/private` redirect is a stop-ship issue (ADR-014).
+
+Run it against the production domain. Deployment-unique URLs sit behind Vercel's Deployment Protection and fail every check.

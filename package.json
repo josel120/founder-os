@@ -18,7 +18,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",
-    "setup:production": "tsx scripts/setup-production.ts"
+    "setup:production": "tsx scripts/setup-production.ts",
+    "smoke": "tsx scripts/smoke.ts"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.13",

@@ -5,7 +5,7 @@ Update this file when a phase starts or ends (AGENTS.md, workflow step 5).
 
 ## Now
 
-**Phase 6: Production readiness** (closing, ADR-016). Founder OS is deployed on Vercel with a Neon production database, and the owner signs in (T-056 via `pnpm setup:production`, T-063 owner reset, T-064 same-origin sign-in). Left: the restore drill (T-057, owner) and the deployed smoke check and privacy sweep (T-058). Phase 7 planning starts after those.
+**Phase 6: Production readiness** (closing, ADR-016). Founder OS is deployed on Vercel with a Neon production database, and the owner signs in (T-056 via `pnpm setup:production`, T-063 owner reset, T-064 same-origin sign-in). The deployed smoke check and privacy sweep passed (T-058, `pnpm smoke`). Left: the restore drill (T-057, owner). Phase 7 planning starts after it.
 
 ## Done
 
