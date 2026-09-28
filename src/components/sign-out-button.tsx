@@ -25,6 +25,6 @@ export function SignOutButton() {
 
   return <span className="flex items-center gap-2">
     {error && <span role="alert" className="text-xs text-red-700">{error}</span>}
-    <button type="button" onClick={signOut} disabled={pending} className="min-h-8 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 hover:bg-slate-50">{pending ? t("Signing out…") : t("Sign out")}</button>
+    <button type="button" onClick={signOut} disabled={pending} className="min-h-11 whitespace-nowrap rounded-lg sm:min-h-8 border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 hover:bg-slate-50">{pending ? t("Signing out…") : t("Sign out")}</button>
   </span>;
 }

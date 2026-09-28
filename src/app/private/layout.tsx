@@ -20,7 +20,7 @@ export default async function PrivateLayout({ children }: Readonly<{ children: R
       <WorkspaceNav />
       <div className="mt-6 hidden rounded-xl bg-slate-50 p-4 lg:mt-auto lg:block"><p className="text-xs font-semibold text-slate-700">{t("Private workspace")}</p><p className="mt-2 text-xs leading-5 text-slate-500">{t("Ideas stay yours. Publishing is always a separate decision.")}</p></div>
     </aside>
-    <div className="min-w-0"><header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 px-5 py-3 sm:px-8 lg:px-10"><WorkspaceSection /><span className="flex items-center gap-3"><span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">{t("Private")}</span><a href="/private/export" download className="text-sm font-medium text-slate-600 underline-offset-4 hover:text-slate-900 hover:underline">{t("Export data")}</a><LanguageSwitcher /><SignOutButton /></span></header>
+    <div className="min-w-0"><header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 px-5 py-3 sm:px-8 lg:px-10"><WorkspaceSection /><span className="flex flex-wrap items-center gap-3"><span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">{t("Private")}</span><a href="/private/export" download className="inline-flex min-h-11 items-center whitespace-nowrap text-sm font-medium text-slate-600 underline-offset-4 sm:min-h-0 hover:text-slate-900 hover:underline">{t("Export data")}</a><LanguageSwitcher /><SignOutButton /></span></header>
     <main id="workspace-content" className="mx-auto max-w-[1440px] px-5 py-8 sm:px-8 lg:p-10">{children}</main></div>
   </div>;
 }

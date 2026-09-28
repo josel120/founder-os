@@ -27,7 +27,7 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
 
   return <span role="group" aria-label={t("Language")} className={`inline-flex rounded-lg border border-slate-200 bg-white p-0.5 text-xs font-semibold ${className}`}>
     {locales.map((locale) => <button key={locale} type="button" lang={locale} aria-pressed={locale === current} title={names[locale]} disabled={pending} onClick={() => choose(locale)}
-      className={`min-h-8 min-w-10 rounded-md px-2 uppercase ${locale === current ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50"}`}>
+      className={`min-h-11 min-w-11 rounded-md sm:min-h-8 sm:min-w-10 px-2 uppercase ${locale === current ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50"}`}>
       <span aria-hidden="true">{locale}</span><span className="sr-only">{names[locale]}</span>
     </button>)}
   </span>;
