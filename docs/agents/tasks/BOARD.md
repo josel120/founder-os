@@ -31,6 +31,7 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-097 | Spanish for Research, Projects and GitHub | todo | claude | M | T-095 |
 | T-098 | Spanish for Finance, AI and the portfolio | todo | claude | M | T-095 |
 | T-099 | Spanish end to end and privacy check | todo | claude | S | T-096, T-097, T-098 |
+| T-093 | Close the phase plan in the roadmap | review | claude | S | T-057, T-092 |
 | T-085 | Set ANTHROPIC_API_KEY, a spend limit, and apply migration 0011 in production | doing | human | S | T-084 |
 | T-086 | Anthropic client, prompt builder and output schema | done | claude | M | T-084 |
 | T-087 | AI run actions, daily cap and run queries | done | claude | M | T-086 |
