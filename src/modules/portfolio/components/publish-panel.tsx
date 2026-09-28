@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useT } from "@/lib/i18n/client";
 import { publishProject, unpublishProject } from "../actions/publication.actions";
 import type { PublicProject } from "../queries/publication.queries";
 import { PublicProjectArticle } from "./public-project";
@@ -18,6 +19,7 @@ const stateLabel = { PRIVATE: "Private", PUBLIC: "Public", UNLISTED: "Unlisted" 
  * public page uses, so it never diverges from what actually becomes public.
  */
 export function PublishPanel({ projectId, publication, preview }: { projectId: string; publication: PublishPanelPublication; preview: PublishPanelPreview }) {
+  const t = useT();
   const router = useRouter();
   const inFlight = useRef(false);
   const [summary, setSummary] = useState(publication?.summary ?? "");
@@ -28,7 +30,7 @@ export function PublishPanel({ projectId, publication, preview }: { projectId: s
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const previewProject: PublicProject = { ...preview, summary: summary || "Your public summary will appear here.", publishedAt: publication?.publishedAt ?? new Date() };
+  const previewProject: PublicProject = { ...preview, summary: summary || t("Your public summary will appear here."), publishedAt: publication?.publishedAt ?? new Date() };
   const currentState = publication ? publication.visibility : "PRIVATE";
 
   async function doPublish() {
@@ -41,12 +43,12 @@ export function PublishPanel({ projectId, publication, preview }: { projectId: s
       data.set("visibility", visibility);
       data.set("summary", summary);
       const result = await publishProject(data);
-      if (!result.ok) { setError(result.error); return; }
-      setMessage(publication ? "Publication updated." : "Project published.");
+      if (!result.ok) { setError(t(result.error)); return; }
+      setMessage(publication ? t("Publication updated.") : t("Project published."));
       setConfirmPublish(false);
       router.refresh();
     } catch {
-      setError("Could not confirm the change. Check the project before retrying.");
+      setError(t("Could not confirm the change. Check the project before retrying."));
     } finally {
       inFlight.current = false;
       setPending(false);
@@ -61,12 +63,12 @@ export function PublishPanel({ projectId, publication, preview }: { projectId: s
       const data = new FormData();
       data.set("projectId", projectId);
       const result = await unpublishProject(data);
-      if (!result.ok) { setError(result.error); return; }
-      setMessage("Project is private again.");
+      if (!result.ok) { setError(t(result.error)); return; }
+      setMessage(t("Project is private again."));
       setConfirmUnpublish(false);
       router.refresh();
     } catch {
-      setError("Could not confirm the change. Check the project before retrying.");
+      setError(t("Could not confirm the change. Check the project before retrying."));
     } finally {
       inFlight.current = false;
       setPending(false);
@@ -75,53 +77,53 @@ export function PublishPanel({ projectId, publication, preview }: { projectId: s
 
   return (
     <section aria-labelledby="publish-heading" aria-busy={pending} className="workspace-panel mt-8 space-y-4 p-6">
-      <h2 id="publish-heading" className="text-lg font-semibold">Public portfolio</h2>
+      <h2 id="publish-heading" className="text-lg font-semibold">{t("Public portfolio")}</h2>
       <p className="text-sm text-slate-600">
-        Current state: <span className="font-medium">{stateLabel[currentState]}</span>
+        {t("Current state:")} <span className="font-medium">{t(stateLabel[currentState])}</span>
         {publication && <> · <a href={`/p/${preview.slug}`} className="text-indigo-700 underline-offset-4 hover:underline">/p/{preview.slug}</a></>}
       </p>
-      {publication && <p className="text-xs text-slate-500">While published, changes to the name, slug, lifecycle, release date and website or store links show on the public page right away.</p>}
+      {publication && <p className="text-xs text-slate-500">{t("While published, changes to the name, slug, lifecycle, release date and website or store links show on the public page right away.")}</p>}
 
-      <label className="block text-sm font-medium">Public summary
+      <label className="block text-sm font-medium">{t("Public summary")}
         <textarea name="summary" value={summary} onChange={(event) => setSummary(event.target.value)} maxLength={PUBLIC_SUMMARY_MAX} readOnly={pending} className="mt-2 min-h-24 w-full rounded-md border p-3" />
       </label>
       <p className="text-xs text-slate-500">{summary.length}/{PUBLIC_SUMMARY_MAX}</p>
 
       <fieldset className="space-y-2">
-        <legend className="text-sm font-medium">Visibility</legend>
+        <legend className="text-sm font-medium">{t("Visibility")}</legend>
         <label className="flex items-start gap-2 text-sm">
           <input type="radio" name="visibility" value="PUBLIC" checked={visibility === "PUBLIC"} onChange={() => setVisibility("PUBLIC")} disabled={pending} />
-          <span><span className="font-medium">Public</span> — listed on the portfolio</span>
+          <span><span className="font-medium">{t("Public")}</span> — {t("listed on the portfolio")}</span>
         </label>
         <label className="flex items-start gap-2 text-sm">
           <input type="radio" name="visibility" value="UNLISTED" checked={visibility === "UNLISTED"} onChange={() => setVisibility("UNLISTED")} disabled={pending} />
-          <span><span className="font-medium">Unlisted</span> — only people with the link</span>
+          <span><span className="font-medium">{t("Unlisted")}</span> — {t("only people with the link")}</span>
         </label>
       </fieldset>
 
       <div>
-        <p className="mb-2 text-sm font-medium">Preview</p>
-        <PublicProjectArticle project={previewProject} headingLevel={3} />
+        <p className="mb-2 text-sm font-medium">{t("Preview")}</p>
+        <PublicProjectArticle project={previewProject} headingLevel={3} t={t} />
       </div>
 
-      {!confirmPublish && <button type="button" disabled={pending} onClick={() => setConfirmPublish(true)} className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{publication ? "Review and update" : "Review and publish"}</button>}
+      {!confirmPublish && <button type="button" disabled={pending} onClick={() => setConfirmPublish(true)} className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{publication ? t("Review and update") : t("Review and publish")}</button>}
       {confirmPublish && (
         <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm">
-          <p>This will be visible to anyone {visibility === "PUBLIC" ? "who visits the portfolio" : "with the link"}.</p>
+          <p>{t(visibility === "PUBLIC" ? "This will be visible to anyone who visits the portfolio." : "This will be visible to anyone with the link.")}</p>
           <div className="mt-3 flex gap-3">
-            <button type="button" disabled={pending} onClick={doPublish} className="rounded-lg bg-indigo-600 px-3 py-2 font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">Confirm</button>
-            <button type="button" disabled={pending} onClick={() => setConfirmPublish(false)} className="rounded-lg border px-3 py-2 font-medium">Cancel</button>
+            <button type="button" disabled={pending} onClick={doPublish} className="rounded-lg bg-indigo-600 px-3 py-2 font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{t("Confirm")}</button>
+            <button type="button" disabled={pending} onClick={() => setConfirmPublish(false)} className="rounded-lg border px-3 py-2 font-medium">{t("Cancel")}</button>
           </div>
         </div>
       )}
 
-      {publication && !confirmUnpublish && <button type="button" disabled={pending} onClick={() => setConfirmUnpublish(true)} className="rounded-xl border border-red-300 px-4 py-3 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">Make private</button>}
+      {publication && !confirmUnpublish && <button type="button" disabled={pending} onClick={() => setConfirmUnpublish(true)} className="rounded-xl border border-red-300 px-4 py-3 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">{t("Make private")}</button>}
       {confirmUnpublish && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm">
-          <p>This removes the public page. Visitors will get a 404.</p>
+          <p>{t("This removes the public page. Visitors will get a 404.")}</p>
           <div className="mt-3 flex gap-3">
-            <button type="button" disabled={pending} onClick={doUnpublish} className="rounded-lg bg-red-600 px-3 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50">Confirm</button>
-            <button type="button" disabled={pending} onClick={() => setConfirmUnpublish(false)} className="rounded-lg border px-3 py-2 font-medium">Cancel</button>
+            <button type="button" disabled={pending} onClick={doUnpublish} className="rounded-lg bg-red-600 px-3 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50">{t("Confirm")}</button>
+            <button type="button" disabled={pending} onClick={() => setConfirmUnpublish(false)} className="rounded-lg border px-3 py-2 font-medium">{t("Cancel")}</button>
           </div>
         </div>
       )}
