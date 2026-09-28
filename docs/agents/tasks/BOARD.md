@@ -32,7 +32,8 @@ Take the first `todo` row whose owner is you and whose dependencies are `done`. 
 | T-098 | Spanish for Finance, AI and the portfolio | done | claude | M | T-095 |
 | T-099 | Spanish end to end and privacy check | done | claude | S | T-096, T-097, T-098 |
 | T-094 | Phase 11 audit: every page at phone and desktop width | done | claude | S | none |
-| T-100 | Phone fixes: field text size, tap targets, header | review | claude | S | T-094, T-095 |
+| T-100 | Phone fixes: field text size, tap targets, header | done | claude | S | T-094, T-095 |
+| T-101 | Edit forms open on demand on detail pages | review | claude | S | T-100 |
 | T-093 | Close the phase plan in the roadmap | done | claude | S | T-057, T-092 |
 | T-085 | Set ANTHROPIC_API_KEY, a spend limit, and apply migration 0011 in production | doing | human | S | T-084 |
 | T-086 | Anthropic client, prompt builder and output schema | done | claude | M | T-084 |

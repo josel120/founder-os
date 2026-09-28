@@ -79,4 +79,5 @@ export const ideas: Catalog = {
   "Idea status::Paused": "Pausada",
   "Idea status::Rejected": "Rechazada",
   "Idea status::Archived": "Archivada",
+  "Edit idea": "Editar idea",
 };

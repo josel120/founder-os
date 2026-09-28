@@ -29,4 +29,5 @@ export const problems: Catalog = {
   "Keep the description under {max} characters": "Mantén la descripción por debajo de {max} caracteres",
   "Could not save the problem. Please try again.": "No se pudo guardar el problema. Inténtalo de nuevo.",
   "Problem not found. Changes were not saved.": "No se encontró el problema. Los cambios no se guardaron.",
+  "Edit problem": "Editar problema",
 };
