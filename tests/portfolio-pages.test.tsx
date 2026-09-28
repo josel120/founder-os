@@ -6,9 +6,15 @@ import type { PublicProject } from "../src/modules/portfolio/queries/publication
 
 const m = vi.hoisted(() => ({ list: vi.fn(), one: vi.fn() }));
 vi.mock("@/modules/portfolio/queries/publication.queries", () => ({ listPublicProjects: m.list, getPublishedProject: m.one }));
-vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NEXT_NOT_FOUND"); } }));
+vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NEXT_NOT_FOUND"); }, useRouter: () => ({ refresh: () => {} }) }));
 vi.mock("next/link", () => ({ default: ({ href, children, ...rest }: { href: string; children: ReactNode }) => <a href={href} {...rest}>{children}</a> }));
-import PortfolioPage, { metadata as portfolioMetadata } from "../src/app/portfolio/page";
+// These pages now call getT() for ADR-023 translations; next/headers has no request context in this unit test, so
+// the catalog is mocked to English-only (createTranslator(null)), matching the assertions below (T-098).
+vi.mock("@/lib/i18n/server", async () => {
+  const { createTranslator } = await import("../src/lib/i18n/translate");
+  return { getT: async () => createTranslator(null), getLocale: async () => "en" };
+});
+import PortfolioPage, { generateMetadata as portfolioMetadata } from "../src/app/portfolio/page";
 import PublishedProjectPage, { generateMetadata } from "../src/app/p/[slug]/page";
 import nextConfig from "../next.config";
 import { publicHref } from "../src/modules/portfolio/services/public-url";
@@ -38,7 +44,7 @@ describe("/portfolio", () => {
     await render(await PortfolioPage());
     expect([...container.querySelectorAll("li a")].map((link) => link.getAttribute("href"))).toEqual(["/p/habit-garden", "/p/second"]);
     expect(container.textContent).toContain("A calm habit tracker.");
-    expect(portfolioMetadata.robots).toEqual({ index: false, follow: false });
+    expect((await portfolioMetadata()).robots).toEqual({ index: false, follow: false });
   });
 
   it("shows a calm empty state", async () => {
