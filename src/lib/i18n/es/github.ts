@@ -2,7 +2,6 @@ import type { Catalog } from "../translate";
 
 // Spanish for the github screens (ADR-023). Keys are the English text exactly as passed to t().
 export const github: Catalog = {
-  "GitHub": "GitHub",
   "Set the repository to a": "Configura el repositorio con una",
   "URL to see its activity here.": "URL para ver aquí su actividad.",
   "Linked to": "Vinculado a",
@@ -12,7 +11,6 @@ export const github: Catalog = {
   "GitHub refused the token.": "GitHub rechazó el token.",
   "GitHub's rate limit was reached; the numbers below may be old.": "Se alcanzó el límite de solicitudes de GitHub; los números de abajo pueden estar desactualizados.",
   "GitHub did not answer at the last sync; the numbers below may be old.": "GitHub no respondió en la última sincronización; los números de abajo pueden estar desactualizados.",
-  "Last push": "Último envío",
   "Never": "Nunca",
   "Open issues": "Problemas abiertos",
   "Open pull requests": "Pull requests abiertas",
@@ -23,9 +21,7 @@ export const github: Catalog = {
   "Refreshes daily.": "Se actualiza a diario.",
   "Refreshing…": "Actualizando…",
   "Refresh from GitHub": "Actualizar desde GitHub",
-  "Could not reach the server. Try again.": "No se pudo conectar con el servidor. Inténtalo de nuevo.",
   "Sign in again to refresh.": "Vuelve a iniciar sesión para actualizar.",
-  "Invalid project.": "Proyecto inválido.",
   "GitHub could not find that repository, or the token cannot see it.": "GitHub no pudo encontrar ese repositorio, o el token no puede verlo.",
   "GitHub refused the token. Check that it is valid and can read this repository.": "GitHub rechazó el token. Verifica que sea válido y pueda leer este repositorio.",
   "GitHub's rate limit was reached. Try again later.": "Se alcanzó el límite de solicitudes de GitHub. Inténtalo más tarde.",

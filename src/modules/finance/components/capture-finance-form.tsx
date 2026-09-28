@@ -39,7 +39,7 @@ export function CaptureFinanceForm({ projects }: { projects: ProjectOption[] }) 
     <div><p className="workspace-eyebrow">{t("Keep the numbers visible")}</p><h2 className="mt-2 text-xl font-semibold tracking-tight">{t("Record a transaction")}</h2><p className="mt-2 text-sm leading-6 text-slate-500">{t("Manual entries stay private and can be linked to one of your projects.")}</p></div>
     <div className="grid gap-4 sm:grid-cols-2">
       <label className="block text-sm font-medium">{t("Type")}
-        <select name="type" defaultValue="EXPENSE" disabled={pending} className="mt-2 block w-full rounded-md border p-3"><option value="EXPENSE">{t("Expense")}</option><option value="INCOME">{t("Income")}</option></select>
+        <select name="type" defaultValue="EXPENSE" disabled={pending} className="mt-2 block w-full rounded-md border p-3"><option value="EXPENSE">{t("Expense")}</option><option value="INCOME">{t("Transaction type::Income")}</option></select>
       </label>
       <label className="block text-sm font-medium">{t("Currency")}
         <input name="currency" defaultValue="USD" required maxLength={3} pattern="[A-Za-z]{3}" readOnly={pending} className="mt-2 w-full rounded-md border p-3 uppercase" />

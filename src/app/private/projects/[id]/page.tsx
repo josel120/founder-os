@@ -56,6 +56,6 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     <ProjectFinance transactions={transactions} t={t} />
     <PublishPanel projectId={project.id} publication={publicationForPanel} preview={{ name: project.name, slug: project.slug, lifecycle: project.lifecycle, releasedAt: project.releasedAt, website: project.website, playStoreUrl: project.playStoreUrl, appStoreUrl: project.appStoreUrl }} />
     <GitHubPanel projectId={project.id} repoFullName={parseGitHubRepository(project.repository)} configured={Boolean(env.GITHUB_TOKEN)} snapshot={github} t={t} />
-    <div className="mt-12 space-y-5"><h2 className="text-xl font-semibold tracking-tight">{t("Decisions")}</h2><DecisionList decisions={decisions} empty={t("No decisions about this project yet.")} /><CaptureDecisionForm projectId={project.id} /></div>
+    <div className="mt-12 space-y-5"><h2 className="text-xl font-semibold tracking-tight">{t("Decisions")}</h2><DecisionList decisions={decisions} empty={t("No decisions about this project yet.")} t={t} /><CaptureDecisionForm projectId={project.id} /></div>
   </section>;
 }
