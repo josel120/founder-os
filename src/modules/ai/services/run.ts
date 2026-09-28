@@ -2,10 +2,11 @@ import { and, count, desc, eq, gte, lt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { isUniqueViolation } from "@/db/errors";
 import { aiRuns, evidence, ideas, problems } from "@/db/schema";
-import { env } from "@/lib/env";
 import { reportError } from "@/lib/report-error";
 import { runTool, type AIClientError, type AIFailureReason, type Fetch } from "./anthropic-client";
+import { runGroqTool } from "./groq-client";
 import { buildIdeaInput } from "./prompt";
+import { activeProvider, AI_PROVIDERS, type AIProviderName } from "./provider";
 
 /** ADR-021 limits. */
 export const DAILY_RUN_LIMIT = 20;
@@ -24,7 +25,7 @@ export type RunOutcome =
   | { status: "in_progress" }
   | { status: "unavailable" };
 
-type Options = { apiKey?: string; apiUrl?: string; model?: string; fetchImpl?: Fetch; now?: () => Date };
+type Options = { provider?: AIProviderName; apiKey?: string; apiUrl?: string; model?: string; fetchImpl?: Fetch; now?: () => Date };
 
 export function startOfUtcDay(now: Date): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
@@ -50,12 +51,14 @@ export async function countRunsToday(ownerId: string, now = new Date()): Promise
  * here changes the idea, creates a decision or publishes anything.
  */
 export async function runIdeaAI(ownerId: string, ideaId: string, kind: RunKind, options: Options = {}): Promise<RunOutcome> {
-  const apiKey = options.apiKey ?? env.ANTHROPIC_API_KEY;
+  const active = activeProvider();
+  const provider = options.provider ?? active?.name ?? "anthropic";
+  const apiKey = options.apiKey ?? active?.apiKey;
   if (!apiKey) return { status: "not_configured" };
   if (!db) return { status: "unavailable" };
   const database = db;
   const now = options.now ?? (() => new Date());
-  const model = options.model ?? env.AI_MODEL;
+  const model = options.model ?? active?.model ?? AI_PROVIDERS[provider].model;
 
   let runId: string;
   let input: Parameters<typeof runTool>[0]["input"];
@@ -95,7 +98,8 @@ export async function runIdeaAI(ownerId: string, ideaId: string, kind: RunKind, 
     return { status: "unavailable" };
   }
 
-  const result = await runTool({ kind, input, apiKey, apiUrl: options.apiUrl ?? env.AI_API_URL, model, fetchImpl: options.fetchImpl });
+  const call = provider === "groq" ? runGroqTool : runTool;
+  const result = await call({ kind, input, apiKey, apiUrl: options.apiUrl ?? active?.apiUrl ?? AI_PROVIDERS[provider].apiUrl, model, fetchImpl: options.fetchImpl });
   const own = and(eq(aiRuns.id, runId), eq(aiRuns.ownerId, ownerId), eq(aiRuns.status, "RUNNING"));
   try {
     if (result.ok) {

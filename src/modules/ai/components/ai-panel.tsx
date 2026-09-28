@@ -7,8 +7,8 @@ import { RunAIButtons } from "./run-ai-buttons";
 
 const recommendationLabel: Record<string, string> = { CONTINUE: "Continue", INVESTIGATE_MORE: "Investigate more", PAUSE: "Pause", REJECT: "Reject" };
 const errorText: Record<string, string> = {
-  unauthorized: "Anthropic refused the API key.",
-  rate_limited: "Anthropic's rate limit was reached.",
+  unauthorized: "The AI provider refused the API key.",
+  rate_limited: "The AI provider's rate limit was reached.",
   unavailable: "The provider did not answer or returned an error.",
   invalid_output: "The answer did not have the expected shape, so it was not kept.",
   too_large: "The notes were too long to send.",
@@ -48,14 +48,14 @@ function RunBody({ run, t }: { run: AIRunView; t: Translate }) {
  * ADR-021: an AI second opinion on one idea. Runs only on the owner's click; the disclosure says what is sent and to
  * whom. Nothing here changes the idea: the owner records any decision in the Decisions section.
  */
-export function AIPanel({ ideaId, status, runs }: { ideaId: string; status: { configured: boolean; used: number; limit: number }; runs: AIRunView[] }) {
+export function AIPanel({ ideaId, status, runs }: { ideaId: string; status: { configured: boolean; provider: string; used: number; limit: number }; runs: AIRunView[] }) {
   const t = useT();
   const left = Math.max(0, status.limit - status.used);
   return <section aria-labelledby="ai-heading" className="workspace-panel mt-12 space-y-4 p-6">
     <h2 id="ai-heading" className="text-xl font-semibold tracking-tight">{t("AI second opinion")}</h2>
-    <p className="text-sm text-slate-600">{t("Runs only when you click. It sends this idea's title, description, status and source, its problem, and up to 50 evidence titles and summaries to Anthropic. Nothing else: no links, decisions, projects or finance. It suggests; you decide.")}</p>
+    <p className="text-sm text-slate-600">{t("Runs only when you click. It sends this idea's title, description, status and source, its problem, and up to 50 evidence titles and summaries to {provider}. Nothing else: no links, decisions, projects or finance. It suggests; you decide.", { provider: status.provider })}</p>
     {!status.configured
-      ? <p className="text-sm text-slate-600">{t("AI is not connected yet: set")} <code>ANTHROPIC_API_KEY</code> {t("(see task T-085).")}</p>
+      ? <p className="text-sm text-slate-600">{t("AI is not connected yet: set")} <code>GROQ_API_KEY</code> {t("(see task T-102).")}</p>
       : <>
         <RunAIButtons ideaId={ideaId} disabled={left === 0} />
         <p className="text-xs text-slate-500 tabular-nums">{t("{used} of {limit} runs used today (UTC).", { used: status.used, limit: status.limit })}{left === 0 && ` ${t("The limit resets at 00:00 UTC.")}`}</p>

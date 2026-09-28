@@ -9,8 +9,8 @@ const serverEnv: Record<string, string> = authenticated
       DATABASE_URL: requireDisposableDatabase(), OWNER_EMAIL: e2eOwner.email, OWNER_SETUP_TOKEN: e2eSetupToken, BETTER_AUTH_SECRET: e2eAuthSecret, BETTER_AUTH_URL: e2eBaseUrl,
       // ADR-019: the app talks only to the local stub GitHub API (tests/e2e/github-stub.mjs), never the real GitHub.
       GITHUB_TOKEN: e2eGithubToken, GITHUB_API_URL: e2eGithubStubUrl, CRON_SECRET: e2eCronSecret,
-      // ADR-021: AI runs go only to the local stub Messages API (tests/e2e/ai-stub.mjs), never to Anthropic.
-      ANTHROPIC_API_KEY: e2eAiKey, AI_API_URL: e2eAiStubUrl,
+      // ADR-021/024: AI runs go only to the local stub (tests/e2e/ai-stub.mjs) through the Groq path, never to a real provider.
+      GROQ_API_KEY: e2eAiKey, AI_API_URL: e2eAiStubUrl,
     }
   : {};
 

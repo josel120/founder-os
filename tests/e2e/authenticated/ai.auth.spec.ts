@@ -1,5 +1,5 @@
-// ADR-021 / T-089: AI execution end to end, against the local stub Messages API (tests/e2e/ai-stub.mjs), never
-// Anthropic. Serial: the daily cap counts every run of the owner, so these tests must not race each other.
+// ADR-021 / ADR-024: AI execution end to end through the Groq path, against the local stub (tests/e2e/ai-stub.mjs), never
+// a real provider. Serial: the daily cap counts every run of the owner, so these tests must not race each other.
 import { expect, test, type Page } from "@playwright/test";
 import { e2eAiStubUrl, e2eOwner } from "../e2e-env";
 import { captureServerAction, ready, replayAnonymously, retargetServerActions, unique, withE2eDb } from "./helpers";
@@ -9,7 +9,7 @@ test.describe.configure({ mode: "serial" });
 // The stub puts this in a text block and in error bodies; the app must never store or show it.
 const STUB_SECRET = "SECRET-ai-stub-must-never-leak-5d1e07";
 
-type StubRequest = { headers: Record<string, string>; body: { model: string; max_tokens: number; system: string; messages: { role: string; content: string }[]; tool_choice: { name: string } } };
+type StubRequest = { path: string; headers: Record<string, string>; body: { model: string; max_tokens: number; messages: { role: string; content: string }[]; tool_choice: { function: { name: string } } } };
 const stubRequests = async (page: Page) => (await (await page.request.get(`${e2eAiStubUrl}/__requests`)).json()) as StubRequest[];
 
 const ownerA = () => withE2eDb(async (sql) => {
@@ -63,15 +63,16 @@ test("an assessment sends only the allowlisted notes, shows plain-text advice an
   const sent = (await stubRequests(page)).slice(before);
   expect(sent).toHaveLength(1);
   const [request] = sent;
-  expect(request!.headers["anthropic-version"]).toBe("2023-06-01");
-  expect(request!.body.tool_choice.name).toBe("idea_assessment");
+  expect(request!.path).toBe("/chat/completions");
+  expect(request!.body.model).toBe("llama-3.3-70b-versatile");
+  expect(request!.body.tool_choice.function.name).toBe("idea_assessment");
   const content = request!.body.messages.map((message) => message.content).join("\n");
   expect(content).toContain(idea.title);
   expect(content).toContain("Two owners said they would pay");
   expect(content).toContain(`E2E AI problem ${idea.marker}`);
   for (const forbidden of ["leak.example", "E2E-DECISION-NOT-SENT", "E2E-FINANCE-NOT-SENT", e2eOwner.email, idea.id]) expect(content).not.toContain(forbidden);
 
-  expect(await runsFor(idea.id)).toEqual([{ kind: "ASSESSMENT", status: "SUCCEEDED", recommendation: "INVESTIGATE_MORE", error: null, model: "claude-sonnet-5-e2e", input_tokens: 321 }]);
+  expect(await runsFor(idea.id)).toEqual([{ kind: "ASSESSMENT", status: "SUCCEEDED", recommendation: "INVESTIGATE_MORE", error: null, model: "llama-e2e", input_tokens: 321 }]);
   const [status] = await withE2eDb((sql) => sql<{ status: string }[]>`SELECT status FROM idea WHERE id = ${idea.id}`);
   expect(status!.status).toBe("RESEARCHING");
   expect(await withE2eDb((sql) => sql`SELECT count(*)::int AS n FROM decision_log WHERE idea_id = ${idea.id}`).then((rows) => rows[0]!.n)).toBe(1);
@@ -90,9 +91,9 @@ test("a research summary shows the evidence overview; a provider failure stores 
   await ready(page, page.goto(`/private/ideas/${failing.id}`));
   const failingPanel = page.getByRole("region", { name: "AI second opinion" });
   await ready(page, failingPanel.getByRole("button", { name: "Get an assessment" }).click());
-  await expect(failingPanel.getByRole("alert")).toHaveText("Anthropic's rate limit was reached. Try again later.");
-  await expect(failingPanel.getByText("Anthropic's rate limit was reached.", { exact: true })).toBeVisible();
-  expect(await runsFor(failing.id)).toEqual([{ kind: "ASSESSMENT", status: "FAILED", recommendation: null, error: "rate_limited", model: "claude-sonnet-5", input_tokens: null }]);
+  await expect(failingPanel.getByRole("alert")).toHaveText("The AI provider's rate limit was reached. Try again later.");
+  await expect(failingPanel.getByText("The AI provider's rate limit was reached.", { exact: true })).toBeVisible();
+  expect(await runsFor(failing.id)).toEqual([{ kind: "ASSESSMENT", status: "FAILED", recommendation: null, error: "rate_limited", model: "llama-3.3-70b-versatile", input_tokens: null }]);
   expect(await page.content()).not.toContain(STUB_SECRET);
 });
 

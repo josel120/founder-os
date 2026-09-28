@@ -119,6 +119,19 @@ describe("runIdeaAI (ADR-021)", () => {
     expect(await runIdeaAI("owner-a", ideaId, "ASSESSMENT", options)).toEqual({ status: "failed", runId: "run-1", error: "interrupted" });
   });
 
+  it("sends the run to Groq's chat completions API when Groq is the provider (ADR-024)", async () => {
+    rows();
+    fetchImpl.mockResolvedValue(new Response(JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      choices: [{ message: { tool_calls: [{ type: "function", function: { name: ASSESSMENT_TOOL_NAME, arguments: JSON.stringify({ recommendation: "REJECT", rationale: "No", risks: [], openQuestions: [] }) } }] } }],
+      usage: { prompt_tokens: 7, completion_tokens: 3 },
+    }), { status: 200 }));
+    expect(await runIdeaAI("owner-a", ideaId, "ASSESSMENT", { ...options, provider: "groq", apiUrl: "https://api.groq.test/openai/v1", model: "llama-3.3-70b-versatile" })).toEqual({ status: "succeeded", runId: "run-1" });
+    expect(fetchImpl.mock.calls[0]![0]).toBe("https://api.groq.test/openai/v1/chat/completions");
+    expect(m.state.inserts[0]).toMatchObject({ model: "llama-3.3-70b-versatile" });
+    expect(m.state.sets.at(-1)).toMatchObject({ status: "SUCCEEDED", recommendation: "REJECT", inputTokens: 7, outputTokens: 3, model: "llama-3.3-70b-versatile" });
+  });
+
   it("stores the error code when the provider fails", async () => {
     rows();
     fetchImpl.mockResolvedValue(new Response("{}", { status: 429 }));

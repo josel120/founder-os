@@ -8,15 +8,15 @@ import { DAILY_RUN_LIMIT, runIdeaAI, type RunKind, type RunOutcome } from "../se
 type Result = { ok: true; message: string } | { ok: false; error: string };
 
 const failures: Record<string, string> = {
-  unauthorized: "Anthropic refused the API key. Check ANTHROPIC_API_KEY.",
-  rate_limited: "Anthropic's rate limit was reached. Try again later.",
+  unauthorized: "The AI provider refused the API key. Check GROQ_API_KEY (or ANTHROPIC_API_KEY) in Vercel.",
+  rate_limited: "The AI provider's rate limit was reached. Try again later.",
   unavailable: "The AI provider did not answer. Try again later.",
-  billing: "Anthropic says this account has no credit. Add credit under Billing in the Anthropic console, then try again.",
-  model_unavailable: "The configured model (AI_MODEL) is not available to this Anthropic account.",
-  bad_request: "Anthropic rejected the request. The error type is in the server logs (ai.provider).",
-  overloaded: "Anthropic is overloaded right now. Try again in a minute.",
-  server_error: "Anthropic returned a server error. Try again later.",
-  network: "Could not reach Anthropic. Try again later.",
+  billing: "The AI provider says this account has no credit or has hit its plan limit.",
+  model_unavailable: "The configured model is not available from the AI provider. Set AI_MODEL to a model it offers.",
+  bad_request: "The AI provider rejected the request. The error type is in the server logs (ai.provider).",
+  overloaded: "The AI provider is overloaded right now. Try again in a minute.",
+  server_error: "The AI provider returned a server error. Try again later.",
+  network: "Could not reach the AI provider. Try again later.",
   invalid_output: "The answer did not have the expected shape, so it was not kept. Try again.",
   too_large: "This idea's notes are too long to send.",
   interrupted: "The run took too long and was stopped. Try again.",
@@ -26,7 +26,7 @@ function resultFor(outcome: RunOutcome, done: string): Result {
   switch (outcome.status) {
     case "succeeded": return { ok: true, message: done };
     case "failed": return { ok: false, error: failures[outcome.reason ?? outcome.error] ?? failures.unavailable! };
-    case "not_configured": return { ok: false, error: "AI is not connected yet: ANTHROPIC_API_KEY is not set." };
+    case "not_configured": return { ok: false, error: "AI is not connected yet: GROQ_API_KEY is not set." };
     case "not_found": return { ok: false, error: "Idea not found." };
     case "too_large": return { ok: false, error: failures.too_large! };
     case "daily_limit": return { ok: false, error: `You have used today's ${DAILY_RUN_LIMIT} AI runs. The limit resets at 00:00 UTC.` };
