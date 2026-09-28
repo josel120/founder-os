@@ -6,6 +6,7 @@
   * { box-sizing: border-box; }
   button, input, select, textarea { font: inherit; }
   button, select { min-height: 44px; }
+  summary { padding-block: 12px; } /* "Edit" and similar toggles: a 44px target without changing their look */
   button:not(:disabled) { cursor: pointer; }
   input, textarea, select { border-color: #cbd5e1; background: white; color: #0f172a; }
   textarea { resize: vertical; }
@@ -13,6 +14,11 @@
   button:disabled { cursor: wait; opacity: .6; }
   body { margin: 0; background: var(--background); color: var(--foreground); font-family: "Segoe UI", Arial, Helvetica, sans-serif; }
   @media (prefers-reduced-motion: no-preference) { a, button { transition: background-color 150ms ease, box-shadow 150ms ease; } }
+}
+/* T-100: phones zoom into any field whose text is under 16px when it gets focus. Unlayered on purpose so it
+   beats `text-sm` and similar utilities on narrow screens only. */
+@media (max-width: 639px) {
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea { font-size: 16px; }
 }
 @layer components {
   .workspace-panel { border: 1px solid #e3e7ef; border-radius: 20px; background: white; box-shadow: 0 4px 24px -16px #33415540; }
