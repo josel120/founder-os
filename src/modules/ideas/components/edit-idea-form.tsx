@@ -2,6 +2,7 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useT } from "@/lib/i18n/client";
 import { updateIdeaContent } from "../actions/idea.actions";
 import { ideaDescriptionMax } from "../schemas/idea.limits";
 
@@ -13,6 +14,7 @@ type EditIdeaFormProps = {
 
 export function EditIdeaForm({ ideaId, initialTitle, initialDescription }: EditIdeaFormProps) {
   const router = useRouter();
+  const t = useT();
   const inFlight = useRef(false);
   const [pending, setPending] = useState(false);
   const [title, setTitle] = useState(initialTitle);
@@ -31,13 +33,13 @@ export function EditIdeaForm({ ideaId, initialTitle, initialDescription }: EditI
     try {
       const result = await updateIdeaContent(data);
       if (!result.ok) {
-        setError(result.error);
+        setError(t(result.error));
         return;
       }
-      setMessage("Idea updated.");
+      setMessage(t("Idea updated."));
       router.refresh();
     } catch {
-      setError("Could not confirm the save. Check the idea before retrying.");
+      setError(t("Could not confirm the save. Check the idea before retrying."));
     } finally {
       inFlight.current = false;
       setPending(false);
@@ -46,15 +48,15 @@ export function EditIdeaForm({ ideaId, initialTitle, initialDescription }: EditI
 
   return (
     <form onSubmit={submit} aria-busy={pending} className="workspace-panel mt-8 space-y-4 p-6">
-      <h2 className="text-lg font-semibold">Refine idea</h2>
+      <h2 className="text-lg font-semibold">{t("Refine idea")}</h2>
       <input type="hidden" name="ideaId" value={ideaId} />
-      <label className="block text-sm font-medium">Title
+      <label className="block text-sm font-medium">{t("Title")}
         <input name="title" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={160} readOnly={pending} required className="mt-2 w-full rounded-md border p-3" />
       </label>
-      <label className="block text-sm font-medium">Description
+      <label className="block text-sm font-medium">{t("Description")}
         <textarea name="description" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={ideaDescriptionMax} readOnly={pending} className="mt-2 min-h-24 w-full rounded-md border p-3" />
       </label>
-      <button disabled={pending} type="submit" className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{pending ? "Saving..." : "Save idea"}</button>
+      <button disabled={pending} type="submit" className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{pending ? t("Saving...") : t("Save idea")}</button>
       <p role="status" className="text-sm text-green-700">{message}</p>
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
     </form>
