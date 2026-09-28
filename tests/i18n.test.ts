@@ -31,6 +31,8 @@ describe("Spanish catalog (ADR-023)", () => {
     for (const [key, value] of Object.entries(es)) {
       expect(value.trim(), key).not.toBe("");
       expect(placeholders(value), key).toEqual(placeholders(key));
+      // Adjacent placeholders ("{a}{b}") compile to back-to-back lazy groups that can backtrack badly.
+      expect(key, "separate placeholders with literal text").not.toMatch(/\}\{/);
     }
     const seen = new Map<string, string>();
     for (const catalog of Object.values(esAreas)) for (const [key, value] of Object.entries(catalog)) {

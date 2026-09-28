@@ -1,5 +1,5 @@
 // ADR-023: English text is the key. A catalog maps it to Spanish; anything missing falls back to English.
-// Keys may hold {name} placeholders. A translated string also matches an already-filled English message
+// Keys may hold {name} placeholders, always separated by literal text (tests/i18n.test.ts enforces it). A translated string also matches an already-filled English message
 // (for example a Zod message with a number in it), so server messages translate where they are shown.
 export type Catalog = Readonly<Record<string, string>>;
 export type Values = Readonly<Record<string, string | number>>;
