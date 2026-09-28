@@ -288,3 +288,16 @@ Accepted:
 - **Privacy**: the file is the owner's own data, served only to the owner and never cached; nothing is logged beyond `reportError("export")` on failure.
 
 Rejected for now: import/restore from the file (the database restore drill covers disaster recovery), CSV per table, scheduled exports.
+
+## ADR-023: English and Spanish interface (Phase 11, T-095)
+
+The owner asked to switch the app between English and Spanish.
+
+- **Scope**: interface text only (labels, buttons, messages, enum labels, page titles). The owner's records (titles, descriptions, evidence, project names) are never translated; public portfolio pages translate their frame, not the owner's summary.
+- **Keys**: the English text is the key (`t("Save")`), with a Spanish catalog per area in `src/lib/i18n/es/`. Anything missing falls back to English, so existing code, tests and server messages stay English. Keys may hold `{name}` placeholders; an already-filled English message (for example a Zod error with a number) also matches its pattern, so server messages translate where they are shown.
+- **Choice**: an `EN | ES` switch in the private header and on the public pages saves a `locale` cookie (httpOnly, SameSite=Lax, one year) through a Zod-validated server action. Without a cookie the browser's `Accept-Language` decides; otherwise English. `<html lang>` follows the choice.
+- **Runtime**: server components and actions use `getT()`; client components get the catalog once from the root layout (`I18nProvider`) and use `useT()`. The catalog holds interface text only, so sending it to the browser exposes nothing private.
+- **Guard**: a unit test scans `src` for literal `t("…")` calls and fails when one has no Spanish entry, an entry is empty, placeholders differ, or two areas translate one key differently.
+- **No dependency**: next-intl and similar were not needed for two languages and one catalog shape.
+
+Rejected: locale in the URL (`/es/...`), which would change every route, the middleware and the E2E paths for a single-owner app; storing the choice in the database, which would need a migration and a signed-in owner on public pages.
