@@ -4,6 +4,8 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 const m = vi.hoisted(() => ({ project: vi.fn(), idea: vi.fn(), transactions: vi.fn(), decisions: vi.fn() }));
 vi.mock("@/lib/require-auth", () => ({ requireAuth: async () => ({ id: "owner-a" }) }));
+// The page now calls getT(), which reads cookies() outside a request scope in this render harness (ADR-023, T-097).
+vi.mock("@/lib/i18n/server", () => ({ getT: async () => (text: string) => text }));
 vi.mock("@/modules/projects/queries/project.queries", () => ({ getPrivateProject: m.project }));
 vi.mock("@/modules/ideas/queries/idea.queries", () => ({ getPrivateIdea: m.idea }));
 vi.mock("@/modules/finance/queries/finance.queries", () => ({ listPrivateFinanceTransactions: m.transactions }));
