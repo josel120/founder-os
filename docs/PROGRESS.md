@@ -14,7 +14,7 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 
 - ADR-023 English/Spanish switch (T-095..T-099): EN | ES in the header and public pages, cookie + Accept-Language, catalogs per area with a coverage test; unit 742, E2E 62/62, privacy audit clean. Audit (T-094) found no overflow; phone fixes to follow.
 
-## Phase 10: AI execution (merged and deployed; waits on the key, T-085)
+## Phase 10: AI execution (merged and deployed; key set, waits on Anthropic credit, T-085)
 
 - ADR-021: owner-click assessment and research summary via Anthropic (fetch, allowlisted input, forced tool output + Zod), `ai_run` (0011, one RUNNING per idea, 20 runs/day). PRs #60, #66 (stack #61–#65); unit 720, E2E 57/57, privacy audits clean. 0011 applied in production 2026-09-27. Turns on when the owner sets `ANTHROPIC_API_KEY` (T-085).
 
