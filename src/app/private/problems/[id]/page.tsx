@@ -7,6 +7,7 @@ import { ProblemToIdeaButton } from "@/modules/ideas/components/problem-to-idea-
 import { listIdeasForProblem } from "@/modules/ideas/queries/idea.queries";
 import { ideaStatusKey } from "@/modules/ideas/services/inbox";
 import { EditProblemForm } from "@/modules/problems/components/edit-problem-form";
+import { EditDisclosure } from "@/components/edit-disclosure";
 import { getPrivateProblem } from "@/modules/problems/queries/problem.queries";
 import { CaptureEvidenceForm } from "@/modules/research/components/capture-evidence-form";
 import { EvidenceList } from "@/modules/research/components/evidence-list";
@@ -32,7 +33,7 @@ export default async function ProblemDetailPage({ params }: { params: Promise<{ 
     <h1 className="mt-2 break-words text-3xl font-semibold">{problem.title}</h1>
     <p className="mt-5 whitespace-pre-wrap break-words text-slate-700">{problem.description}</p>
     <ProblemToIdeaButton problemId={problem.id} />
-    <EditProblemForm problemId={problem.id} initialTitle={problem.title} initialDescription={problem.description} />
+    <EditDisclosure label={t("Edit problem")}><EditProblemForm problemId={problem.id} initialTitle={problem.title} initialDescription={problem.description} /></EditDisclosure>
     <section aria-labelledby="ideas-heading" className="mt-12 space-y-4"><h2 id="ideas-heading" className="text-xl font-semibold tracking-tight">{t("Ideas from this problem")}</h2>
       {ideas.length === 0 ? <p className="text-sm text-slate-500">{t("No ideas yet. Turn this problem into one when you are ready.")}</p> : <ul className="space-y-2">{ideas.map((idea) => <li key={idea.id} className="workspace-panel flex items-center justify-between gap-3 px-5 py-3"><Link href={`/private/ideas/${idea.id}`} className="min-w-0 break-words font-medium hover:text-indigo-700">{idea.title}</Link><span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">{t(ideaStatusKey(idea.status))}</span></li>)}</ul>}
     </section>

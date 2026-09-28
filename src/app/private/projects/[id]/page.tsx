@@ -8,6 +8,7 @@ import { listDecisionsForProject } from "@/modules/decisions/queries/decision.qu
 import { CaptureDecisionForm } from "@/modules/decisions/components/capture-decision-form";
 import { DecisionList } from "@/modules/decisions/components/decision-list";
 import { EditProjectForm } from "@/modules/projects/components/edit-project-form";
+import { EditDisclosure } from "@/components/edit-disclosure";
 import { ProjectStatusForm } from "@/modules/projects/components/project-status-form";
 import { isWaiting, operationalTone, projectLabel, toDateInput } from "@/modules/projects/components/project-labels";
 import { ProjectFinance } from "@/modules/projects/components/project-finance";
@@ -52,7 +53,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     {links.length > 0 && <ul className="mt-4 flex flex-wrap gap-3 text-sm">{links.map(([label, href]) => <li key={label}><a href={href} target="_blank" rel="noopener noreferrer nofollow" className="font-medium text-indigo-700 underline-offset-4 hover:underline">{label}</a></li>)}</ul>}
     {(project.currentVersion || project.productionVersion) && <p className="mt-3 text-sm text-slate-500">{project.currentVersion && <>{t("Current")} {project.currentVersion}</>}{project.currentVersion && project.productionVersion && " · "}{project.productionVersion && <>{t("Production")} {project.productionVersion}</>}</p>}
     <ProjectStatusForm projectId={project.id} lifecycle={project.lifecycle} operationalStatus={project.operationalStatus} nextAction={project.nextAction ?? ""} waitingReason={project.waitingReason ?? ""} waitingSince={toDateInput(project.waitingSince)} reviewAt={toDateInput(project.reviewAt)} />
-    <EditProjectForm project={{ id: project.id, name: project.name, slug: project.slug, description: project.description, repository: project.repository, website: project.website, playStoreUrl: project.playStoreUrl, appStoreUrl: project.appStoreUrl, currentVersion: project.currentVersion, productionVersion: project.productionVersion }} />
+    <EditDisclosure label={t("Edit project")}><EditProjectForm project={{ id: project.id, name: project.name, slug: project.slug, description: project.description, repository: project.repository, website: project.website, playStoreUrl: project.playStoreUrl, appStoreUrl: project.appStoreUrl, currentVersion: project.currentVersion, productionVersion: project.productionVersion }} /></EditDisclosure>
     <ProjectFinance transactions={transactions} t={t} />
     <PublishPanel projectId={project.id} publication={publicationForPanel} preview={{ name: project.name, slug: project.slug, lifecycle: project.lifecycle, releasedAt: project.releasedAt, website: project.website, playStoreUrl: project.playStoreUrl, appStoreUrl: project.appStoreUrl }} />
     <GitHubPanel projectId={project.id} repoFullName={parseGitHubRepository(project.repository)} configured={Boolean(env.GITHUB_TOKEN)} snapshot={github} t={t} />

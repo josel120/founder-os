@@ -63,6 +63,7 @@ test("idea content edits persist and decisions stay with their idea", async ({ p
 
   await page.getByRole("link", { name: firstTitle }).click();
   await ready(page, page.waitForURL(/\/private\/ideas\/[0-9a-f-]{36}$/));
+  await page.locator("summary", { hasText: "Edit idea" }).click();
   await page.getByLabel("Title", { exact: true }).fill(`${firstTitle} refined`);
   await page.getByLabel("Description", { exact: true }).fill("A persisted description");
   await page.getByRole("button", { name: "Save idea" }).click();
@@ -110,6 +111,7 @@ test("an idea converts into a private project with an isolated decision log", as
   await page.getByRole("link", { name: ideaTitle, exact: true }).click();
   await ready(page, page.waitForURL(convertedUrl));
 
+  await page.locator("summary", { hasText: "Edit project" }).click();
   await page.getByLabel("Name", { exact: true }).fill(`${ideaTitle} edited`);
   await page.getByLabel("Description", { exact: true }).fill("A project description that survives reload");
   await page.getByRole("button", { name: "Save project" }).click();
@@ -178,6 +180,7 @@ test("owner A cannot read or change owner B's project or add a decision to it", 
   const ownBefore = await projectSnapshot(ownProjectId);
   const retargeted = await retargetServerActions(page, ownProjectId, other.projectId);
 
+  await page.locator("summary", { hasText: "Edit project" }).click();
   const editForm = page.locator("form", { has: page.getByRole("button", { name: "Save project" }) });
   await page.getByLabel("Name", { exact: true }).fill("Hijacked by owner A");
   await page.getByLabel("Description", { exact: true }).fill("Owner A overwrote this");
@@ -211,6 +214,7 @@ test("anonymous project mutations are rejected and leave rows unchanged", async 
   const ownProjectId = await createOwnProject(page, `E2E anonymous target ${unique()}`);
   const before = await projectSnapshot(ownProjectId);
 
+  await page.locator("summary", { hasText: "Edit project" }).click();
   const content = await captureServerAction(page, async () => {
     await page.getByLabel("Name", { exact: true }).fill("Renamed anonymously");
     await page.getByRole("button", { name: "Save project" }).click();

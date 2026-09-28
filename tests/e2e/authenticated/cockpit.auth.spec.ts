@@ -149,6 +149,7 @@ test("a problem is edited on its page, gathers ideas and evidence, and a project
   await ready(page, page.getByRole("link", { name: title }).click());
   await expect(page).toHaveURL(new RegExp(`/private/problems/${problemId}$`));
   await expect(page).toHaveTitle("Problem · Founder OS");
+  await page.locator("summary", { hasText: "Edit problem" }).click();
   const form = page.locator("form", { hasText: "Refine problem" });
   await form.getByLabel("Problem", { exact: true }).fill(edited);
   await form.getByLabel("Who experiences it and why does it matter?").fill(`Refined why ${id}`);
@@ -216,6 +217,7 @@ test("owner A cannot open or edit owner B's problem or project, and B's origin i
   const problemId = await idOf("problem", title);
   await ready(page, page.goto(`/private/problems/${problemId}`));
   const retargeted = await retargetServerActions(page, problemId, other.problemId);
+  await page.locator("summary", { hasText: "Edit problem" }).click();
   const form = page.locator("form", { hasText: "Refine problem" });
   await form.getByLabel("Problem", { exact: true }).fill("Hijacked by owner A");
   await form.getByRole("button", { name: "Save problem" }).click();
@@ -234,6 +236,7 @@ test("an anonymous replay of a problem edit is rejected and changes nothing", as
   const before = await withE2eDb((sql) => sql`SELECT * FROM problem WHERE id = ${problemId}`).then((rows) => [...rows]);
 
   await ready(page, page.goto(`/private/problems/${problemId}`));
+  await page.locator("summary", { hasText: "Edit problem" }).click();
   const form = page.locator("form", { hasText: "Refine problem" });
   const update = await captureServerAction(page, async () => {
     await form.getByLabel("Problem", { exact: true }).fill("Renamed anonymously");
