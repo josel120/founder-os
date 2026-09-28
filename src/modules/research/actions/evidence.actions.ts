@@ -43,7 +43,7 @@ export async function createEvidence(formData: FormData): Promise<EvidenceResult
     const [owned] = parent.type === "idea"
       ? await db.select({ id: ideas.id }).from(ideas).where(and(eq(ideas.id, parent.id), eq(ideas.ownerId, owner.id), eq(ideas.visibility, "PRIVATE"))).limit(1)
       : await db.select({ id: problems.id }).from(problems).where(and(eq(problems.id, parent.id), eq(problems.ownerId, owner.id), eq(problems.visibility, "PRIVATE"))).limit(1);
-    if (!owned) return { ok: false, reason: "not_found", error: `${parent.type === "idea" ? "Idea" : "Problem"} not found. The evidence was not saved.` };
+    if (!owned) return { ok: false, reason: "not_found", error: parent.type === "idea" ? "Idea not found. The evidence was not saved." : "Problem not found. The evidence was not saved." };
     const ideaId = parent.type === "idea" ? owned.id : null;
     const [created] = await db.insert(evidence).values({
       ownerId: owner.id,

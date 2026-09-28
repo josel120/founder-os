@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getT } from "@/lib/i18n/server";
 import { PublicProjectArticle, PublicShell } from "@/modules/portfolio/components/public-project";
 import { getPublishedProject } from "@/modules/portfolio/queries/publication.queries";
 
@@ -15,16 +16,18 @@ const noIndex = { index: false, follow: false };
 // Metadata uses the same allowlisted query as the page. A private or unknown slug gets the same generic title,
 // so neither the page nor its metadata reveals that a private project exists.
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const t = await getT();
   const project = await findProject((await params).slug);
-  if (!project) return { title: "Page not found", robots: noIndex };
+  if (!project) return { title: t("Page not found"), robots: noIndex };
   return { title: project.name, description: project.summary.slice(0, 160), robots: noIndex };
 }
 
 export default async function PublishedProjectPage({ params }: Props) {
+  const t = await getT();
   const project = await findProject((await params).slug);
   if (!project) notFound();
-  return <PublicShell>
-    <PublicProjectArticle project={project} />
-    <Link href="/portfolio" className="mt-6 inline-block text-sm text-slate-500 underline underline-offset-4">← All projects</Link>
+  return <PublicShell t={t}>
+    <PublicProjectArticle project={project} t={t} />
+    <Link href="/portfolio" className="mt-6 inline-block text-sm text-slate-500 underline underline-offset-4">{t("← All projects")}</Link>
   </PublicShell>;
 }

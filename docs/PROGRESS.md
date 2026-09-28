@@ -10,6 +10,10 @@ Rolling summary, ≤40 lines. Facts only. Per-task detail lives in the task card
 - Migrations 0000..0011; production has all of them (0011 applied 2026-09-27 at 15:15 UTC) (0008–0010 applied 2026-09-27 by Claude with the owner's approval, after snapshot `pre-0008-20260927`). Historical rows were adopted per ADR-006.
 - Branch/PR per card (ADR-010). Merges, force pushes, pushes to `master`, real-data migrations and secrets stay human.
 
+## Phase 11: Polish and phone use (in progress)
+
+- ADR-023 English/Spanish switch (T-095..T-099): EN | ES in the header and public pages, cookie + Accept-Language, catalogs per area with a coverage test; unit 742, E2E 62/62, privacy audit clean. Audit (T-094) found no overflow; phone fixes to follow.
+
 ## Phase 10: AI execution (merged and deployed; key set, waits on Anthropic credit, T-085)
 
 - ADR-021: owner-click assessment and research summary via Anthropic (fetch, allowlisted input, forced tool output + Zod), `ai_run` (0011, one RUNNING per idea, 20 runs/day). PRs #60, #66 (stack #61–#65); unit 720, E2E 57/57, privacy audits clean. 0011 applied in production 2026-09-27. Turns on when the owner sets `ANTHROPIC_API_KEY` (T-085).
