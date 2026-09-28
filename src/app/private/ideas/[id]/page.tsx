@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { getT } from "@/lib/i18n/server";
 import { requireAuth } from "@/lib/require-auth";
 import { getPrivateIdea } from "@/modules/ideas/queries/idea.queries";
-import { inboxStatuses, statusLabel } from "@/modules/ideas/services/inbox";
+import { ideaStatusKey, inboxStatuses } from "@/modules/ideas/services/inbox";
 import { getPrivateProblem } from "@/modules/problems/queries/problem.queries";
 import { listDecisionsForIdea } from "@/modules/decisions/queries/decision.queries";
 import { findPrivateProjectForIdea } from "@/modules/projects/queries/project.queries";
@@ -20,14 +21,17 @@ import { getAIStatus, listIdeaRuns } from "@/modules/ai/queries/ai.queries";
 import { StatusForm } from "./status-form";
 
 // Generic on purpose: private titles never go into metadata.
-export const metadata: Metadata = { title: "Idea" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Idea") };
+}
 // An AI run (ADR-021) waits up to 60 s for the provider inside this page's server action.
 export const maxDuration = 90;
 
-const statusOptions = inboxStatuses.map((value) => ({ value, label: statusLabel(value) }));
-
 export default async function IdeaDetailPage({ params }: { params: Promise<{ id: string }> }) {
   if (!(await requireAuth())) redirect("/login");
+  const t = await getT();
+  const statusOptions = inboxStatuses.map((value) => ({ value, label: ideaStatusKey(value) }));
   const { id } = await params;
   const idea = await getPrivateIdea(id);
   if (!idea) notFound();
@@ -40,11 +44,11 @@ export default async function IdeaDetailPage({ params }: { params: Promise<{ id:
     listIdeaRuns(idea.id),
   ]);
   const signals = summarizeSignals(evidenceRows);
-  return <section className="max-w-2xl"><Link href="/private/ideas" className="text-sm text-slate-500 underline">← Back to ideas</Link><p className="mt-8 text-sm uppercase tracking-widest text-slate-500">Idea detail</p><h1 className="mt-2 break-words text-3xl font-semibold">{idea.title}</h1>{problem && <p className="mt-3 text-sm text-slate-500">From problem: <Link href={`/private/problems/${problem.id}`} className="font-medium text-indigo-700 underline-offset-4 hover:underline">{problem.title}</Link></p>}<p className="mt-5 whitespace-pre-wrap break-words text-slate-700">{idea.description || "No description yet."}</p>
-    {project ? <p className="mt-5 text-sm text-slate-600">Became a project: <Link href={`/private/projects/${project.id}`} className="font-semibold text-indigo-700 underline-offset-4 hover:underline">{project.name}</Link></p> : <IdeaToProjectButton ideaId={idea.id} />}
+  return <section className="max-w-2xl"><Link href="/private/ideas" className="text-sm text-slate-500 underline">{t("← Back to ideas")}</Link><p className="mt-8 text-sm uppercase tracking-widest text-slate-500">{t("Idea detail")}</p><h1 className="mt-2 break-words text-3xl font-semibold">{idea.title}</h1>{problem && <p className="mt-3 text-sm text-slate-500">{t("From problem:")} <Link href={`/private/problems/${problem.id}`} className="font-medium text-indigo-700 underline-offset-4 hover:underline">{problem.title}</Link></p>}<p className="mt-5 whitespace-pre-wrap break-words text-slate-700">{idea.description || t("No description yet.")}</p>
+    {project ? <p className="mt-5 text-sm text-slate-600">{t("Became a project:")} <Link href={`/private/projects/${project.id}`} className="font-semibold text-indigo-700 underline-offset-4 hover:underline">{project.name}</Link></p> : <IdeaToProjectButton ideaId={idea.id} />}
     <EditIdeaForm ideaId={idea.id} initialTitle={idea.title} initialDescription={idea.description} /><StatusForm ideaId={idea.id} initialStatus={idea.status} options={statusOptions} />
-    <section aria-labelledby="evidence-heading" className="mt-12 space-y-5"><div className="flex flex-wrap items-baseline justify-between gap-3"><h2 id="evidence-heading" className="text-xl font-semibold tracking-tight">Evidence</h2><p className="text-sm text-slate-500 tabular-nums"><span className="font-medium text-emerald-700">{signals.supports} supports</span> · <span className="font-medium text-red-700">{signals.contradicts} contradicts</span> · {signals.neutral} neutral</p></div><EvidenceList rows={evidenceRows} empty="No evidence about this idea yet." /><CaptureEvidenceForm fixedParent={{ value: `idea:${idea.id}`, label: idea.title }} /></section>
+    <section aria-labelledby="evidence-heading" className="mt-12 space-y-5"><div className="flex flex-wrap items-baseline justify-between gap-3"><h2 id="evidence-heading" className="text-xl font-semibold tracking-tight">{t("Evidence")}</h2><p className="text-sm text-slate-500 tabular-nums"><span className="font-medium text-emerald-700">{t("{count} supports", { count: signals.supports })}</span> · <span className="font-medium text-red-700">{t("{count} contradicts", { count: signals.contradicts })}</span> · {t("{count} neutral", { count: signals.neutral })}</p></div><EvidenceList rows={evidenceRows} empty={t("No evidence about this idea yet.")} t={t} /><CaptureEvidenceForm fixedParent={{ value: `idea:${idea.id}`, label: idea.title }} /></section>
     {aiStatus && <AIPanel ideaId={idea.id} status={aiStatus} runs={aiRuns} />}
-    <div id="decisions" className="mt-12 space-y-5"><h2 className="text-xl font-semibold tracking-tight">Decisions</h2><DecisionList decisions={decisions} empty="No decisions about this idea yet." /><CaptureDecisionForm ideaId={idea.id} /></div>
+    <div id="decisions" className="mt-12 space-y-5"><h2 className="text-xl font-semibold tracking-tight">{t("Decisions")}</h2><DecisionList decisions={decisions} empty={t("No decisions about this idea yet.")} t={t} /><CaptureDecisionForm ideaId={idea.id} /></div>
   </section>;
 }

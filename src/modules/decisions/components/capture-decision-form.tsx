@@ -1,9 +1,11 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
+import { useT } from "@/lib/i18n/client";
 import { createDecision } from "../actions/decision.actions";
 
 export function CaptureDecisionForm({ ideaId, projectId }: { ideaId?: string; projectId?: string }) {
+  const t = useT();
   const inFlight = useRef(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -18,12 +20,12 @@ export function CaptureDecisionForm({ ideaId, projectId }: { ideaId?: string; pr
     setPending(true); setError(""); setMessage("");
     try {
       const result = await createDecision(data);
-      if (!result.ok) { setError(result.error); return; }
+      if (!result.ok) { setError(t(result.error)); return; }
       form.reset();
-      setMessage("Decision recorded privately.");
+      setMessage(t("Decision recorded privately."));
       form.querySelector<HTMLInputElement>('[name="title"]')?.focus();
     } catch {
-      setError("Could not confirm the save. Check your decisions before retrying.");
+      setError(t("Could not confirm the save. Check your decisions before retrying."));
     } finally {
       inFlight.current = false;
       setPending(false);
@@ -32,18 +34,18 @@ export function CaptureDecisionForm({ ideaId, projectId }: { ideaId?: string; pr
 
   return (
     <form onSubmit={submit} aria-busy={pending} className="workspace-panel space-y-4 p-6">
-      <label className="block text-sm font-medium">What was decided about?
-        <input name="title" required maxLength={160} readOnly={pending} placeholder="e.g. Pricing model" className="mt-2 w-full rounded-md border p-3" />
+      <label className="block text-sm font-medium">{t("What was decided about?")}
+        <input name="title" required maxLength={160} readOnly={pending} placeholder={t("e.g. Pricing model")} className="mt-2 w-full rounded-md border p-3" />
       </label>
-      <label className="block text-sm font-medium">Decision
+      <label className="block text-sm font-medium">{t("Decision")}
         <textarea name="decision" required maxLength={2000} readOnly={pending} className="mt-2 min-h-20 w-full rounded-md border p-3" />
       </label>
-      <label className="block text-sm font-medium">Why
+      <label className="block text-sm font-medium">{t("Why")}
         <textarea name="reason" required maxLength={2000} readOnly={pending} className="mt-2 min-h-20 w-full rounded-md border p-3" />
       </label>
       {ideaId && <input type="hidden" name="ideaId" value={ideaId} />}
       {projectId && <input type="hidden" name="projectId" value={projectId} />}
-      <button disabled={pending} className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50" type="submit">{pending ? "Saving..." : "Record decision"}</button>
+      <button disabled={pending} className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50" type="submit">{pending ? t("Saving...") : t("Record decision")}</button>
       <p role="status" className="text-sm text-green-700">{message}</p>
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
     </form>

@@ -54,6 +54,14 @@ describe("translator", () => {
     expect(t("Keep it under 160 characters")).toBe("Menos de 160 caracteres");
     expect(t("Keep it under")).toBe("Keep it under");
   });
+  it("uses a context prefix to tell apart one English word with two Spanish forms, and drops it in English", () => {
+    const ctx = createTranslator({ "Paused": "Pausado", "Idea status::Paused": "Pausada" });
+    expect(ctx("Paused")).toBe("Pausado");
+    expect(ctx("Idea status::Paused")).toBe("Pausada");
+    expect(ctx("Idea status::Rejected")).toBe("Rejected");
+    expect(createTranslator(null)("Idea status::Paused")).toBe("Paused");
+    expect(createTranslator(null)("Note: see::this")).toBe("Note: see::this");
+  });
   it("leaves English untouched without a catalog", () => {
     expect(createTranslator(null)("{n} runs", { n: 3 })).toBe("3 runs");
   });

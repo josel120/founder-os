@@ -20,8 +20,13 @@ function compilePatterns(catalog: Catalog) {
     });
 }
 
+// A key may start with a context ("Idea status::Paused") when one English word needs different Spanish in
+// different places; English output drops the context.
+const CONTEXT = /^[A-Z][A-Za-z ]*::/;
+const english = (text: string) => text.replace(CONTEXT, "");
+
 export function createTranslator(catalog: Catalog | null): Translate {
-  if (!catalog) return (text, values) => (values ? fill(text, values) : text);
+  if (!catalog) return (text, values) => (values ? fill(english(text), values) : english(text));
   const patterns = compilePatterns(catalog);
   return (text, values) => {
     const exact = catalog[text];
@@ -30,6 +35,6 @@ export function createTranslator(catalog: Catalog | null): Translate {
       const match = regex.exec(text);
       if (match) return fill(catalog[key]!, Object.fromEntries(names.map((name, i) => [name, match[i + 1]!])));
     }
-    return values ? fill(text, values) : text;
+    return values ? fill(english(text), values) : english(text);
   };
 }

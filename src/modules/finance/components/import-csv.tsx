@@ -2,6 +2,7 @@
 
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useT } from "@/lib/i18n/client";
 import { confirmFinanceImport, previewFinanceImport } from "../actions/import.actions";
 import { IMPORT_FILE_NAME_MAX, IMPORT_MAX_BYTES } from "../schemas/import.limits";
 
@@ -72,6 +73,7 @@ function mappingPayload(mapping: Mapping) {
 }
 
 export function ImportCsv() {
+  const t = useT();
   const router = useRouter();
   const inFlight = useRef(false);
   const [step, setStep] = useState<Step>("choose");
@@ -99,7 +101,7 @@ export function ImportCsv() {
     event.target.value = "";
     if (!file) return;
     setError(""); setMessage("");
-    if (file.size > IMPORT_MAX_BYTES) { setError("The file is larger than 1 MB."); return; }
+    if (file.size > IMPORT_MAX_BYTES) { setError(t("The file is larger than 1 MB.")); return; }
     if (inFlight.current) return;
     inFlight.current = true;
     setPending(true);
@@ -108,7 +110,7 @@ export function ImportCsv() {
       const formData = new FormData();
       formData.set("csv", text);
       const result = await previewFinanceImport(formData);
-      if (!result.ok) { setError(result.error); return; }
+      if (!result.ok) { setError(t(result.error)); return; }
       setCsvText(text);
       setFileName(file.name.slice(0, IMPORT_FILE_NAME_MAX));
       setHeaders(result.headers);
@@ -117,7 +119,7 @@ export function ImportCsv() {
       setMapping(buildMapping(result.headers, file.name));
       setStep("map");
     } catch {
-      setError("Could not read the file. Check it is a CSV export.");
+      setError(t("Could not read the file. Check it is a CSV export."));
     } finally {
       inFlight.current = false;
       setPending(false);
@@ -134,12 +136,12 @@ export function ImportCsv() {
       formData.set("csv", csvText);
       formData.set("mapping", JSON.stringify(mappingPayload(mapping)));
       const result = await previewFinanceImport(formData);
-      if (!result.ok) { setError(result.error); return; }
-      if (!result.mapped) { setError("Could not preview the mapping."); return; }
+      if (!result.ok) { setError(t(result.error)); return; }
+      if (!result.mapped) { setError(t("Could not preview the mapping.")); return; }
       setPreview(result.mapped);
       setStep("preview");
     } catch {
-      setError("Could not preview the file. Check your mapping and try again.");
+      setError(t("Could not preview the file. Check your mapping and try again."));
     } finally {
       inFlight.current = false;
       setPending(false);
@@ -155,12 +157,12 @@ export function ImportCsv() {
       formData.set("csv", csvText);
       formData.set("mapping", JSON.stringify(mappingPayload(mapping)));
       const result = await confirmFinanceImport(formData);
-      if (!result.ok) { setError(result.error); return; }
-      setMessage(`Imported ${result.imported}, skipped ${result.skipped}.`);
+      if (!result.ok) { setError(t(result.error)); return; }
+      setMessage(t("Imported {imported}, skipped {skipped}.", { imported: result.imported, skipped: result.skipped }));
       setConfirming(false);
       router.refresh();
     } catch {
-      setError("Could not confirm the import. Check your transactions before retrying.");
+      setError(t("Could not confirm the import. Check your transactions before retrying."));
     } finally {
       inFlight.current = false;
       setPending(false);
@@ -170,68 +172,68 @@ export function ImportCsv() {
   const newCount = preview?.newCount ?? 0;
 
   return <div className="workspace-panel space-y-4 p-6" aria-busy={pending}>
-    <div><p className="workspace-eyebrow">Bring in past history</p><h2 className="mt-2 text-xl font-semibold tracking-tight">Import from CSV</h2><p className="mt-2 text-sm leading-6 text-slate-500">Map your export&apos;s columns, preview it, then confirm. The file itself is never stored.</p></div>
+    <div><p className="workspace-eyebrow">{t("Bring in past history")}</p><h2 className="mt-2 text-xl font-semibold tracking-tight">{t("Import from CSV")}</h2><p className="mt-2 text-sm leading-6 text-slate-500">{t("Map your export's columns, preview it, then confirm. The file itself is never stored.")}</p></div>
 
     {step === "choose" && <div className="space-y-3">
-      <label className="block text-sm font-medium">CSV file
+      <label className="block text-sm font-medium">{t("CSV file")}
         <input type="file" accept=".csv,text/csv" onChange={onFileChange} disabled={pending} className="mt-2 block w-full text-sm" />
       </label>
     </div>}
 
     {step === "map" && mapping && <form onSubmit={submitMapping} className="space-y-4">
-      <p className="text-sm text-slate-500">{fileName} · {totalRows} row{totalRows === 1 ? "" : "s"}</p>
+      <p className="text-sm text-slate-500">{fileName} · {t(totalRows === 1 ? "{count} row" : "{count} rows", { count: totalRows })}</p>
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block text-sm font-medium">Date column
+        <label className="block text-sm font-medium">{t("Date column")}
           <select name="date" value={mapping.date} onChange={(e) => setMapping({ ...mapping, date: e.target.value })} disabled={pending} required className="mt-2 w-full rounded-md border p-3">
-            <option value="" disabled>Choose a column</option>
+            <option value="" disabled>{t("Choose a column")}</option>
             {headers.map((h) => <option key={h} value={h}>{h}</option>)}
           </select>
         </label>
-        <label className="block text-sm font-medium">Date format
+        <label className="block text-sm font-medium">{t("Date format")}
           <select name="dateFormat" value={mapping.dateFormat} onChange={(e) => setMapping({ ...mapping, dateFormat: e.target.value as DateFormat })} disabled={pending} className="mt-2 w-full rounded-md border p-3">
             {DATE_FORMATS.map((f) => <option key={f} value={f}>{f}</option>)}
           </select>
         </label>
-        <label className="block text-sm font-medium">Amount column
+        <label className="block text-sm font-medium">{t("Amount column")}
           <select name="amount" value={mapping.amount} onChange={(e) => setMapping({ ...mapping, amount: e.target.value })} disabled={pending} required className="mt-2 w-full rounded-md border p-3">
-            <option value="" disabled>Choose a column</option>
+            <option value="" disabled>{t("Choose a column")}</option>
             {headers.map((h) => <option key={h} value={h}>{h}</option>)}
           </select>
         </label>
-        <label className="block text-sm font-medium">Decimal separator
+        <label className="block text-sm font-medium">{t("Decimal separator")}
           <select name="decimalSeparator" value={mapping.decimalSeparator} onChange={(e) => setMapping({ ...mapping, decimalSeparator: e.target.value as DecimalSeparator })} disabled={pending} className="mt-2 w-full rounded-md border p-3">
-            {DECIMAL_SEPARATORS.map((s) => <option key={s} value={s}>{s === "." ? "Period (1.23)" : "Comma (1,23)"}</option>)}
+            {DECIMAL_SEPARATORS.map((s) => <option key={s} value={s}>{s === "." ? t("Period (1.23)") : t("Comma (1,23)")}</option>)}
           </select>
         </label>
-        <label className="block text-sm font-medium">Debit column (optional)
+        <label className="block text-sm font-medium">{t("Debit column (optional)")}
           <select name="debit" value={mapping.debit} onChange={(e) => setMapping({ ...mapping, debit: e.target.value })} disabled={pending} className="mt-2 w-full rounded-md border p-3">
             <option value={OPTIONAL}>—</option>
             {headers.map((h) => <option key={h} value={h}>{h}</option>)}
           </select>
         </label>
-        <label className="block text-sm font-medium">Description column
+        <label className="block text-sm font-medium">{t("Description column")}
           <select name="description" value={mapping.description} onChange={(e) => setMapping({ ...mapping, description: e.target.value })} disabled={pending} required className="mt-2 w-full rounded-md border p-3">
-            <option value="" disabled>Choose a column</option>
+            <option value="" disabled>{t("Choose a column")}</option>
             {headers.map((h) => <option key={h} value={h}>{h}</option>)}
           </select>
         </label>
-        <label className="block text-sm font-medium">Currency
+        <label className="block text-sm font-medium">{t("Currency")}
           <select value={currencyIsColumn ? "column" : "fixed"} onChange={(e) => setMapping({ ...mapping, currency: e.target.value === "column" ? { column: headers[0] ?? "" } : { fixed: "EUR" } })} disabled={pending} className="mt-2 w-full rounded-md border p-3">
-            <option value="fixed">One fixed currency</option>
-            <option value="column">A column</option>
+            <option value="fixed">{t("One fixed currency")}</option>
+            <option value="column">{t("A column")}</option>
           </select>
         </label>
         {currencyIsColumn
-          ? <label className="block text-sm font-medium">Currency column
+          ? <label className="block text-sm font-medium">{t("Currency column")}
               <select value={"column" in mapping.currency ? mapping.currency.column : ""} onChange={(e) => setMapping({ ...mapping, currency: { column: e.target.value } })} disabled={pending} required className="mt-2 w-full rounded-md border p-3">
-                <option value="" disabled>Choose a column</option>
+                <option value="" disabled>{t("Choose a column")}</option>
                 {headers.map((h) => <option key={h} value={h}>{h}</option>)}
               </select>
             </label>
-          : <label className="block text-sm font-medium">Currency code
+          : <label className="block text-sm font-medium">{t("Currency code")}
               <input value={"fixed" in mapping.currency ? mapping.currency.fixed : ""} onChange={(e) => setMapping({ ...mapping, currency: { fixed: e.target.value.toUpperCase() } })} maxLength={3} pattern="[A-Za-z]{3}" required readOnly={pending} className="mt-2 w-full rounded-md border p-3 uppercase" />
             </label>}
-        <label className="block text-sm font-medium">External ID column (optional)
+        <label className="block text-sm font-medium">{t("External ID column (optional)")}
           <select name="externalId" value={mapping.externalId} onChange={(e) => setMapping({ ...mapping, externalId: e.target.value })} disabled={pending} className="mt-2 w-full rounded-md border p-3">
             <option value={OPTIONAL}>—</option>
             {headers.map((h) => <option key={h} value={h}>{h}</option>)}
@@ -246,37 +248,37 @@ export function ImportCsv() {
       </div>}
 
       <div className="flex gap-3">
-        <button disabled={pending} type="submit" className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{pending ? "Previewing..." : "Preview"}</button>
-        <button disabled={pending} type="button" onClick={reset} className="rounded-xl border px-4 py-3 text-sm font-semibold text-slate-700">Start over</button>
+        <button disabled={pending} type="submit" className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{pending ? t("Previewing...") : t("Preview")}</button>
+        <button disabled={pending} type="button" onClick={reset} className="rounded-xl border px-4 py-3 text-sm font-semibold text-slate-700">{t("Start over")}</button>
       </div>
     </form>}
 
     {step === "preview" && preview && <div className="space-y-4">
       <dl className="grid grid-cols-3 gap-3 text-sm">
-        <div className="workspace-panel p-3"><dt className="text-xs text-slate-500">New</dt><dd className="text-lg font-semibold tabular-nums">{preview.newCount}</dd></div>
-        <div className="workspace-panel p-3"><dt className="text-xs text-slate-500">Already imported</dt><dd className="text-lg font-semibold tabular-nums">{preview.duplicateCount}</dd></div>
-        <div className="workspace-panel p-3"><dt className="text-xs text-slate-500">Errors</dt><dd className="text-lg font-semibold tabular-nums">{preview.errorCount}</dd></div>
+        <div className="workspace-panel p-3"><dt className="text-xs text-slate-500">{t("New")}</dt><dd className="text-lg font-semibold tabular-nums">{preview.newCount}</dd></div>
+        <div className="workspace-panel p-3"><dt className="text-xs text-slate-500">{t("Already imported")}</dt><dd className="text-lg font-semibold tabular-nums">{preview.duplicateCount}</dd></div>
+        <div className="workspace-panel p-3"><dt className="text-xs text-slate-500">{t("Errors")}</dt><dd className="text-lg font-semibold tabular-nums">{preview.errorCount}</dd></div>
       </dl>
 
-      {preview.totals.length > 0 && <div className="grid gap-2 sm:grid-cols-2">{preview.totals.map((t) => <div key={t.currency} className="rounded-lg border p-3 text-sm"><span className="font-semibold">{t.currency}</span><span className="ml-2 tabular-nums">net {t.net}</span></div>)}</div>}
+      {preview.totals.length > 0 && <div className="grid gap-2 sm:grid-cols-2">{preview.totals.map((total) => <div key={total.currency} className="rounded-lg border p-3 text-sm"><span className="font-semibold">{total.currency}</span><span className="ml-2 tabular-nums">{t("net")} {total.net}</span></div>)}</div>}
 
       {preview.rows.length > 0 && <div className="overflow-x-auto rounded-lg border">
-        <table className="min-w-full text-xs"><thead><tr className="border-b bg-slate-50"><th className="px-3 py-2 text-left font-medium text-slate-500">Line</th><th className="px-3 py-2 text-left font-medium text-slate-500">Date</th><th className="px-3 py-2 text-left font-medium text-slate-500">Type</th><th className="px-3 py-2 text-left font-medium text-slate-500">Amount</th><th className="px-3 py-2 text-left font-medium text-slate-500">Currency</th><th className="px-3 py-2 text-left font-medium text-slate-500">Category</th></tr></thead>
+        <table className="min-w-full text-xs"><thead><tr className="border-b bg-slate-50"><th className="px-3 py-2 text-left font-medium text-slate-500">{t("Line")}</th><th className="px-3 py-2 text-left font-medium text-slate-500">{t("Date")}</th><th className="px-3 py-2 text-left font-medium text-slate-500">{t("Type")}</th><th className="px-3 py-2 text-left font-medium text-slate-500">{t("Amount")}</th><th className="px-3 py-2 text-left font-medium text-slate-500">{t("Currency")}</th><th className="px-3 py-2 text-left font-medium text-slate-500">{t("Category")}</th></tr></thead>
           <tbody>{preview.rows.map((row) => <tr key={row.line} className="border-b last:border-0"><td className="px-3 py-2">{row.line}</td><td className="px-3 py-2">{row.date}</td><td className="px-3 py-2">{row.type}</td><td className="px-3 py-2 tabular-nums">{row.amount}</td><td className="px-3 py-2">{row.currency}</td><td className="px-3 py-2">{row.category}</td></tr>)}</tbody>
         </table>
       </div>}
 
-      {preview.errors.length > 0 && <ul className="space-y-1 text-xs text-red-700">{preview.errors.map((e, i) => <li key={i}>Line {e.line}: {e.message}</li>)}</ul>}
+      {preview.errors.length > 0 && <ul className="space-y-1 text-xs text-red-700">{preview.errors.map((e, i) => <li key={i}>{t("Line {line}", { line: e.line })}: {t(e.message)}</li>)}</ul>}
 
       {!confirming && <div className="flex gap-3">
-        <button disabled={pending || newCount === 0} type="button" onClick={() => setConfirming(true)} className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">Import {newCount} transaction{newCount === 1 ? "" : "s"}</button>
-        <button disabled={pending} type="button" onClick={reset} className="rounded-xl border px-4 py-3 text-sm font-semibold text-slate-700">Start over</button>
+        <button disabled={pending || newCount === 0} type="button" onClick={() => setConfirming(true)} className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{t(newCount === 1 ? "Import {count} transaction" : "Import {count} transactions", { count: newCount })}</button>
+        <button disabled={pending} type="button" onClick={reset} className="rounded-xl border px-4 py-3 text-sm font-semibold text-slate-700">{t("Start over")}</button>
       </div>}
       {confirming && <div className="space-y-3 rounded-lg border border-indigo-200 bg-indigo-50 p-4">
-        <p className="text-sm font-medium">Import {newCount} transaction{newCount === 1 ? "" : "s"} into your private ledger?</p>
+        <p className="text-sm font-medium">{t(newCount === 1 ? "Import {count} transaction into your private ledger?" : "Import {count} transactions into your private ledger?", { count: newCount })}</p>
         <div className="flex gap-3">
-          <button disabled={pending} type="button" onClick={doImport} className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{pending ? "Importing..." : "Confirm"}</button>
-          <button disabled={pending} type="button" onClick={() => setConfirming(false)} className="rounded-xl border px-4 py-3 text-sm font-semibold text-slate-700">Cancel</button>
+          <button disabled={pending} type="button" onClick={doImport} className="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{pending ? t("Importing...") : t("Confirm")}</button>
+          <button disabled={pending} type="button" onClick={() => setConfirming(false)} className="rounded-xl border px-4 py-3 text-sm font-semibold text-slate-700">{t("Cancel")}</button>
         </div>
       </div>}
     </div>}

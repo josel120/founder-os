@@ -2,4 +2,42 @@ import type { Catalog } from "../translate";
 
 // Spanish for the portfolio screens (ADR-023). Keys are the English text exactly as passed to t().
 export const portfolio: Catalog = {
+  "Current state:": "Estado actual:",
+  "Make private": "Hacer privado",
+  "Portfolio": "Portafolio",
+  "Public": "Público",
+  "Public portfolio": "Portafolio público",
+  "Public summary": "Resumen público",
+  "Publication updated.": "Publicación actualizada.",
+  "Published": "Publicado",
+  "Published projects": "Proyectos publicados",
+  "Published projects.": "Proyectos publicados.",
+  "Nothing is published yet.": "Aún no hay nada publicado.",
+  "Products built with Founder OS.": "Productos construidos con Founder OS.",
+  "Project is private again.": "El proyecto volvió a ser privado.",
+  "Project published.": "Proyecto publicado.",
+  "Site": "Sitio",
+  "Unlisted": "No listado",
+  "Visibility": "Visibilidad",
+  "While published, changes to the name, slug, lifecycle, release date and website or store links show on the public page right away.":
+    "Mientras esté publicado, los cambios en el nombre, el slug, la etapa, la fecha de lanzamiento y los enlaces del sitio o las tiendas se reflejan de inmediato en la página pública.",
+  "Your public summary will appear here.": "Tu resumen público aparecerá aquí.",
+  "listed on the portfolio": "aparece en el portafolio",
+  "only people with the link": "solo quienes tengan el enlace",
+  "Review and publish": "Revisar y publicar",
+  "Review and update": "Revisar y actualizar",
+  "This removes the public page. Visitors will get a 404.": "Esto elimina la página pública. Quienes la visiten verán un error 404.",
+  "Could not confirm the change. Check the project before retrying.": "No se pudo confirmar el cambio. Revisa el proyecto antes de reintentar.",
+  "← All projects": "← Todos los proyectos",
+  "Page not found": "Página no encontrada",
+  "This will be visible to anyone who visits the portfolio.": "Esto será visible para cualquiera que visite el portafolio.",
+  "This will be visible to anyone with the link.": "Esto será visible para cualquiera que tenga el enlace.",
+  // The project's own lifecycle stage (projectLabel), shown on the public page frame — not owner data.
+  // Server messages, translated where a component shows them (ADR-023).
+  "Could not change what is public. Please try again.": "No se pudo cambiar lo que es público. Inténtalo de nuevo.",
+  "Project not found. Nothing was published.": "Proyecto no encontrado. No se publicó nada.",
+  "Invalid publication.": "Publicación inválida.",
+  "Write a public summary.": "Escribe un resumen público.",
+  "Keep the public summary to {max} characters.": "Limita el resumen público a {max} caracteres.",
+  "This project is not published.": "Este proyecto no está publicado.",
 };

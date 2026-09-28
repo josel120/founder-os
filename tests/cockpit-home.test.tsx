@@ -2,12 +2,15 @@ import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { Attention } from "../src/modules/cockpit/queries/attention.queries";
+import { createTranslator } from "../src/lib/i18n/translate";
 
 const m = vi.hoisted(() => ({ attention: vi.fn(), pathname: vi.fn(() => "/private") }));
 vi.mock("@/modules/cockpit/queries/attention.queries", () => ({ getAttention: m.attention }));
 vi.mock("next/navigation", () => ({ usePathname: m.pathname, redirect: (to: string) => { throw new Error(`NEXT_REDIRECT ${to}`); } }));
 vi.mock("next/link", () => ({ default: ({ href, children, ...rest }: { href: string; children: ReactNode }) => <a href={href} {...rest}>{children}</a> }));
-import PrivateHomePage, { metadata } from "../src/app/private/page";
+// This page renders outside a request scope in the test harness, so cookies()/headers() are unavailable (ADR-023).
+vi.mock("@/lib/i18n/server", () => ({ getT: async () => createTranslator(null) }));
+import PrivateHomePage, { generateMetadata } from "../src/app/private/page";
 import { WorkspaceNav, WorkspaceSection } from "../src/components/workspace-nav";
 
 const now = new Date("2026-09-26T12:00:00Z");
@@ -54,7 +57,7 @@ const section = (headingId: string) => container.querySelector(`[aria-labelledby
 const hrefs = (element: Element) => [...element.querySelectorAll("a")].map((link) => link.getAttribute("href"));
 
 it("uses a generic title and sends anonymous callers to login", async () => {
-  expect(metadata.title).toBe("Home");
+  expect((await generateMetadata()).title).toBe("Home");
   await expect(renderHome(null)).rejects.toThrow("NEXT_REDIRECT /login");
 });
 
