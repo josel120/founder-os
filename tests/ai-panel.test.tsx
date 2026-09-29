@@ -12,7 +12,7 @@ const createdAt = new Date("2026-09-27T15:04:00Z");
 const assessment: AIRunView = { id: "r1", kind: "ASSESSMENT", status: "SUCCEEDED", model: "claude-sonnet-5", error: null, createdAt, output: { recommendation: "INVESTIGATE_MORE", rationale: "Interviews are thin.", risks: ["<img src=x onerror=alert(1)>"], openQuestions: ["Who pays?"] } };
 const summary: AIRunView = { id: "r2", kind: "SUMMARY", status: "SUCCEEDED", model: "claude-sonnet-5", error: null, createdAt, output: { overview: "Mixed.", supports: ["Demand"], contradicts: [], openQuestions: [] } };
 const failed: AIRunView = { id: "r3", kind: "SUMMARY", status: "FAILED", model: "claude-sonnet-5", error: "rate_limited", createdAt, output: null };
-const on = { configured: true, used: 2, limit: 20 };
+const on = { configured: true, provider: "Groq", used: 2, limit: 20 };
 
 let container: HTMLDivElement;
 let root: Root;
@@ -31,8 +31,8 @@ it("says what is sent and to whom before any button, and offers no run when not 
   await render({ ideaId, status: { ...on, configured: false }, runs: [] });
   expect(container.querySelector("section")?.getAttribute("aria-labelledby")).toBe("ai-heading");
   expect(container.textContent).toContain("Runs only when you click");
-  expect(container.textContent).toContain("to Anthropic");
-  expect(container.textContent).toContain("ANTHROPIC_API_KEY");
+  expect(container.textContent).toContain("to Groq.");
+  expect(container.textContent).toContain("GROQ_API_KEY");
   expect(buttons()).toHaveLength(0);
 });
 
@@ -50,7 +50,7 @@ it("renders output as plain text, with one h3 per run and a link to record a dec
   expect(container.querySelector("img")).toBeNull();
   expect(container.textContent).toContain("<img src=x onerror=alert(1)>");
   expect(container.textContent).toContain("Suggests: Investigate more");
-  expect(container.textContent).toContain("Anthropic's rate limit was reached.");
+  expect(container.textContent).toContain("The AI provider's rate limit was reached.");
   const headings = [...container.querySelectorAll("h3")].map((heading) => heading.textContent);
   expect(headings).toEqual(["Assessment · 2026-09-27 15:04 UTC", "Research summary · 2026-09-27 15:04 UTC", "Research summary · 2026-09-27 15:04 UTC"]);
   expect(container.querySelectorAll("h1, h2")).toHaveLength(1);

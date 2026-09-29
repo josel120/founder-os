@@ -38,13 +38,13 @@ it("runs with the session owner, never an owner from the form, and refreshes the
 
 it("explains refusals and failures with fixed messages only", async () => {
   const cases: [unknown, string][] = [
-    [{ status: "not_configured" }, "AI is not connected yet: ANTHROPIC_API_KEY is not set."],
+    [{ status: "not_configured" }, "AI is not connected yet: GROQ_API_KEY is not set."],
     [{ status: "daily_limit" }, "You have used today's 20 AI runs. The limit resets at 00:00 UTC."],
     [{ status: "in_progress" }, "A run on this idea is already in progress."],
     [{ status: "not_found" }, "Idea not found."],
     [{ status: "failed", runId: "r", error: "invalid_output" }, "The answer did not have the expected shape, so it was not kept. Try again."],
-    [{ status: "failed", runId: "r", error: "unavailable", reason: "billing" }, "Anthropic says this account has no credit. Add credit under Billing in the Anthropic console, then try again."],
-    [{ status: "failed", runId: "r", error: "unavailable", reason: "model_unavailable" }, "The configured model (AI_MODEL) is not available to this Anthropic account."],
+    [{ status: "failed", runId: "r", error: "unavailable", reason: "billing" }, "The AI provider says this account has no credit or has hit its plan limit."],
+    [{ status: "failed", runId: "r", error: "unavailable", reason: "model_unavailable" }, "The configured model is not available from the AI provider. Set AI_MODEL to a model it offers."],
   ];
   for (const [outcome, error] of cases) {
     m.run.mockResolvedValueOnce(outcome);
@@ -70,6 +70,6 @@ it("lists only the owner's runs on their PRIVATE idea and drops stored output th
 
 it("reports whether AI is configured and today's usage", async () => {
   m.count.mockResolvedValue(3);
-  expect(await getAIStatus()).toEqual({ configured: true, used: 3, limit: 20 });
+  expect(await getAIStatus()).toEqual({ configured: true, provider: "Anthropic", used: 3, limit: 20 });
   expect(m.count).toHaveBeenCalledWith("owner-a");
 });

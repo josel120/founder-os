@@ -17,7 +17,7 @@ const TIMEOUT_MS = 60_000;
 const MAX_TOKENS = 2_000;
 
 // The system prompt follows from the kind, and the input must come from `buildIdeaInput` (ADR-021 allowlist).
-type RunToolArgs = { kind: "ASSESSMENT" | "SUMMARY"; input: IdeaPromptText; apiKey: string; apiUrl: string; model: string; fetchImpl?: Fetch };
+export type RunToolArgs = { kind: "ASSESSMENT" | "SUMMARY"; input: IdeaPromptText; apiKey: string; apiUrl: string; model: string; fetchImpl?: Fetch };
 
 export type RunToolResult =
   | { ok: true; output: AssessmentOutput; recommendation: AIRecommendation; inputTokens: number | null; outputTokens: number | null; model: string }
@@ -43,7 +43,7 @@ class RunFailure extends Error {
 }
 
 /** One line per provider refusal: the HTTP status and the provider's error-type code only. No body, message, key or prompt. */
-function logProviderFailure(status: number, type: string | undefined) {
+export function logProviderFailure(status: number, type: string | undefined) {
   console.warn("[founder-os] ai provider error", JSON.stringify({ scope: "ai.provider", status, type: type && ERROR_TYPE.test(type) ? type : "unknown" }));
 }
 

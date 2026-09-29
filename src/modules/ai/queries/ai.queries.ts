@@ -2,9 +2,9 @@ import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { aiRuns, ideas } from "@/db/schema";
-import { env } from "@/lib/env";
 import { requireAuth } from "@/lib/require-auth";
 import { assessmentOutputSchema, summaryOutputSchema, type AssessmentOutput, type SummaryOutput } from "../services/output";
+import { activeProvider } from "../services/provider";
 import { countRunsToday, DAILY_RUN_LIMIT } from "../services/run";
 
 const HISTORY_LIMIT = 20;
@@ -37,8 +37,10 @@ export async function listIdeaRuns(ideaId: string): Promise<AIRunView[]> {
 }
 
 /** Whether AI is configured and how many of today's runs the session owner has used. */
-export async function getAIStatus(): Promise<{ configured: boolean; used: number; limit: number } | null> {
+export async function getAIStatus(): Promise<{ configured: boolean; provider: string; used: number; limit: number } | null> {
   const owner = await requireAuth();
   if (!owner) return null;
-  return { configured: Boolean(env.ANTHROPIC_API_KEY), used: await countRunsToday(owner.id), limit: DAILY_RUN_LIMIT };
+  const provider = activeProvider();
+  // Only the provider's display name leaves the server, never its key or URL.
+  return { configured: provider !== null, provider: provider?.label ?? "Groq", used: await countRunsToday(owner.id), limit: DAILY_RUN_LIMIT };
 }

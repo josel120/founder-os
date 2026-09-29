@@ -302,3 +302,15 @@ The owner asked to switch the app between English and Spanish.
 - **No dependency**: next-intl and similar were not needed for two languages and one catalog shape.
 
 Rejected: locale in the URL (`/es/...`), which would change every route, the middleware and the E2E paths for a single-owner app; storing the choice in the database, which would need a migration and a signed-in owner on public pages.
+
+## ADR-024: Groq as the AI provider (T-102)
+
+The owner does not want to pay for AI runs, so ADR-021's provider becomes a choice, with Groq's free tier first.
+
+- **Provider**: when `GROQ_API_KEY` is set, runs go to Groq's OpenAI-compatible API (`https://api.groq.com/openai/v1/chat/completions`); otherwise to Anthropic as before; with neither, AI is off. Default model `llama-3.3-70b-versatile`; `AI_MODEL` overrides it for either provider (it may now contain `/` and `_`, e.g. `openai/gpt-oss-120b`).
+- **Unchanged from ADR-021**: owner click only; the same allowlisted input and system prompts; one forced function (`tool_choice`) whose arguments are parsed and validated with the same strict Zod schemas, so a model that answers in free text or with extra fields stores nothing; 20 runs a day; `ai_run` rows and error codes; plain-text rendering; one log line with the HTTP status and the provider's error code only.
+- **Groq specifics**: bearer key; `tool_use_failed` counts as `invalid_output`; 498/503 as overloaded; `model_not_found`/`model_decommissioned` as model unavailable, with a message pointing to `AI_MODEL`.
+- **Privacy**: the owner's allowlisted idea notes now go to Groq when it is configured. The panel names the active provider before any button. Groq's free-tier data terms were not verified by the agent; the owner reads them before adding the key.
+- **Test path**: E2E runs through the Groq path against the local stub; the Anthropic path keeps its unit tests. `AI_API_URL` has no default any more and is still refused in production.
+
+Rejected: Gemini's free tier (the provider may use submitted content to improve its products), local Ollama (the deployed app cannot reach a home computer), Vercel AI Gateway or OpenRouter free models (changing model lists and data terms).

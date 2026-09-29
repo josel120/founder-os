@@ -26,7 +26,7 @@ export function requireDisposableDatabase(): string {
   return e2eDatabaseUrl;
 }
 
-// ADR-021: a fixed, e2e-only Anthropic key and the local stub Messages API it authenticates against
+// ADR-021/024: a fixed, e2e-only AI key and the local stub API it authenticates against
 // (tests/e2e/ai-stub.mjs). Never a real key; only used against http://127.0.0.1.
 export const e2eAiKey = "e2e-anthropic-key-not-a-secret-0123456789";
 export const e2eAiStubPort = 4011;
